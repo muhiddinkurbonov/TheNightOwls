@@ -1,14 +1,10 @@
-<<<<<<< HEAD
-# TheNightOwls
-=======
+
 # TheNightOwls
 
 ## Team Members
 * Christian Brewer
 * Charles Trangay
-* -
-* -Jeremiah
-* -
-* -
-* -Dean Gelbaum
-* -
+* Victor Torres
+* Jeremiah Ogembo
+* Muhiddin Kurbonov
+* Dean Gelbaum
