@@ -6,5 +6,5 @@
 * Charles Trangay
 * Victor Torres
 * Jeremiah Ogembo
-* Muhiddin Kurbonov
+* [Muhiddin Kurbonov](https://github.com/muhiddinkurbonov)
 * Dean Gelbaum
