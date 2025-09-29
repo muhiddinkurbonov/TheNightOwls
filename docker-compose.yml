@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql-express
+    
+    environment:
+      # Accept the End-User Licensing Agreement
+      ACCEPT_EULA: "Y"
+      
+      # Reference the variable from the .env file
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      
+      # Specify the edition: 'Express' for the free edition
+      MSSQL_PID: "Express"
+      
+    ports:
+      # Map host port 1433 to container port 1433 (default SQL Server port)
+      - "1433:1433"
+      
+    volumes:
+      # Create a named volume for data persistence.
+      - mssql_data:/var/opt/mssql
+      
+# Define the named volumes used by the services
+volumes:
+  mssql_data:
+    driver: local
