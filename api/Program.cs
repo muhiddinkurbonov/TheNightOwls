@@ -1,3 +1,6 @@
+
+using DotNetEnv;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,6 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// builder.Services.AddDbContext<NightOwlsDbContext>((options) =>
+// {
+//     var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+//     options.UseSqlServer(connectionString);
+// });
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
