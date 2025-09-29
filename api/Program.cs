@@ -1,19 +1,25 @@
 
 using DotNetEnv;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 
+using TheNightOwls.DB;
+
+Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-var app = builder.Build();
+builder.Services.AddDbContext<NightOwlsDbContext>((options) =>
+{
+    var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+    options.UseSqlServer(connectionString);
+});
 
-// builder.Services.AddDbContext<NightOwlsDbContext>((options) =>
-// {
-//     var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
-//     options.UseSqlServer(connectionString);
-// });
+var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
