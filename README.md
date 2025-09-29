@@ -3,17 +3,8 @@
 
 ## Team Members
 * Christian Brewer
-<<<<<<< HEAD
-* 
-* -
-* -
-* -
 * Victor Torres
-=======
 * Charles Trangay
-* -
-* -Jeremiah
-* -
-* -
-* -Dean Gelbaum
-* -
+* Dean Gelbaum
+* Jeremiah Ogembo
+* [Muhiddin Kurbonov](https://github.com/muhiddinkurbonov)
