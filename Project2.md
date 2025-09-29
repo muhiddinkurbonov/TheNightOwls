@@ -1,0 +1,53 @@
+# P2 - Web Application with Frontend, API backend, and SQL Database
+
+## Project Requirements (Minimum Viable Product)
+### Application Architecture
+- Your code must be pushed to a project git repo on the cohort organization
+- Your application must build and run
+- Your application components must be loosely coupled, and exemplify a Service Oriented Architecture
+
+### SQL Database
+- Your database must use MS SQL Server Express
+- Your database must run inside of a docker container
+- Your database should be in 3rd normal form
+- Your database should include at least one many-to-many relationship
+- Your database should be set up through an Entity Framework "Code-First" migration
+
+### API
+- Your API must be written in C# for .NET
+- Your API must use the ASP.NET framework
+- Your API must exemplify the principles of REST
+- Your API must implement the Repository pattern for data persistance (multiple namespaces, interface)
+- Your API must implement SQL Server and Entity Framework Core to provide data persistance
+- Your API should fulfill all common CRUD functions
+- Your API should include proper exception handling
+- Your API should include logging with Serilog
+- Your API should include validation for any data being handled
+- Your API should include at least 50% unit test coverage
+
+### Frontend
+- Your frontend must be written in "vanilla JavaScript", with HTML5, CSS3, and JavaScript
+- Your frontend must interact with your API for data persistence
+- Your frontend must use the React library. 
+    - Your frontend must include at least three components, with at least one nested component. (At least one parent-child relationship, and at least one other unrelated component).
+        - Your components should include at least one component that implements `useState`.
+        - Your components should include at least one component with props.
+        - Your components should include at least one component that implements the `Context` hook.
+- Your frontend __may__ be built on the Node.js or Next.js frameworks.
+
+## Non-Functional Requiremnts
+- Your project team should select a Team Lead to organize the development team efforts
+- Your project should include a Project Description document which details:
+    - a description of the project
+    - at least five user stories for your applicaton.
+    - a wireframe diagram of the UI
+    - an ERD (Entity Relationship Diagram) of the Database
+    - unit test coverage reporting
+    - API endpoint documentation
+- Your project team should conduct a daily stand-up meeting
+    - meeting notes should be kept to record development progress
+
+## Project Presentation
+- Project presentation will be done on Friday 8/9 afternoon
+- You should demo the application functionality by completing the planned user stories
+- Your presentation should be about 10 minutes long, no longer than 15 minutes (at 20 min, you will be cut off so that there is time for everyone to present)
