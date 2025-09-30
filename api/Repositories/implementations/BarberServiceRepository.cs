@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fadebook.Repositories;
 
-public class BarberServiceRespoitory: IBarberServiceRespoitory
+public class BarberServiceRespoitory : IBarberServiceRespoitory
 {
     private readonly NightOwlsDbContext _nightOwlsDbContext;
 
@@ -33,7 +33,9 @@ public class BarberServiceRespoitory: IBarberServiceRespoitory
     }
     public async Task<BarberServiceModel?> GetBarberServiceByBarberIdServiceId(int barberId, int serviceId)
     {
-        
+        return await _nightOwlsDbContext.barberServiceTable
+            .Where(bsm => bsm.BarberId == barberId && bsm.ServiceId == serviceId)
+            .FirstAsync();
     }
     public async Task<BarberServiceModel?> AddBarberService(int barberId, int servicerId)
     {
@@ -47,12 +49,21 @@ public class BarberServiceRespoitory: IBarberServiceRespoitory
         await _nightOwlsDbContext.barberServiceTable.AddAsync(barberServiceModel);
         return barberServiceModel;
     }
-    Task<BarberServiceModel?> RemoveBarberServiceById(int barberServiceId)
+    public async Task<BarberServiceModel?> RemoveBarberServiceById(int barberServiceId)
     {
-        
+        // TODO: Throw exception for not found
+        var barberSerice = await GetByIdAsync(barberServiceId);
+        if (barberSerice == null) return null;
+        // throw new NotFoundException($"There is no barber service with id: {barberServiceId}");
+        _nightOwlsDbContext.barberServiceTable.Remove(barberSerice);
+        return barberSerice;
     }
     public async Task<BarberServiceModel?> RemoveBarberServiceByBarberIdServiceId(int barberId, int serviceId)
     {
-        throw new NotImplementedException();
+        // TODO: Throw exception for not found
+        var foundBarberService = await this.GetBarberServiceByBarberIdServiceId(barberId, serviceId);
+        if (foundBarberService == null) return null; // throw new NotFoundException($"There is no BarberService with barberId:{barberId}/serviceId{serviceId}");
+        _nightOwlsDbContext.barberServiceTable.Remove(foundBarberService);
+        return foundBarberService;
     }
 }

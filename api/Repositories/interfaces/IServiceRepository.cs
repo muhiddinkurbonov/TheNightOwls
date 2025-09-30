@@ -5,6 +5,11 @@ namespace Fadebook.Repositories;
 
 public interface IServiceRepository
 {
-    Task<ServiceModel?> GetByIdAsync(ServiceModel service);
+    Task<ServiceModel?> GetByIdAsync(int serviceId);
     Task<IEnumerable<ServiceModel>> GetAll();
 }
+
+/*
+
+
+*/
