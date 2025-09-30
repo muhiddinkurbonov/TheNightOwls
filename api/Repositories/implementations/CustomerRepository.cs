@@ -9,22 +9,22 @@ using Fadebook.Models;
 
 namespace Fadebook.Repositories;
 
-public class CustomerRepository: ICustomerRepository
+public class CustomerRepository : ICustomerRepository
 {
 
     private readonly NightOwlsDbContext _db;
 
-        //Constructor Injection
-     public CustomerRepository(NightOwlsDbContext db)
-        {
-            _db = db;
-        }
+    //Constructor Injection
+    public CustomerRepository(NightOwlsDbContext db)
+    {
+        _db = db;
+    }
 
     //find customer by id
     public async Task<CustomerModel?> GetByIdAsync(int id)
-        {
-            return await _db.customerTable.FindAsync(id);
-        }
+    {
+        return await _db.customerTable.FindAsync(id);
+    }
 
     //get all customers
     public async Task<IEnumerable<CustomerModel>> GetAllAsync()
@@ -36,6 +36,13 @@ public class CustomerRepository: ICustomerRepository
     public async Task<CustomerModel?> GetByUsernameAsync(string username)
     {
         return await _db.customerTable.FirstOrDefaultAsync(c => c.Username == username);
+    }
+
+    //update customer
+    public async Task UpdateAsync(CustomerModel customer)
+    {
+        _db.customerTable.Update(customer);
+        await _db.SaveChangesAsync();
     }
 
 }
