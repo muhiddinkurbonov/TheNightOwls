@@ -28,7 +28,7 @@ public class BarberRepository: IBarberRepository
     public async Task<BarberModel> AddAsync(BarberModel barber)
     {
         var result = await _context.barberTable.AddAsync(barber);
-        await _context.SaveChangesAsync();
+        //await _context.SaveChangesAsync();
         return result.Entity;
     }
 
@@ -50,7 +50,9 @@ public class BarberRepository: IBarberRepository
         existing.Specialty = barber.Specialty;
         existing.ContactInfo = barber.ContactInfo;
 
-        await _context.SaveChangesAsync();
+        _context.barberTable.Update(barber);
+
+        //await _context.SaveChangesAsync();
         return existing;
     }
 
@@ -60,7 +62,7 @@ public class BarberRepository: IBarberRepository
         if (entity is null) return false;
 
         _context.barberTable.Remove(entity);
-        await _context.SaveChangesAsync();
+        //await _context.SaveChangesAsync();
         return true;
     }
 }

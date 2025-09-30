@@ -35,14 +35,15 @@ public class CustomerRepository : ICustomerRepository
     //find customer by username
     public async Task<CustomerModel?> GetByUsernameAsync(string username)
     {
-        return await _db.customerTable.FirstOrDefaultAsync(c => c.Username == username);
+        return await _db.customerTable.FirstAsync(c => c.Username == username);
     }
 
-    //update customer
-    public async Task UpdateAsync(CustomerModel customer)
-    {
-        _db.customerTable.Update(customer);
-        await _db.SaveChangesAsync();
-    }
+    // TODO: update customer
+    //public async Task<CustomerModel> UpdateAsync(CustomerModel customer)
+    //{
+        
+        //_db.customerTable.Update(customer);
+        //await _db.SaveChangesAsync();
+    //}
 
 }

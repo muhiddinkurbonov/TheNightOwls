@@ -46,6 +46,8 @@ public class NightOwlsDbContext : DbContext
             .WithMany()
             .HasForeignKey(bsm => bsm.ServiceId)
             .IsRequired();
+        
+        // TODO: Add BarberService composite key
 
         base.OnModelCreating(modelBuilder);
     }
