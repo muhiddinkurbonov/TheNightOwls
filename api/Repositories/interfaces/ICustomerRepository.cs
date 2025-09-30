@@ -1,6 +1,5 @@
 
 using Fadebook.Models;
-using Fadebook.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,5 +12,5 @@ public interface ICustomerRepository
     Task<IEnumerable<CustomerModel>> GetAllAsync();
     Task<CustomerModel?> GetByUsernameAsync(string username);
     // TODO:
-    // Task UpdateCustomerAsync(CustomerModel customer);
+    Task<CustomerModel?> UpdateCustomerAsync(CustomerModel customer);
 }
