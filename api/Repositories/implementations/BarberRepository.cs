@@ -50,8 +50,7 @@ public class BarberRepository: IBarberRepository
         existing.Specialty = barber.Specialty;
         existing.ContactInfo = barber.ContactInfo;
 
-        _context.barberTable.Update(barber);
-
+        // Do not attach a second instance; the tracked 'existing' has been mutated.
         //await _context.SaveChangesAsync();
         return existing;
     }
