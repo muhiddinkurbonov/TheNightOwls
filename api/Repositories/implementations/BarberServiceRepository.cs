@@ -1,7 +1,7 @@
 
-using TheNightOwls.Models;
+using Fadebook.Models;
 
-namespace TheNightOwls.Repositories;
+namespace Fadebook.Repositories;
 
 public class BarberServiceRespoitory: IBarberServiceRespoitory
 {

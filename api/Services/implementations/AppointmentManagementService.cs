@@ -1,5 +1,5 @@
 
-namespace TheNightOwls.Services;
+namespace Fadebook.Services;
 
 public class AppointmentManagementService : IAppointmentManagementService
 {

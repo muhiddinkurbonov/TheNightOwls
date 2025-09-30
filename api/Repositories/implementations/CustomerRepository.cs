@@ -1,7 +1,9 @@
 
-using TheNightOwls.Models;
+// TODO: G2
 
-namespace TheNightOwls.Repositories;
+using Fadebook.Models;
+
+namespace Fadebook.Repositories;
 
 public class CustomerRepository: ICustomerRepository
 {

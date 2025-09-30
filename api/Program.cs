@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-using TheNightOwls.DB;
+using Fadebook.DB;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
