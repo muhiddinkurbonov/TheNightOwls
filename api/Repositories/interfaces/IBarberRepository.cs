@@ -9,5 +9,5 @@ public interface IBarberRepository
     Task<IEnumerable<BarberModel>> GetAll();
     Task <BarberModel> AddAsync(BarberModel barber);
     Task <BarberModel> UpdateAsync(BarberModel barber);
-    Task <BarberModel> DeleteAsync(BarberModel barber);
+    Task <bool> DeleteByIdAsync(int id);
 }
