@@ -22,7 +22,7 @@ BarberManagement:
     - getBarberById
     - getBarbersByService
     - searchByBarber
-    - updateBarber
+    - updateBarber -> set [1,3] has [1,2] then -2 +3 -> [barber39, service1] [barber39, service3]
     - createBarber
     - deleteBarber
 

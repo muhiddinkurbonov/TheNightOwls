@@ -1,5 +1,5 @@
 
-// TODO: G1
+// G1
 
 using Fadebook.Models;
 
