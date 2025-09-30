@@ -30,5 +30,6 @@ public class AppointmentModel
     [ForeignKey(nameof(BarberId))]
     public BarberModel Barber { get; set; }
 
+    public DateTime appointmentDate { get; set; }
 }
 

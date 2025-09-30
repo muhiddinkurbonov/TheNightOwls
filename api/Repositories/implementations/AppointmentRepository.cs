@@ -1,16 +1,63 @@
 
 using Fadebook.Models;
+using Fadebook.DB;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fadebook.Repositories;
 
-public class AppointmentRepository: IAppointmentRepository
+public class AppointmentRepository : IAppointmentRepository
 {
-    public async Task<AppointmentModel?> GetByIdAsync(AppointmentModel appointment)
+    private readonly NightOwlsDbContext _nightOwlsDbContext;
+
+    public AppointmentRepository(NightOwlsDbContext nightOwlsDbContext)
     {
-        throw new NotImplementedException();
+        _nightOwlsDbContext = nightOwlsDbContext;
+    }
+    public async Task<AppointmentModel?> GetByIdAsync(int appointmentId)
+    {
+        return await _nightOwlsDbContext.appointmentTable.FindAsync(appointmentId);
     }
     public async Task<IEnumerable<AppointmentModel>> GetAll()
     {
-        throw new NotImplementedException();
+        return await _nightOwlsDbContext.appointmentTable.ToListAsync();
+    }
+    public async Task<IEnumerable<AppointmentModel>> GetApptsByDate(DateTime targetDate)
+    {
+        return await _nightOwlsDbContext.appointmentTable
+            .Where(a => a.appointmentDate.Date == targetDate.Date)
+            .ToListAsync();
+    }
+    public async Task<IEnumerable<AppointmentModel>> GetByCustomerId(int customerId)
+    {
+        return await _nightOwlsDbContext.appointmentTable
+            .Where(a => a.CustomerId == customerId)
+            .ToListAsync();
+    }
+    public async Task<AppointmentModel> AddAppointment(AppointmentModel appointmentModel) {
+        var foundAppointment = await this.GetByIdAsync(appointmentModel.AppointmentId);
+        // TODO: Throw exception to be handled -> throw, catch and return 40# code saying resource exists
+        if (foundAppointment != null) return foundAppointment;
+        
+        await _nightOwlsDbContext.appointmentTable.AddAsync(appointmentModel);
+        return appointmentModel;
+    }
+
+    public async Task<AppointmentModel> UpdateAppointment(AppointmentModel appointmentModel)
+    {
+        var foundAppointmentModel = await this.GetByIdAsync(appointmentModel.AppointmentId);
+        // TODO: Throw exception
+        if (foundAppointmentModel is null) return null;
+        appointmentModel.AppointmentId = foundAppointmentModel.AppointmentId;
+        _nightOwlsDbContext.appointmentTable.Update(appointmentModel);
+        return appointmentModel;
+    }
+    public async Task<AppointmentModel> DeleteApptById(int appointmentId) {
+        // TODO: Throw exception for not found
+        var appointment = await GetByIdAsync(appointmentId);
+        if (appointment == null) return null;
+        // throw new NotFoundException($"There is no barber service with id: {barberServiceId}");
+        _nightOwlsDbContext.appointmentTable.Remove(appointment);
+        return appointment;
     }
 }
+
