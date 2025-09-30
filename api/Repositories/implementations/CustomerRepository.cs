@@ -1,15 +1,7 @@
-<<<<<<< HEAD
 using Microsoft.EntityFrameworkCore;
-using TheNightOwls.Models;
-using TheNightOwls.DB;
-
-=======
-
-// TODO: G2
 using Fadebook.Models;
 using Fadebook.DB;
-using Microsoft.EntityFrameworkCore;
->>>>>>> 46687dc91493a82cc6225fb94406eda9e760483f
+
 
 
 using Fadebook.Models;
@@ -36,14 +28,7 @@ public class CustomerRepository : ICustomerRepository
     //get all customers
     public async Task<IEnumerable<CustomerModel>> GetAllAsync()
     {
-<<<<<<< HEAD
-        return await _context.Customers
-        .AsNoTracking()
-        .FirstOrDefaultAsync();
-        throw new NotImplementedException();
-=======
         return await _db.customerTable.ToListAsync();
->>>>>>> 46687dc91493a82cc6225fb94406eda9e760483f
     }
 
     //find customer by username
@@ -71,18 +56,13 @@ public class CustomerRepository : ICustomerRepository
         return existingCustomer;
         
     }
-<<<<<<< HEAD
-    public async Task<CustomerModel> UpdateAsync(CustomerModel entity)
+    public async Task<CustomerModel> UpdateAsync(CustomerModel customerModel)
     {
-        if (entity == null)
-        {
-            throw new ArgumentNullException(nameof(entity));
-        }
-
-        var existing = await _context.Customers.FindAsync(customer.CustomerId);
+        var foundCustomerModel = await GetByIdAsync(customerModel.CustomerId);
+        if (foundCustomerModel is null) return null;
+        customerModel.CustomerId = foundCustomerModel.CustomerId;
+        _db.customerTable.Update(customerModel);
+        return customerModel;
     }
     
-=======
-
->>>>>>> 46687dc91493a82cc6225fb94406eda9e760483f
 }
