@@ -1,10 +1,16 @@
 
 using TheNightOwls.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 
 namespace TheNightOwls.Repositories;
 
-public interface ICustomerRepository
+public interface ICustomerRepository 
 {
-    Task<CustomerModel?> GetByIdAsync(CustomerModel customer);
-    Task<IEnumerable<CustomerModel>> GetAll();
+    Task<CustomerModel?> GetByIdAsync(int id);
+    Task<IEnumerable<CustomerModel>> GetAllAsync();
+    Task<CustomerModel?> GetByUsername(string username);
+
+    
 }
