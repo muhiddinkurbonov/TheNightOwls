@@ -1,6 +1,6 @@
 
 using Fadebook.Models;
-using TheNightOwls.Models;
+using Fadebook.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
