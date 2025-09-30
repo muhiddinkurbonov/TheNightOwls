@@ -59,9 +59,8 @@ public class BarberRepository: IBarberRepository
         var entity = await _context.barberTable.FindAsync(id);
         if (entity is null) return false;
 
-        _db.barberTable.Remove(entity);
-        await _db.SaveChangesAsync();
+        _context.barberTable.Remove(entity);
+        await _context.SaveChangesAsync();
         return true;
-        
     }
 }
