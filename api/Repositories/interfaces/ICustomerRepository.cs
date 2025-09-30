@@ -1,10 +1,17 @@
 
+using Fadebook.Models;
 using TheNightOwls.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TheNightOwls.Repositories;
 
-public interface ICustomerRepository
+namespace Fadebook.Repositories;
+
+public interface ICustomerRepository 
 {
-    Task<CustomerModel?> GetByIdAsync(CustomerModel customer);
-    Task<IEnumerable<CustomerModel>> GetAll();
+    Task<CustomerModel?> GetByIdAsync(int id);
+    Task<IEnumerable<CustomerModel>> GetAllAsync();
+    Task<CustomerModel?> GetByUsernameAsync(string username);
+
+    
 }

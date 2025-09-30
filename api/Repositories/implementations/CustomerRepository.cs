@@ -1,16 +1,41 @@
 
+// TODO: G2
 using TheNightOwls.Models;
+using TheNightOwls.DB;
+using Microsoft.EntityFrameworkCore;
 
-namespace TheNightOwls.Repositories;
+
+using Fadebook.Models;
+
+namespace Fadebook.Repositories;
 
 public class CustomerRepository: ICustomerRepository
 {
-    public async Task<CustomerModel?> GetByIdAsync(CustomerModel customer)
+
+    private readonly NightOwlsDbContext _db;
+
+        //Constructor Injection
+     public CustomerRepository(NightOwlsDbContext db)
+        {
+            _db = db;
+        }
+
+    //find customer by id
+    public async Task<CustomerModel?> GetByIdAsync(int id)
+        {
+            return await _db.customerTable.FindAsync(id);
+        }
+
+    //get all customers
+    public async Task<IEnumerable<CustomerModel>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _db.customerTable.ToListAsync();
     }
-    public async Task<IEnumerable<CustomerModel>> GetAll()
+
+    //find customer by username
+    public async Task<CustomerModel?> GetByUsernameAsync(string username)
     {
-        throw new NotImplementedException();
+        return await _db.customerTable.FirstOrDefaultAsync(c => c.Username == username);
     }
+
 }

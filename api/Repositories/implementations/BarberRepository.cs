@@ -4,8 +4,7 @@ using TheNightOwls.Models;
 using TheNightOwls.DB;
 using Microsoft.EntityFrameworkCore;
 
-namespace TheNightOwls.Repositories;
-
+namespace Fadebook.Repositories;
 
 public class BarberRepository: IBarberRepository
 {
