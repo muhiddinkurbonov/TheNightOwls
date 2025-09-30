@@ -1,9 +1,9 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using TheNightOwls.Models;
+using Fadebook.Models;
 
-namespace TheNightOwls.DB;
+namespace Fadebook.DB;
 
 public class NightOwlsDbContext : DbContext
 {

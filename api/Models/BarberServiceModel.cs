@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TheNightOwls.Models;
+namespace Fadebook.Models;
 
 public class BarberServiceModel
 {

@@ -1,10 +1,15 @@
 
-using TheNightOwls.Models;
+using Fadebook.Models;
 
-namespace TheNightOwls.Repositories;
+namespace Fadebook.Repositories;
 
 public interface IBarberServiceRespoitory
 {
-    Task<BarberServiceModel?> GetByIdAsync(BarberServiceModel barberService);
-    Task<IEnumerable<BarberServiceModel>> GetAll();
+    Task<BarberServiceModel?> GetByIdAsync(int barberServiceId);
+    Task<IEnumerable<BarberServiceModel>> GetBarberServiceByBarberId(int barberId);
+    Task<IEnumerable<BarberServiceModel>> GetBarberServiceByServiceId(int serviceId);
+    Task<BarberServiceModel?> GetBarberServiceByBarberIdServiceId(int barberId, int serviceId);
+    Task<BarberServiceModel?> AddBarberService(int barberId, int servicerId);
+    Task<BarberServiceModel?> RemoveBarberServiceById(int barberServiceId);
+    Task<BarberServiceModel?> RemoveBarberServiceByBarberIdServiceId(int barberId, int serviceId);
 }
