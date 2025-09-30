@@ -30,9 +30,9 @@ public class CustomerRepository: ICustomerRepository
     }
 
     //find customer by username
-    public Task<CustomerModel?> GetByUsername(string username)
+    public async Task<CustomerModel?> GetByUsernameAsync(string username)
     {
-        throw new NotImplementedException();
+        return await _db.customerTable.FirstOrDefaultAsync(c => c.Username == username);
     }
 
 }

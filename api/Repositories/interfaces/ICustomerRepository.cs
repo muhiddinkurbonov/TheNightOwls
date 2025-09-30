@@ -10,7 +10,7 @@ public interface ICustomerRepository
 {
     Task<CustomerModel?> GetByIdAsync(int id);
     Task<IEnumerable<CustomerModel>> GetAllAsync();
-    Task<CustomerModel?> GetByUsername(string username);
+    Task<CustomerModel?> GetByUsernameAsync(string username);
 
     
 }
