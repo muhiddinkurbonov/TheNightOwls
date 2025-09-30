@@ -39,11 +39,23 @@ public class CustomerRepository : ICustomerRepository
     }
 
     // TODO: update customer
-    //public async Task<CustomerModel> UpdateAsync(CustomerModel customer)
-    //{
+    public async Task<CustomerModel?> UpdateCustomerAsync(CustomerModel customer)
+    {
+        var existingCustomer = await _db.customerTable.FindAsync(customer.CustomerId);
         
-        //_db.customerTable.Update(customer);
-        //await _db.SaveChangesAsync();
-    //}
+        if (existingCustomer == null)
+        {
+            return null;
+        }
+
+        // Update the properties of the existing customer
+        existingCustomer.Username = customer.Username;
+        existingCustomer.Name = customer.Name;
+        existingCustomer.ContactInfo = customer.ContactInfo;
+
+        await _db.SaveChangesAsync();
+        return existingCustomer;
+        
+    }
 
 }
