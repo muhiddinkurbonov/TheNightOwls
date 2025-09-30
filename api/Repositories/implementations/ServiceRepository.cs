@@ -1,18 +1,29 @@
 
 // TODO: G3
 
+using Fadebook.DB;
 using Fadebook.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fadebook.Repositories;
 
 public class ServiceRepository: IServiceRepository
 {
-    public async Task<ServiceModel?> GetByIdAsync(ServiceModel service)
+    private readonly NightOwlsDbContext _NightOwlsDbContext;
+
+    public ServiceRepository(NightOwlsDbContext nightOwlsDbContext)
     {
-        throw new NotImplementedException();
+        _NightOwlsDbContext = nightOwlsDbContext;
+    }
+
+
+    public async Task<ServiceModel?> GetByIdAsync(int serviceId)
+    {
+        return await _NightOwlsDbContext.serviceTable
+            .FindAsync(serviceId);
     }
     public async Task<IEnumerable<ServiceModel>> GetAll()
     {
-        throw new NotImplementedException();
+        return await _NightOwlsDbContext.serviceTable.ToListAsync();
     }
 }
