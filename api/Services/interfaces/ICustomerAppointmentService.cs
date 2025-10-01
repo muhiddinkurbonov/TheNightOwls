@@ -7,15 +7,10 @@ public interface ICustomerAppointmentService
 {
 
 
-   
+
 
     // requestAppointment
-    Task<AppointmentModel> RequestAppointmentAsync(
-            int customerId,
-            int barberId,
-            int serviceId,
-            string username,
-            DateTime scheduledAt);
+    Task<AppointmentModel> RequestAppointmentAsync(CustomerModel customer, AppointmentModel appointment);
 
 
 
