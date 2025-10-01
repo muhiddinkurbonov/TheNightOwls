@@ -1,5 +1,4 @@
 
-
 using Fadebook.Models;
 using Fadebook.DB;
 using Microsoft.EntityFrameworkCore;
@@ -15,12 +14,12 @@ public class BarberRepository: IBarberRepository
         _context = context;
     }
 
-    public async Task<BarberModel?> GetByIdAsync(BarberModel barber)
+    public async Task<BarberModel?> GetByIdAsync(int id)
     {
-        return await _context.barberTable.FirstOrDefaultAsync(b => b.BarberId == barber.BarberId);
+        return await _context.barberTable.FindAsync(id);
     }
 
-    public async Task<IEnumerable<BarberModel>> GetAll()
+    public async Task<IEnumerable<BarberModel>> GetAllAsync()
     {
         return await _context.barberTable.ToListAsync();
     }
@@ -32,7 +31,7 @@ public class BarberRepository: IBarberRepository
         return result.Entity;
     }
 
-    public async Task<BarberModel> UpdateAsync(BarberModel barber)
+    public async Task<BarberModel?> UpdateAsync(BarberModel barber)
     {
         // return await _context.barberTable.UpdateAsync(barber);
         // if (await _context.Barbers.FindAsync(id) is null) throw new InvalidOperationException("*Barber with ID " + id + " not found*");
@@ -63,5 +62,9 @@ public class BarberRepository: IBarberRepository
         _context.barberTable.Remove(entity);
         //await _context.SaveChangesAsync();
         return true;
+    }
+    public async Task<int> SaveChangesAsync()
+    {
+        return await _context.SaveChangesAsync();
     }
 }

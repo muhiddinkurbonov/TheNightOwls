@@ -5,9 +5,9 @@ namespace Fadebook.Repositories;
 
 public interface IBarberRepository
 {
-    Task<BarberModel?> GetByIdAsync(BarberModel barber);
-    Task<IEnumerable<BarberModel>> GetAll();
+    Task<BarberModel?> GetByIdAsync(int id);
+    Task<IEnumerable<BarberModel>> GetAllAsync();
     Task <BarberModel> AddAsync(BarberModel barber);
-    Task <BarberModel> UpdateAsync(BarberModel barber);
+    Task <BarberModel?> UpdateAsync(BarberModel barber);
     Task <bool> DeleteByIdAsync(int id);
 }
