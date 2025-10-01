@@ -2,31 +2,28 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Fadebook.DB;
 using Fadebook.Models;
 using Fadebook.Repositories;
 using FluentAssertions;
+using Fadebook.Api.Tests.TestUtilities;
 
 namespace Api.Tests.Repositories;
 
-public class BarberRepositoryTests
+public class BarberRepositoryTests: RepositoryTestBase
 {
-    private static NightOwlsDbContext CreateDbContext()
+   private readonly BarberRepository _repo;
+
+    public BarberRepositoryTests()
     {
-        var options = new DbContextOptionsBuilder<NightOwlsDbContext>()
-            .UseInMemoryDatabase(databaseName: $"NightOwlsTestDb_{Guid.NewGuid()}")
-            .Options;
-        return new NightOwlsDbContext(options);
+        _repo = new BarberRepository(_context);
     }
 
     [Fact]
     public async Task GetByIdAsync_WhenBarberExists_ShouldReturnBarber()
     {
         // Arrange
-        await using var db = CreateDbContext();
-        var repo = new BarberRepository(db);
         var barber = new BarberModel
         {
             Username = "john_doe",
@@ -34,16 +31,16 @@ public class BarberRepositoryTests
             Specialty = "Fades",
             ContactInfo = "john@example.com"
         };
-        var added = await repo.AddAsync(barber);
-        await db.SaveChangesAsync();
+        _context.barberTable.Add(barber);
+        await _context.SaveChangesAsync();
 
         // Act
         // Repository does not call SaveChanges; test calls it to persist
-        var found = await repo.GetByIdAsync(new BarberModel { BarberId = added.BarberId });
+        var found = await _repo.GetByIdAsync(new BarberModel { BarberId = barber.BarberId });
 
         // Assert
         found.Should().NotBeNull();
-        found.BarberId.Should().Be(added.BarberId);
+        found.BarberId.Should().Be(barber.BarberId);
         found.Username.Should().Be("john_doe");
     }
 
@@ -51,8 +48,6 @@ public class BarberRepositoryTests
     public async Task GetByIdAsync_WhenBarberDoesNotExist_ShouldReturnNull()
     {
         // Arrange
-        await using var db = CreateDbContext();
-        var repo = new BarberRepository(db);
         var barber = new BarberModel
         {
             Username = "john_doe",
@@ -60,12 +55,12 @@ public class BarberRepositoryTests
             Specialty = "Fades",
             ContactInfo = "john@example.com"
         };
-        var added = await repo.AddAsync(barber);
-        await db.SaveChangesAsync();
+        _context.barberTable.Add(barber);
+        await _context.SaveChangesAsync();
 
         // Act
         // Repository does not call SaveChanges; test calls it to persist
-        var found = await repo.GetByIdAsync(new BarberModel { BarberId = added.BarberId + 1 });
+        var found = await _repo.GetByIdAsync(new BarberModel { BarberId = barber.BarberId + 1 });
 
         // Assert
         found.Should().BeNull();
