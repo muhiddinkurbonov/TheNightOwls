@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fadebook.Repositories;
 
-public class BarberServiceRespoitory : IBarberServiceRespoitory
+public class BarberServiceRepository : IBarberServiceRepository
 {
     private readonly NightOwlsDbContext _nightOwlsDbContext;
 
-    public BarberServiceRespoitory(NightOwlsDbContext nightOwlsDbContext)
+    public BarberServiceRepository(NightOwlsDbContext nightOwlsDbContext)
     {
         _nightOwlsDbContext = nightOwlsDbContext;
     }
