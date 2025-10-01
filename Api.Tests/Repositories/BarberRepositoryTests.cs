@@ -37,7 +37,6 @@ public class BarberRepositoryTests: RepositoryTestBase
         await _context.SaveChangesAsync();
 
         // Act
-        // Repository does not call SaveChanges; test calls it to persist
         var found = await _repo.GetByIdAsync(testId);
 
         // Assert
@@ -63,7 +62,6 @@ public class BarberRepositoryTests: RepositoryTestBase
         await _context.SaveChangesAsync();
 
         // Act
-        // Repository does not call SaveChanges; test calls it to persist
         var found = await _repo.GetByIdAsync(testId + 1);
 
         // Assert
@@ -87,7 +85,6 @@ public class BarberRepositoryTests: RepositoryTestBase
         await _context.SaveChangesAsync();
 
         // Act
-        // Repository does not call SaveChanges; test calls it to persist
         var found = await _repo.GetAllAsync();
 
         // Assert
@@ -122,7 +119,6 @@ public class BarberRepositoryTests: RepositoryTestBase
     await _context.SaveChangesAsync();
 
     // Act
-    // Repository does not call SaveChanges; test calls it to persist
     var found = await _repo.GetAllAsync();
 
     // Assert
@@ -158,7 +154,6 @@ public class BarberRepositoryTests: RepositoryTestBase
         };
 
         // Act
-        // Repository does not call SaveChanges; test calls it to persist
         var found = await _repo.UpdateAsync(updatedBarber);
 
         // Assert
@@ -194,7 +189,6 @@ public class BarberRepositoryTests: RepositoryTestBase
         };
 
         // Act
-        // Repository does not call SaveChanges; test calls it to persist
         var found = await _repo.UpdateAsync(updatedBarber);
 
         // Assert
