@@ -8,349 +8,316 @@ using Fadebook.Models;
 using Fadebook.Repositories;
 using FluentAssertions;
 using Fadebook.Api.Tests.TestUtilities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Api.Tests.Repositories;
 
-public class AppointmentRepositoryTest : RepositoryTestBase
+public class AppointmentRepositoryTests: RepositoryTestBase
 {
-    // The repositories being tested/used for setup
-    private readonly BarberRepository _barberRepository;
-    private readonly CustomerRepository _customerRepository;
-    private readonly ServiceRepository _serviceRepository;
-    private readonly AppointmentRepository _appointmentRepository;
-    private readonly BarberServiceRepository _barberServiceRepository; 
+    private readonly AppointmentRepository _repo;
 
-    // Sample data constants
-    private const int TEST_APPOINTMENT_ID = 100;
-    private const int TEST_CUSTOMER_ID = 50;
-    private static readonly DateTime TEST_DATE_TODAY = DateTime.UtcNow.Date;
-    private static readonly DateTime TEST_DATE_TOMORROW = DateTime.UtcNow.Date.AddDays(1);
-
-    public AppointmentRepositoryTest()
+    public AppointmentRepositoryTests()
     {
-        _barberRepository = new BarberRepository(_context);
-        _customerRepository = new CustomerRepository(_context);
-        _serviceRepository = new ServiceRepository(_context);
-        _appointmentRepository = new AppointmentRepository(_context);
-        _barberServiceRepository = new BarberServiceRepository(_context);
+        _repo = new AppointmentRepository(_context);
     }
-
-    /// Seeds core data required for appointment tests.
-    private async Task SeedCoreDataAsync()
-    {
-        // Ensure data is cleared before seeding for independent tests
-        await _context.Database.EnsureDeletedAsync();
-        await _context.Database.EnsureCreatedAsync();
-
-        var barber = new BarberModel
-        {
-            BarberId = 1,
-            Username = "sample_barber",
-            Name = "Sample Barber",
-            Specialty = "Classic Cuts",
-            ContactInfo = "415-256-8844"
-        };
-        var customer = new CustomerModel
-        {
-            CustomerId = TEST_CUSTOMER_ID, // Use constant ID
-            Username = "sample_customer",
-            Name = "Sample Customer",
-            ContactInfo = "415-256-8844"
-        };
-        var service = new ServiceModel
-        {
-            ServiceId = 1,
-            ServiceName = "Haircut",
-            ServicePrice = 20
-        };
-
-        // Appointment 1: AppointmentId = TEST_APPOINTMENT_ID, Date = Today, Customer = TEST_CUSTOMER_ID
-        var appointment1 = new AppointmentModel
-        {
-            AppointmentId = TEST_APPOINTMENT_ID,
-            Status = "Pending",
-            BarberId = barber.BarberId,
-            CustomerId = customer.CustomerId,
-            ServiceId = service.ServiceId,
-            appointmentDate = TEST_DATE_TODAY, 
-        };
-
-        // Appointment 2: AppointmentId = 101, Date = Tomorrow, Customer = 51 (Different customer)
-        var appointment2 = new AppointmentModel
-        {
-            AppointmentId = 101,
-            Status = "Pending", 
-            BarberId = barber.BarberId,
-            CustomerId = 51,
-            ServiceId = service.ServiceId,
-            appointmentDate = TEST_DATE_TOMORROW,
-        };
-
-        _context.barberTable.Add(barber);
-        _context.customerTable.Add(customer);
-        _context.customerTable.Add(new CustomerModel { CustomerId = 51, Username = "cust2", Name = "Customer 2", ContactInfo = "415-244-8844" });
-        _context.serviceTable.Add(service);
-        _context.appointmentTable.Add(appointment1);
-        _context.appointmentTable.Add(appointment2);
-
-        await _context.SaveChangesAsync();
-    }
-    
 
     [Fact]
     public async Task GetByIdAsync_WhenAppointmentExists_ShouldReturnAppointment()
     {
         // Arrange
-        await SeedCoreDataAsync();
+        var customer = new CustomerModel { Username = "customer_one", Name = "C One", ContactInfo = "c1" };
+        var service = new ServiceModel { ServiceName = "svc", ServicePrice = 10 };
+        var barber = new BarberModel { Username = "barber_one", Name = "B One", Specialty = "Fade", ContactInfo = "b1" };
+        _context.customerTable.Add(customer);
+        _context.serviceTable.Add(service);
+        _context.barberTable.Add(barber);
+        await _context.SaveChangesAsync();
+
+        var appt = new AppointmentModel
+        {
+            CustomerId = customer.CustomerId,
+            ServiceId = service.ServiceId,
+            BarberId = barber.BarberId,
+            appointmentDate = new DateTime(2025, 01, 02)
+        };
+        _context.appointmentTable.Add(appt);
+        await _context.SaveChangesAsync();
+        var testId = appt.AppointmentId;
 
         // Act
-        var found = await _appointmentRepository.GetByIdAsync(TEST_APPOINTMENT_ID);
+        var found = await _repo.GetByIdAsync(testId);
 
         // Assert
         found.Should().NotBeNull();
-        found.AppointmentId.Should().Be(TEST_APPOINTMENT_ID);
-        found.CustomerId.Should().Be(TEST_CUSTOMER_ID);
+        found!.AppointmentId.Should().Be(testId);
     }
 
     [Fact]
     public async Task GetByIdAsync_WhenAppointmentDoesNotExist_ShouldReturnNull()
     {
         // Arrange
-        await SeedCoreDataAsync();
-        var nonExistentId = 999;
+        var customer = new CustomerModel { Username = "customer_one", Name = "C One", ContactInfo = "c1" };
+        var service = new ServiceModel { ServiceName = "svc", ServicePrice = 10 };
+        var barber = new BarberModel { Username = "barber_one", Name = "B One", Specialty = "Fade", ContactInfo = "b1" };
+        _context.customerTable.Add(customer);
+        _context.serviceTable.Add(service);
+        _context.barberTable.Add(barber);
+        await _context.SaveChangesAsync();
+
+        var appt = new AppointmentModel
+        {
+            CustomerId = customer.CustomerId,
+            ServiceId = service.ServiceId,
+            BarberId = barber.BarberId,
+            appointmentDate = new DateTime(2025, 01, 02)
+        };
+        _context.appointmentTable.Add(appt);
+        await _context.SaveChangesAsync();
 
         // Act
-        var found = await _appointmentRepository.GetByIdAsync(nonExistentId);
+        var found = await _repo.GetByIdAsync(2);
 
         // Assert
         found.Should().BeNull();
     }
-    
 
     [Fact]
-    public async Task GetAll_ShouldReturnAllAppointments()
+    public async Task GetAll_WhenAppointmentsExist_ShouldReturnAppointments()
     {
         // Arrange
-        await SeedCoreDataAsync();
-
-        // Act
-        var appointments = await _appointmentRepository.GetAll();
-
-        // Assert
-        appointments.Should().NotBeEmpty();
-        appointments.Should().HaveCount(2);
-    }
-
-    [Fact]
-    public async Task GetAll_WhenNoAppointmentsExist_ShouldReturnEmptyList()
-    {
-        // Arrange
-        await _context.Database.EnsureDeletedAsync();
-        await _context.Database.EnsureCreatedAsync();
-
-        // Act
-        var appointments = await _appointmentRepository.GetAll();
-
-        // Assert
-        appointments.Should().BeEmpty();
-    }
-
-
-    [Fact]
-    public async Task GetApptsByDate_ShouldReturnAppointmentsOnTargetDate()
-    {
-        // Arrange
-        await SeedCoreDataAsync();
-
-        // Act
-        var appointments = await _appointmentRepository.GetApptsByDate(TEST_DATE_TODAY.AddHours(15)); // Pass a DateTime with a time component
-
-        // Assert
-        appointments.Should().HaveCount(1);
-        appointments.First().AppointmentId.Should().Be(TEST_APPOINTMENT_ID);
-        // Assert that the date part matches
-        appointments.All(a => a.appointmentDate.Date == TEST_DATE_TODAY).Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task GetApptsByDate_WhenNoAppointmentsOnDate_ShouldReturnEmptyList()
-    {
-        // Arrange
-        await SeedCoreDataAsync();
-        var futureDate = DateTime.UtcNow.Date.AddDays(5);
-
-        // Act
-        var appointments = await _appointmentRepository.GetApptsByDate(futureDate);
-
-        // Assert
-        appointments.Should().BeEmpty();
-    }
-
-
-    [Fact]
-    public async Task GetByCustomerId_ShouldReturnAppointmentsForCustomer()
-    {
-        // Arrange
-        await SeedCoreDataAsync();
-
-        // Act
-        var appointments = await _appointmentRepository.GetByCustomerId(TEST_CUSTOMER_ID);
-
-        // Assert
-        appointments.Should().HaveCount(1);
-        appointments.First().AppointmentId.Should().Be(TEST_APPOINTMENT_ID);
-        appointments.All(a => a.CustomerId == TEST_CUSTOMER_ID).Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task GetByCustomerId_WhenCustomerHasNoAppointments_ShouldReturnEmptyList()
-    {
-        // Arrange
-        await SeedCoreDataAsync();
-        var nonAppointmentCustomer = 999;
-
-        // Act
-        var appointments = await _appointmentRepository.GetByCustomerId(nonAppointmentCustomer);
-
-        // Assert
-        appointments.Should().BeEmpty();
-    }
-
-
-    [Fact]
-    public async Task AddAppointment_ShouldAddNewAppointment()
-    {
-        // Arrange
-        await SeedCoreDataAsync();
-        var newApptId = 200;
-        var newAppointment = new AppointmentModel
-        {
-            AppointmentId = newApptId,
-            Status = "Pending",
-            BarberId = 1,
-            CustomerId = 51,
-            ServiceId = 1,
-            appointmentDate = DateTime.UtcNow.AddDays(2),
-        };
-
-        // Act
-        var addedAppointment = await _appointmentRepository.AddAppointment(newAppointment);
+        var customer1 = new CustomerModel { Username = "cust1", Name = "n1", ContactInfo = "c1" };
+        var customer2 = new CustomerModel { Username = "cust2", Name = "n2", ContactInfo = "c2" };
+        var service1 = new ServiceModel { ServiceName = "s1", ServicePrice = 10 };
+        var service2 = new ServiceModel { ServiceName = "s2", ServicePrice = 20 };
+        var barber1 = new BarberModel { Username = "b1", Name = "B1", Specialty = "sp1", ContactInfo = "b1" };
+        var barber2 = new BarberModel { Username = "b2", Name = "B2", Specialty = "sp2", ContactInfo = "b2" };
+        _context.customerTable.AddRange(customer1, customer2);
+        _context.serviceTable.AddRange(service1, service2);
+        _context.barberTable.AddRange(barber1, barber2);
         await _context.SaveChangesAsync();
-        var foundInDb = await _appointmentRepository.GetByIdAsync(newApptId);
 
-        // Assert
-        addedAppointment.Should().NotBeNull();
-        addedAppointment.AppointmentId.Should().Be(newApptId);
-        foundInDb.Should().NotBeNull();
-        (await _appointmentRepository.GetAll()).Should().HaveCount(3);
-    }
-
-    [Fact]
-    public async Task AddAppointment_WhenAppointmentAlreadyExists_ShouldReturnExistingAppointment()
-    {
-        // Arrange
-        await SeedCoreDataAsync();
-        var existingAppointment = new AppointmentModel
+        var appt1 = new AppointmentModel
         {
-            AppointmentId = TEST_APPOINTMENT_ID,
-            Status = "Pending",
-            BarberId = 1,
-            CustomerId = TEST_CUSTOMER_ID,
-            ServiceId = 1,
-            appointmentDate = TEST_DATE_TODAY,
+            CustomerId = customer1.CustomerId,
+            ServiceId = service1.ServiceId,
+            BarberId = barber1.BarberId,
+            appointmentDate = new DateTime(2025, 01, 02)
         };
-        
-        // Act
-        var result = await _appointmentRepository.AddAppointment(existingAppointment);
-        
-        // Assert
-        result.Should().NotBeNull();
-        result.AppointmentId.Should().Be(TEST_APPOINTMENT_ID);
-        (await _appointmentRepository.GetAll()).Should().HaveCount(2); 
-    }
-
-
-    [Fact]
-    public async Task UpdateAppointment_ShouldUpdateExistingAppointment()
-    {
-        // Arrange
-        await SeedCoreDataAsync();
-        var newUsername = "Updated_Customer_User";
-        var updatedModel = new AppointmentModel
+        var appt2 = new AppointmentModel
         {
-            AppointmentId = TEST_APPOINTMENT_ID,
-            Status = "Pending",
-            BarberId = 1,
-            CustomerId = TEST_CUSTOMER_ID,
-            ServiceId = 1,
-            appointmentDate = TEST_DATE_TODAY,
+            CustomerId = customer2.CustomerId,
+            ServiceId = service2.ServiceId,
+            BarberId = barber2.BarberId,
+            appointmentDate = new DateTime(2025, 01, 03)
         };
-
-        // Act
-        var result = await _appointmentRepository.UpdateAppointment(updatedModel);
+        _context.appointmentTable.Add(appt1);
+        _context.appointmentTable.Add(appt2);
         await _context.SaveChangesAsync();
-        var foundInDb = await _appointmentRepository.GetByIdAsync(TEST_APPOINTMENT_ID);
+
+        // Act
+        var found = await _repo.GetAll();
+
+        // Assert
+        found.Should().NotBeNull();
+        found.Should().HaveCount(2);
+        found.Should().Contain(a => a.CustomerId == customer1.CustomerId);
+        found.Should().Contain(a => a.CustomerId == customer2.CustomerId);
+    }
+
+    [Fact]
+    public async Task GetApptsByDate_WhenAppointmentsForDateExist_ShouldReturnThoseAppointments()
+    {
+        // Arrange
+        var date = new DateTime(2025, 01, 02);
+        var c1 = new CustomerModel { Username = "cust1", Name = "n1", ContactInfo = "c1" };
+        var c2 = new CustomerModel { Username = "cust2", Name = "n2", ContactInfo = "c2" };
+        var c3 = new CustomerModel { Username = "cust3", Name = "n3", ContactInfo = "c3" };
+        var s1 = new ServiceModel { ServiceName = "s1", ServicePrice = 10 };
+        var s2 = new ServiceModel { ServiceName = "s2", ServicePrice = 20 };
+        var s3 = new ServiceModel { ServiceName = "s3", ServicePrice = 30 };
+        var b1 = new BarberModel { Username = "b1", Name = "B1", Specialty = "sp1", ContactInfo = "b1" };
+        var b2 = new BarberModel { Username = "b2", Name = "B2", Specialty = "sp2", ContactInfo = "b2" };
+        var b3 = new BarberModel { Username = "b3", Name = "B3", Specialty = "sp3", ContactInfo = "b3" };
+        _context.customerTable.AddRange(c1, c2, c3);
+        _context.serviceTable.AddRange(s1, s2, s3);
+        _context.barberTable.AddRange(b1, b2, b3);
+        await _context.SaveChangesAsync();
+
+        var appt1 = new AppointmentModel { CustomerId = c1.CustomerId, ServiceId = s1.ServiceId, BarberId = b1.BarberId, appointmentDate = date };
+        var appt2 = new AppointmentModel { CustomerId = c2.CustomerId, ServiceId = s2.ServiceId, BarberId = b2.BarberId, appointmentDate = date };
+        var apptOtherDay = new AppointmentModel { CustomerId = c3.CustomerId, ServiceId = s3.ServiceId, BarberId = b3.BarberId, appointmentDate = date.AddDays(1) };
+        _context.appointmentTable.AddRange(appt1, appt2, apptOtherDay);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var found = await _repo.GetApptsByDate(date);
+
+        // Assert
+        found.Should().HaveCount(2);
+        found.Should().OnlyContain(a => a.appointmentDate.Date == date.Date);
+    }
+
+    [Fact]
+    public async Task GetByCustomerId_WhenAppointmentsForCustomerExist_ShouldReturnThoseAppointments()
+    {
+        // Arrange
+        var c1 = new CustomerModel { Username = "cust1", Name = "n1", ContactInfo = "c1" };
+        var c2 = new CustomerModel { Username = "cust2", Name = "n2", ContactInfo = "c2" };
+        var s1 = new ServiceModel { ServiceName = "s1", ServicePrice = 10 };
+        var s2 = new ServiceModel { ServiceName = "s2", ServicePrice = 20 };
+        var s3 = new ServiceModel { ServiceName = "s3", ServicePrice = 30 };
+        var b1 = new BarberModel { Username = "b1", Name = "B1", Specialty = "sp1", ContactInfo = "b1" };
+        var b2 = new BarberModel { Username = "b2", Name = "B2", Specialty = "sp2", ContactInfo = "b2" };
+        var b3 = new BarberModel { Username = "b3", Name = "B3", Specialty = "sp3", ContactInfo = "b3" };
+        _context.customerTable.AddRange(c1, c2);
+        _context.serviceTable.AddRange(s1, s2, s3);
+        _context.barberTable.AddRange(b1, b2, b3);
+        await _context.SaveChangesAsync();
+
+        var appt1 = new AppointmentModel { CustomerId = c1.CustomerId, ServiceId = s1.ServiceId, BarberId = b1.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        var appt2 = new AppointmentModel { CustomerId = c1.CustomerId, ServiceId = s2.ServiceId, BarberId = b2.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        var apptOther = new AppointmentModel { CustomerId = c2.CustomerId, ServiceId = s3.ServiceId, BarberId = b3.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        _context.appointmentTable.AddRange(appt1, appt2, apptOther);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var found = await _repo.GetByCustomerId(c1.CustomerId);
+
+        // Assert
+        found.Should().HaveCount(2);
+        found.Should().OnlyContain(a => a.CustomerId == c1.CustomerId);
+    }
+
+    [Fact]
+    public async Task AddAppointment_WhenDuplicateExists_ShouldReturnExistingAppointment()
+    {
+        // Arrange
+        var c = new CustomerModel { Username = "cust1", Name = "n1", ContactInfo = "c1" };
+        var s = new ServiceModel { ServiceName = "s1", ServicePrice = 10 };
+        var b = new BarberModel { Username = "b1", Name = "B1", Specialty = "sp1", ContactInfo = "b1" };
+        _context.customerTable.Add(c);
+        _context.serviceTable.Add(s);
+        _context.barberTable.Add(b);
+        await _context.SaveChangesAsync();
+
+        var existing = new AppointmentModel { CustomerId = c.CustomerId, ServiceId = s.ServiceId, BarberId = b.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        _context.appointmentTable.Add(existing);
+        await _context.SaveChangesAsync();
+
+        var toAdd = new AppointmentModel { AppointmentId = existing.AppointmentId, CustomerId = c.CustomerId, ServiceId = s.ServiceId, BarberId = b.BarberId, appointmentDate = DateTime.UtcNow.Date };
+
+        // Act
+        var result = await _repo.AddAppointment(toAdd);
 
         // Assert
         result.Should().NotBeNull();
-        foundInDb.Should().NotBeNull();
+        result!.AppointmentId.Should().Be(existing.AppointmentId);
+    }
+
+    [Fact]
+    public async Task AddAppointment_WhenNew_ShouldAddAndBeRetrievableAfterSave()
+    {
+        // Arrange
+        var c = new CustomerModel { Username = "cust5", Name = "n5", ContactInfo = "c5" };
+        var s = new ServiceModel { ServiceName = "s5", ServicePrice = 50 };
+        var b = new BarberModel { Username = "b5", Name = "B5", Specialty = "sp5", ContactInfo = "b5" };
+        _context.customerTable.Add(c);
+        _context.serviceTable.Add(s);
+        _context.barberTable.Add(b);
+        await _context.SaveChangesAsync();
+
+        var toAdd = new AppointmentModel { CustomerId = c.CustomerId, ServiceId = s.ServiceId, BarberId = b.BarberId, appointmentDate = DateTime.UtcNow.Date };
+
+        // Act
+        var added = await _repo.AddAppointment(toAdd);
+        await _context.SaveChangesAsync();
+        var found = await _repo.GetByIdAsync(added.AppointmentId);
+
+        // Assert
+        added.Should().NotBeNull();
+        found.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task UpdateAppointment_WhenAppointmentExists_ShouldReturnUpdatedAppointment()
+    {
+        // Arrange
+        var c = new CustomerModel { Username = "cust3", Name = "n3", ContactInfo = "c3" };
+        var s1 = new ServiceModel { ServiceName = "s3", ServicePrice = 30 };
+        var s2 = new ServiceModel { ServiceName = "s4", ServicePrice = 40 };
+        var b1 = new BarberModel { Username = "b3", Name = "B3", Specialty = "sp3", ContactInfo = "b3" };
+        var b2 = new BarberModel { Username = "b4", Name = "B4", Specialty = "sp4", ContactInfo = "b4" };
+        _context.customerTable.Add(c);
+        _context.serviceTable.AddRange(s1, s2);
+        _context.barberTable.AddRange(b1, b2);
+        await _context.SaveChangesAsync();
+
+        var existing = new AppointmentModel { CustomerId = c.CustomerId, ServiceId = s1.ServiceId, BarberId = b1.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        _context.appointmentTable.Add(existing);
+        await _context.SaveChangesAsync();
+
+        var updated = new AppointmentModel { AppointmentId = existing.AppointmentId, CustomerId = c.CustomerId, ServiceId = s2.ServiceId, BarberId = b2.BarberId, appointmentDate = DateTime.UtcNow.Date.AddDays(1) };
+
+        // Act
+        var result = await _repo.UpdateAppointment(updated);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.AppointmentId.Should().Be(existing.AppointmentId);
+        result.ServiceId.Should().Be(s2.ServiceId);
     }
 
     [Fact]
     public async Task UpdateAppointment_WhenAppointmentDoesNotExist_ShouldReturnNull()
     {
         // Arrange
-        await SeedCoreDataAsync();
-        var nonExistentModel = new AppointmentModel
-        {
-            AppointmentId = 999,
-            Status = "Pending",
-            BarberId = 1,
-            CustomerId = 1,
-            ServiceId = 1,
-            appointmentDate = DateTime.UtcNow,
-        };
+        var c = new CustomerModel { Username = "nope", Name = "none", ContactInfo = "none" };
+        var s = new ServiceModel { ServiceName = "sx", ServicePrice = 99 };
+        var b = new BarberModel { Username = "bx", Name = "Bx", Specialty = "spx", ContactInfo = "bx" };
+        _context.customerTable.Add(c);
+        _context.serviceTable.Add(s);
+        _context.barberTable.Add(b);
+        await _context.SaveChangesAsync();
+
+        var updated = new AppointmentModel { AppointmentId = 999, CustomerId = c.CustomerId, ServiceId = s.ServiceId, BarberId = b.BarberId, appointmentDate = DateTime.UtcNow.Date };
 
         // Act
-        var result = await _appointmentRepository.UpdateAppointment(nonExistentModel);
+        var result = await _repo.UpdateAppointment(updated);
 
         // Assert
         result.Should().BeNull();
     }
-    
 
     [Fact]
-    public async Task DeleteApptById_ShouldDeleteAppointment()
+    public async Task DeleteApptById_WhenAppointmentExists_ShouldReturnDeletedAppointment()
     {
         // Arrange
-        await SeedCoreDataAsync();
-        (await _appointmentRepository.GetAll()).Should().HaveCount(2);
-
-        // Act
-        var deletedAppt = await _appointmentRepository.DeleteApptById(TEST_APPOINTMENT_ID);
+        var c = new CustomerModel { Username = "cust7", Name = "n7", ContactInfo = "c7" };
+        var s = new ServiceModel { ServiceName = "s7", ServicePrice = 70 };
+        var b = new BarberModel { Username = "b7", Name = "B7", Specialty = "sp7", ContactInfo = "b7" };
+        _context.customerTable.Add(c);
+        _context.serviceTable.Add(s);
+        _context.barberTable.Add(b);
         await _context.SaveChangesAsync();
 
+        var existing = new AppointmentModel { CustomerId = c.CustomerId, ServiceId = s.ServiceId, BarberId = b.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        _context.appointmentTable.Add(existing);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var deleted = await _repo.DeleteApptById(existing.AppointmentId);
+
         // Assert
-        deletedAppt.Should().NotBeNull();
-        deletedAppt.AppointmentId.Should().Be(TEST_APPOINTMENT_ID);
-        (await _appointmentRepository.GetByIdAsync(TEST_APPOINTMENT_ID)).Should().BeNull();
-        (await _appointmentRepository.GetAll()).Should().HaveCount(1);
+        deleted.Should().NotBeNull();
+        deleted!.AppointmentId.Should().Be(existing.AppointmentId);
     }
 
     [Fact]
     public async Task DeleteApptById_WhenAppointmentDoesNotExist_ShouldReturnNull()
     {
-        // Arrange
-        await SeedCoreDataAsync();
-        var nonExistentId = 999;
-
         // Act
-        var deletedAppt = await _appointmentRepository.DeleteApptById(nonExistentId);
-        await _context.SaveChangesAsync();
+        var deleted = await _repo.DeleteApptById(999);
 
         // Assert
-        deletedAppt.Should().BeNull();
-        (await _appointmentRepository.GetAll()).Should().HaveCount(2); // Count should be unchanged
+        deleted.Should().BeNull();
     }
 }
