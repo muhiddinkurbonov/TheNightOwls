@@ -1,15 +1,16 @@
 
+
 using Fadebook.DB;
 using Fadebook.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fadebook.Repositories;
 
-public class BarberServiceRespoitory : IBarberServiceRespoitory
+public class BarberServiceRepository : IBarberServiceRepository
 {
     private readonly NightOwlsDbContext _nightOwlsDbContext;
 
-    public BarberServiceRespoitory(NightOwlsDbContext nightOwlsDbContext)
+    public BarberServiceRepository(NightOwlsDbContext nightOwlsDbContext)
     {
         _nightOwlsDbContext = nightOwlsDbContext;
     }
@@ -65,5 +66,9 @@ public class BarberServiceRespoitory : IBarberServiceRespoitory
         if (foundBarberService == null) return null; // throw new NotFoundException($"There is no BarberService with barberId:{barberId}/serviceId{serviceId}");
         _nightOwlsDbContext.barberServiceTable.Remove(foundBarberService);
         return foundBarberService;
+    }
+    public async Task<int> SaveChangesAsync()
+    {
+        return await _nightOwlsDbContext.SaveChangesAsync();
     }
 }

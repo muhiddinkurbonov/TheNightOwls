@@ -31,17 +31,18 @@ public class CustomerRepository : ICustomerRepository
         return await _db.customerTable.ToListAsync();
     }
 
+    // TODO: Add Customer
+
     //find customer by username
     public async Task<CustomerModel?> GetByUsernameAsync(string username)
     {
         return await _db.customerTable.FirstAsync(c => c.Username == username);
     }
 
-    // TODO: update customer
     public async Task<CustomerModel?> UpdateCustomerAsync(CustomerModel customer)
     {
         var existingCustomer = await _db.customerTable.FindAsync(customer.CustomerId);
-        
+
         if (existingCustomer == null)
         {
             return null;
@@ -51,18 +52,19 @@ public class CustomerRepository : ICustomerRepository
         existingCustomer.Username = customer.Username;
         existingCustomer.Name = customer.Name;
         existingCustomer.ContactInfo = customer.ContactInfo;
-
-        await _db.SaveChangesAsync();
+        _db.customerTable.Update(existingCustomer);
+        // await _db.SaveChangesAsync();
         return existingCustomer;
-        
+
     }
-    public async Task<CustomerModel> UpdateAsync(CustomerModel customerModel)
+
+    public async Task<CustomerModel> AddCustomerAsync(CustomerModel customer)
     {
-        var foundCustomerModel = await GetByIdAsync(customerModel.CustomerId);
-        if (foundCustomerModel is null) return null;
-        customerModel.CustomerId = foundCustomerModel.CustomerId;
-        _db.customerTable.Update(customerModel);
-        return customerModel;
+        var foundCustomer = await GetByUsernameAsync(customer.Username);
+        // TODO: Throw exception for adding a duplicate
+        if (foundCustomer != null) return foundCustomer;
+        await _db.customerTable.AddAsync(customer);
+        await _db.SaveChangesAsync();
+        return customer;
     }
-    
 }

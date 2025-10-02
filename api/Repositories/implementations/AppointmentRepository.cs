@@ -39,6 +39,7 @@ public class AppointmentRepository : IAppointmentRepository
         if (foundAppointment != null) return foundAppointment;
         
         await _nightOwlsDbContext.appointmentTable.AddAsync(appointmentModel);
+        await _nightOwlsDbContext.SaveChangesAsync();
         return appointmentModel;
     }
 
@@ -47,8 +48,12 @@ public class AppointmentRepository : IAppointmentRepository
         var foundAppointmentModel = await this.GetByIdAsync(appointmentModel.AppointmentId);
         // TODO: Throw exception
         if (foundAppointmentModel is null) return null;
-        appointmentModel.AppointmentId = foundAppointmentModel.AppointmentId;
-        _nightOwlsDbContext.appointmentTable.Update(appointmentModel);
+        foundAppointmentModel.BarberId = appointmentModel.BarberId;
+        foundAppointmentModel.CustomerId = appointmentModel.CustomerId;
+        foundAppointmentModel.ServiceId = appointmentModel.ServiceId;
+        foundAppointmentModel.appointmentDate = appointmentModel.appointmentDate;
+        _nightOwlsDbContext.appointmentTable.Update(foundAppointmentModel);
+        await _nightOwlsDbContext.SaveChangesAsync();
         return appointmentModel;
     }
     public async Task<AppointmentModel> DeleteApptById(int appointmentId) {
@@ -57,6 +62,7 @@ public class AppointmentRepository : IAppointmentRepository
         if (appointment == null) return null;
         // throw new NotFoundException($"There is no barber service with id: {barberServiceId}");
         _nightOwlsDbContext.appointmentTable.Remove(appointment);
+        await _nightOwlsDbContext.SaveChangesAsync();
         return appointment;
     }
 }
