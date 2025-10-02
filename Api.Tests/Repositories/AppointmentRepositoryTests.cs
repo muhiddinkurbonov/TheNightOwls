@@ -53,6 +53,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
         found.Username.Should().Be("customer_one");
     }
 
+
     [Fact]
     public async Task GetByIdAsync_WhenAppointmentDoesNotExist_ShouldReturnNull()
     {
