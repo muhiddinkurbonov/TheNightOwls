@@ -4,19 +4,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using Fadebook.Models;
 using Fadebook.Repositories;
+using Fadebook.Api.Tests.TestUtilities;
 using Moq;
 using Xunit;
 
 namespace Api.Tests.Repositories
 {
-    public class CustomerRepositoryTests
+    public class CustomerRepositoryTests: RepositoryTestBase
     {
         //
-        private readonly Mock<ICustomerRepository> _mockCustomerRepository;
+        private readonly ICustomerRepository _mockCustomerRepository;
 
         public CustomerRepositoryTests()
         {
-            _mockCustomerRepository = new Mock<ICustomerRepository>();
+            _mockCustomerRepository = new CustomerRepository(_context);
         }
 
 
@@ -33,13 +34,8 @@ namespace Api.Tests.Repositories
                 ContactInfo = "555-5678"
             };
 
-
-            _mockCustomerRepository
-              .Setup(r => r.GetByIdAsync(customerId))
-                .ReturnsAsync(customer);
-
             // Act
-            var result = await _mockCustomerRepository.Object.GetByIdAsync(customerId);
+            var result = await _mockCustomerRepository.AddCustomerAsync(customer);
 
             // Assert
             Assert.NotNull(result);

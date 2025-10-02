@@ -89,7 +89,7 @@ public class AppointmentRepositoryTest : RepositoryTestBase
 
         _context.barberTable.Add(barber);
         _context.customerTable.Add(customer);
-        _context.customerTable.Add(new CustomerModel { CustomerId = 51, Username = "cust2", Name = "Customer 2", ContactInfo = "c2@ex.com" });
+        _context.customerTable.Add(new CustomerModel { CustomerId = 51, Username = "cust2", Name = "Customer 2", ContactInfo = "415-244-8844" });
         _context.serviceTable.Add(service);
         _context.appointmentTable.Add(appointment1);
         _context.appointmentTable.Add(appointment2);

@@ -64,6 +64,7 @@ public class CustomerRepository : ICustomerRepository
         // TODO: Throw exception for adding a duplicate
         if (foundCustomer != null) return foundCustomer;
         await _db.customerTable.AddAsync(customer);
+        await _db.SaveChangesAsync();
         return customer;
     }
 }
