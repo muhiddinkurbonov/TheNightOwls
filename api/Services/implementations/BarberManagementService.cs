@@ -36,4 +36,5 @@ public class BarberManagementService(BarberRepository repo) : IBarberManagementS
         await repo.SaveChangesAsync();
         return result;
     }
+    // TODO: Update a barbers available services: Add and remove linked BarberService services 
 }
