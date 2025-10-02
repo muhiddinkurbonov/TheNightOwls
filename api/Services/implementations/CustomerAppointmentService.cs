@@ -12,7 +12,7 @@ public class CustomerAppointmentService : ICustomerAppointmentService
     private readonly NightOwlsDbContext _db;
     private readonly ICustomerRepository _customerRepository;
     private readonly IServiceRepository _serviceRepository;
-    private readonly IBarberServiceRespoitory _barberServiceRepository;
+    private readonly IBarberServiceRepository _barberServiceRepository;
     private readonly IBarberRepository _barberRepository;
     private readonly IAppointmentRepository _appointmentRepository;
 
@@ -20,7 +20,7 @@ public class CustomerAppointmentService : ICustomerAppointmentService
         NightOwlsDbContext db,
         ICustomerRepository customerRepository,
         IServiceRepository serviceRepository,
-        IBarberServiceRespoitory barberServiceRepository,
+        IBarberServiceRepository barberServiceRepository,
         IBarberRepository barberRepository,
         IAppointmentRepository appointmentRepository
         )
