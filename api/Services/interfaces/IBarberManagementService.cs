@@ -8,4 +8,5 @@ public interface IBarberManagementService
     public Task<BarberModel> AddAsync(BarberModel barber);
     public Task<BarberModel?> UpdateAsync(BarberModel barber);
     public Task<bool> DeleteByIdAsync(int id);
+    public Task<bool> UpdateBarberServicesAsync(int barberId, List<int> serviceIds);
 }

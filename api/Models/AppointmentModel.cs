@@ -7,12 +7,10 @@ namespace Fadebook.Models;
 
 public class AppointmentModel
 {
+    // KEYS WILL BE PUBLIC IN DTO
     [Key]
     public int AppointmentId { get; set; }
-    [Required(ErrorMessage = "Username is required")]
-    [StringLength(100, ErrorMessage = "Username must not exceed 100 characters")]
-    public string Username { get; set; } = string.Empty;
-    public DateTime Status { get; set; } = DateTime.Now;
+    public string Status { get; set; }
 
     [Required]
     public int CustomerId { get; set; } // Foreign key

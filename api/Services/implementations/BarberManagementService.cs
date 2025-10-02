@@ -4,7 +4,7 @@ using Fadebook.Repositories;
 namespace Fadebook.Services;
 
 
-public class BarberManagementService(BarberRepository repo) : IBarberManagementService
+public class BarberManagementService(BarberRepository repo, BarberServiceRepository barberServiceRepo) : IBarberManagementService
 {
     public async Task<BarberModel?> GetByIdAsync(int id)
     {
@@ -36,5 +36,24 @@ public class BarberManagementService(BarberRepository repo) : IBarberManagementS
         await repo.SaveChangesAsync();
         return result;
     }
-    // TODO: Update a barbers available services: Add and remove linked BarberService services 
+    // Update a barber's available services
+    public async Task<bool> UpdateBarberServicesAsync(int barberId, List<int> serviceIds)
+    {
+        // Remove all current services for the barber
+        var currentLinks = await barberServiceRepo.GetBarberServiceByBarberId(barberId);
+        foreach (var link in currentLinks)
+        {
+            await barberServiceRepo.RemoveBarberServiceByBarberIdServiceId(barberId, link.ServiceId);
+        }
+
+        // Add new services
+        foreach (var serviceId in serviceIds)
+        {
+            await barberServiceRepo.AddBarberService(barberId, serviceId);
+        }
+
+        if (barberServiceRepo.SaveChangesAsync != null)
+            await barberServiceRepo.SaveChangesAsync();
+        return true;
+    }
 }

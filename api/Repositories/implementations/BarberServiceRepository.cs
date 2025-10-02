@@ -1,4 +1,5 @@
 
+
 using Fadebook.DB;
 using Fadebook.Models;
 using Microsoft.EntityFrameworkCore;
@@ -65,5 +66,9 @@ public class BarberServiceRepository : IBarberServiceRepository
         if (foundBarberService == null) return null; // throw new NotFoundException($"There is no BarberService with barberId:{barberId}/serviceId{serviceId}");
         _nightOwlsDbContext.barberServiceTable.Remove(foundBarberService);
         return foundBarberService;
+    }
+    public async Task<int> SaveChangesAsync()
+    {
+        return await _nightOwlsDbContext.SaveChangesAsync();
     }
 }

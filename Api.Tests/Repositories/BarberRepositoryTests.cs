@@ -128,7 +128,6 @@ public class BarberRepositoryTests: RepositoryTestBase
     found.Should().Contain(b => b.Username == "jane_doe" && b.Name == "Jane Doe");
     }
 
-    //updateAsync
     [Fact]
     public async Task UpdateAsync_WhenBarberExists_ShouldReturnUpdatedBarber()
     {
@@ -164,6 +163,7 @@ public class BarberRepositoryTests: RepositoryTestBase
         found.Specialty.Should().Be("Shape Ups");
         found.ContactInfo.Should().Be("tom@example.com");
     }
+
     [Fact]
     public async Task UpdateAsync_WhenBarberDoesNotExist_ShouldReturnNull()
     {
@@ -193,6 +193,52 @@ public class BarberRepositoryTests: RepositoryTestBase
 
         // Assert
         found.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteByIdAsync_WhenBarberExists_ShouldReturnTrue()
+    {
+        // Arrange
+        var testId = 1;
+        var barber = new BarberModel
+        {
+            BarberId = testId,
+            Username = "john_doe",
+            Name = "John Doe",
+            Specialty = "Fades",
+            ContactInfo = "john@example.com"
+        };
+        _context.barberTable.Add(barber);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var found = await _repo.DeleteByIdAsync(testId);
+
+        // Assert
+        found.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteByIdAsync_WhenBarberDoesNotExist_ShouldReturnFalse()
+    {
+        // Arrange
+        var testId = 1;
+        var barber = new BarberModel
+        {
+            BarberId = testId,
+            Username = "john_doe",
+            Name = "John Doe",
+            Specialty = "Fades",
+            ContactInfo = "john@example.com"
+        };
+        _context.barberTable.Add(barber);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var found = await _repo.DeleteByIdAsync(testId + 1);
+
+        // Assert
+        found.Should().BeFalse();
     }
 }
 
