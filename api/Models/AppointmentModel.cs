@@ -7,6 +7,7 @@ namespace Fadebook.Models;
 
 public class AppointmentModel
 {
+    // KEYS WILL BE PUBLIC IN DTO
     [Key]
     public int AppointmentId { get; set; }
     [Required(ErrorMessage = "Username is required")]
