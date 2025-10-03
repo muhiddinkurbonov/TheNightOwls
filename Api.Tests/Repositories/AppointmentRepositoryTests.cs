@@ -37,7 +37,8 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = customer.CustomerId,
             ServiceId = service.ServiceId,
             BarberId = barber.BarberId,
-            appointmentDate = new DateTime(2025, 01, 02)
+            appointmentDate = new DateTime(2025, 01, 02),
+            Status = "Scheduled"
         };
         _context.appointmentTable.Add(appt);
         await _context.SaveChangesAsync();
@@ -68,7 +69,8 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = customer.CustomerId,
             ServiceId = service.ServiceId,
             BarberId = barber.BarberId,
-            appointmentDate = new DateTime(2025, 01, 02)
+            appointmentDate = new DateTime(2025, 01, 02),
+            Status = "Scheduled"
         };
         _context.appointmentTable.Add(appt);
         await _context.SaveChangesAsync();
@@ -100,14 +102,16 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = customer1.CustomerId,
             ServiceId = service1.ServiceId,
             BarberId = barber1.BarberId,
-            appointmentDate = new DateTime(2025, 01, 02)
+            appointmentDate = new DateTime(2025, 01, 02),
+            Status = "Scheduled"
         };
         var appt2 = new AppointmentModel
         {
             CustomerId = customer2.CustomerId,
             ServiceId = service2.ServiceId,
             BarberId = barber2.BarberId,
-            appointmentDate = new DateTime(2025, 01, 03)
+            appointmentDate = new DateTime(2025, 01, 03),
+            Status = "Scheduled"
         };
         _context.appointmentTable.Add(appt1);
         _context.appointmentTable.Add(appt2);
@@ -142,9 +146,30 @@ public class AppointmentRepositoryTests: RepositoryTestBase
         _context.barberTable.AddRange(b1, b2, b3);
         await _context.SaveChangesAsync();
 
-        var appt1 = new AppointmentModel { CustomerId = c1.CustomerId, ServiceId = s1.ServiceId, BarberId = b1.BarberId, appointmentDate = date };
-        var appt2 = new AppointmentModel { CustomerId = c2.CustomerId, ServiceId = s2.ServiceId, BarberId = b2.BarberId, appointmentDate = date };
-        var apptOtherDay = new AppointmentModel { CustomerId = c3.CustomerId, ServiceId = s3.ServiceId, BarberId = b3.BarberId, appointmentDate = date.AddDays(1) };
+        var appt1 = new AppointmentModel
+        {
+            CustomerId = c1.CustomerId,
+            ServiceId = s1.ServiceId,
+            BarberId = b1.BarberId,
+            appointmentDate = date,
+            Status = "Scheduled"
+        };
+        var appt2 = new AppointmentModel
+        {
+            CustomerId = c2.CustomerId,
+            ServiceId = s2.ServiceId,
+            BarberId = b2.BarberId,
+            appointmentDate = date,
+            Status = "Scheduled"
+        };
+        var apptOtherDay = new AppointmentModel
+        {
+            CustomerId = c3.CustomerId,
+            ServiceId = s3.ServiceId,
+            BarberId = b3.BarberId,
+            appointmentDate = date.AddDays(1),
+            Status = "Scheduled"
+        };
         _context.appointmentTable.AddRange(appt1, appt2, apptOtherDay);
         await _context.SaveChangesAsync();
 
@@ -173,9 +198,30 @@ public class AppointmentRepositoryTests: RepositoryTestBase
         _context.barberTable.AddRange(b1, b2, b3);
         await _context.SaveChangesAsync();
 
-        var appt1 = new AppointmentModel { CustomerId = c1.CustomerId, ServiceId = s1.ServiceId, BarberId = b1.BarberId, appointmentDate = DateTime.UtcNow.Date };
-        var appt2 = new AppointmentModel { CustomerId = c1.CustomerId, ServiceId = s2.ServiceId, BarberId = b2.BarberId, appointmentDate = DateTime.UtcNow.Date };
-        var apptOther = new AppointmentModel { CustomerId = c2.CustomerId, ServiceId = s3.ServiceId, BarberId = b3.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        var appt1 = new AppointmentModel
+        {
+            CustomerId = c1.CustomerId,
+            ServiceId = s1.ServiceId,
+            BarberId = b1.BarberId,
+            appointmentDate = DateTime.UtcNow.Date,
+            Status = "Scheduled"
+        };
+        var appt2 = new AppointmentModel
+        {
+            CustomerId = c1.CustomerId,
+            ServiceId = s2.ServiceId,
+            BarberId = b2.BarberId,
+            appointmentDate = DateTime.UtcNow.Date,
+            Status = "Scheduled"
+        };
+        var apptOther = new AppointmentModel
+        {
+            CustomerId = c2.CustomerId,
+            ServiceId = s3.ServiceId,
+            BarberId = b3.BarberId,
+            appointmentDate = DateTime.UtcNow.Date,
+            Status = "Scheduled"
+        };
         _context.appointmentTable.AddRange(appt1, appt2, apptOther);
         await _context.SaveChangesAsync();
 
@@ -199,11 +245,27 @@ public class AppointmentRepositoryTests: RepositoryTestBase
         _context.barberTable.Add(b);
         await _context.SaveChangesAsync();
 
-        var existing = new AppointmentModel { CustomerId = c.CustomerId, ServiceId = s.ServiceId, BarberId = b.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        var existing = new AppointmentModel
+        {
+            CustomerId = c.CustomerId,
+            ServiceId = s.ServiceId,
+            BarberId = b.BarberId,
+            appointmentDate = DateTime.UtcNow.Date,
+            Status = "Scheduled"
+        };
         _context.appointmentTable.Add(existing);
         await _context.SaveChangesAsync();
 
-        var toAdd = new AppointmentModel { AppointmentId = existing.AppointmentId, CustomerId = c.CustomerId, ServiceId = s.ServiceId, BarberId = b.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        var toAdd = new AppointmentModel
+        {
+            AppointmentId = existing.AppointmentId,
+            CustomerId = c.CustomerId,
+            ServiceId = s.ServiceId,
+            BarberId = b.BarberId,
+            appointmentDate = DateTime.UtcNow.Date,
+            Status = "Scheduled"
+        }
+            ;
 
         // Act
         var result = await _repo.AddAppointment(toAdd);
@@ -225,7 +287,14 @@ public class AppointmentRepositoryTests: RepositoryTestBase
         _context.barberTable.Add(b);
         await _context.SaveChangesAsync();
 
-        var toAdd = new AppointmentModel { CustomerId = c.CustomerId, ServiceId = s.ServiceId, BarberId = b.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        var toAdd = new AppointmentModel
+        {
+            CustomerId = c.CustomerId,
+            ServiceId = s.ServiceId,
+            BarberId = b.BarberId,
+            appointmentDate = DateTime.UtcNow.Date,
+            Status = "Scheduled"
+        };
 
         // Act
         var added = await _repo.AddAppointment(toAdd);
@@ -251,11 +320,26 @@ public class AppointmentRepositoryTests: RepositoryTestBase
         _context.barberTable.AddRange(b1, b2);
         await _context.SaveChangesAsync();
 
-        var existing = new AppointmentModel { CustomerId = c.CustomerId, ServiceId = s1.ServiceId, BarberId = b1.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        var existing = new AppointmentModel
+        {
+            CustomerId = c.CustomerId,
+            ServiceId = s1.ServiceId,
+            BarberId = b1.BarberId,
+            appointmentDate = DateTime.UtcNow.Date,
+            Status = "Scheduled"
+        };
         _context.appointmentTable.Add(existing);
         await _context.SaveChangesAsync();
 
-        var updated = new AppointmentModel { AppointmentId = existing.AppointmentId, CustomerId = c.CustomerId, ServiceId = s2.ServiceId, BarberId = b2.BarberId, appointmentDate = DateTime.UtcNow.Date.AddDays(1) };
+        var updated = new AppointmentModel
+        {
+            AppointmentId = existing.AppointmentId,
+            CustomerId = c.CustomerId,
+            ServiceId = s2.ServiceId,
+            BarberId = b2.BarberId,
+            appointmentDate = DateTime.UtcNow.Date.AddDays(1),
+            Status = "Scheduled"
+        };
 
         // Act
         var result = await _repo.UpdateAppointment(updated);
@@ -278,7 +362,15 @@ public class AppointmentRepositoryTests: RepositoryTestBase
         _context.barberTable.Add(b);
         await _context.SaveChangesAsync();
 
-        var updated = new AppointmentModel { AppointmentId = 999, CustomerId = c.CustomerId, ServiceId = s.ServiceId, BarberId = b.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        var updated = new AppointmentModel
+        {
+            AppointmentId = 999,
+            CustomerId = c.CustomerId,
+            ServiceId = s.ServiceId,
+            BarberId = b.BarberId,
+            appointmentDate = DateTime.UtcNow.Date,
+            Status = "Scheduled"
+        };
 
         // Act
         var result = await _repo.UpdateAppointment(updated);
@@ -299,7 +391,14 @@ public class AppointmentRepositoryTests: RepositoryTestBase
         _context.barberTable.Add(b);
         await _context.SaveChangesAsync();
 
-        var existing = new AppointmentModel { CustomerId = c.CustomerId, ServiceId = s.ServiceId, BarberId = b.BarberId, appointmentDate = DateTime.UtcNow.Date };
+        var existing = new AppointmentModel
+        {
+            CustomerId = c.CustomerId,
+            ServiceId = s.ServiceId,
+            BarberId = b.BarberId,
+            appointmentDate = DateTime.UtcNow.Date,
+            Status = "Scheduled"
+        };
         _context.appointmentTable.Add(existing);
         await _context.SaveChangesAsync();
 

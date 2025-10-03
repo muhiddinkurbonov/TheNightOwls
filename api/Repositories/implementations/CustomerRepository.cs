@@ -36,7 +36,7 @@ public class CustomerRepository : ICustomerRepository
     //find customer by username
     public async Task<CustomerModel?> GetByUsernameAsync(string username)
     {
-        return await _db.customerTable.FirstAsync(c => c.Username == username);
+        return await _db.customerTable.Where(c => c.Username == username).SingleOrDefaultAsync();
     }
 
     public async Task<CustomerModel?> UpdateCustomerAsync(CustomerModel customer)
