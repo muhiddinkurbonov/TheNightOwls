@@ -63,8 +63,8 @@ public class BarberRepository: IBarberRepository
         //await _context.SaveChangesAsync();
         return true;
     }
-    public async Task<int> SaveChangesAsync()
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.SaveChangesAsync();
+        return _context.SaveChangesAsync(cancellationToken);
     }
 }

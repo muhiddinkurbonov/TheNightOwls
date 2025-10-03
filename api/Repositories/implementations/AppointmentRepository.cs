@@ -33,11 +33,12 @@ public class AppointmentRepository : IAppointmentRepository
             .Where(a => a.CustomerId == customerId)
             .ToListAsync();
     }
-    public async Task<AppointmentModel> AddAppointment(AppointmentModel appointmentModel) {
+    public async Task<AppointmentModel> AddAppointment(AppointmentModel appointmentModel)
+    {
         var foundAppointment = await this.GetByIdAsync(appointmentModel.AppointmentId);
         // TODO: Throw exception to be handled -> throw, catch and return 40# code saying resource exists
         if (foundAppointment != null) return foundAppointment;
-        
+
         await _nightOwlsDbContext.appointmentTable.AddAsync(appointmentModel);
         await _nightOwlsDbContext.SaveChangesAsync();
         return appointmentModel;
@@ -56,7 +57,8 @@ public class AppointmentRepository : IAppointmentRepository
         await _nightOwlsDbContext.SaveChangesAsync();
         return appointmentModel;
     }
-    public async Task<AppointmentModel> DeleteApptById(int appointmentId) {
+    public async Task<AppointmentModel> DeleteApptById(int appointmentId)
+    {
         // TODO: Throw exception for not found
         var appointment = await GetByIdAsync(appointmentId);
         if (appointment == null) return null;
@@ -65,5 +67,15 @@ public class AppointmentRepository : IAppointmentRepository
         await _nightOwlsDbContext.SaveChangesAsync();
         return appointment;
     }
+
+    public async Task<int> SaveChangesAsync()
+    {
+        return await _nightOwlsDbContext.SaveChangesAsync();
+    }
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return _nightOwlsDbContext.SaveChangesAsync(cancellationToken);
+    }
+
 }
 

@@ -102,6 +102,17 @@ public class CustomerAppointmentService : ICustomerAppointmentService
     {
         return await _serviceRepository.GetAll();
     }
+    //GetCustomerByIdAsync
+    public async Task<CustomerModel?> GetCustomerByIdAsync(int customerId)
+    {
+        return await _customerRepository.GetByIdAsync(customerId);
+    }
 
+    //AddCustomer
+    public async Task<CustomerModel> AddCustomerAsync(CustomerModel customer)
+    {
+        return await _customerRepository.AddCustomerAsync(customer);
+    }
+    
     
 }

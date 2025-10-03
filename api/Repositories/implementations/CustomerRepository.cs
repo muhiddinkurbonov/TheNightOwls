@@ -67,4 +67,9 @@ public class CustomerRepository : ICustomerRepository
         await _db.SaveChangesAsync();
         return customer;
     }
+
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return _db.SaveChangesAsync(cancellationToken);
+    }
 }

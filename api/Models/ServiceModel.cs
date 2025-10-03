@@ -11,7 +11,8 @@ public class ServiceModel
     public int ServiceId { get; set; }
 
     [Required]
-    public string ServiceName { get; set; }
+    [StringLength(50, ErrorMessage = "Service name must be between 1 and 50 characters.")]
+    public string ServiceName { get; set; } = "";
 
     [Required]
     [Range(0, 1000)]

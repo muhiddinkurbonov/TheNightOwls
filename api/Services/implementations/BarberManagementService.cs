@@ -4,7 +4,7 @@ using Fadebook.Repositories;
 namespace Fadebook.Services;
 
 
-public class BarberManagementService(BarberRepository repo, BarberServiceRepository barberServiceRepo) : IBarberManagementService
+public class BarberManagementService(IBarberRepository repo, IBarberServiceRepository barberServiceRepo) : IBarberManagementService
 {
     public async Task<BarberModel?> GetByIdAsync(int id)
     {

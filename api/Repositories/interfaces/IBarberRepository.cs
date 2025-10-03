@@ -3,7 +3,7 @@ using Fadebook.Models;
 
 namespace Fadebook.Repositories;
 
-public interface IBarberRepository
+public interface IBarberRepository: DbSaveChanges
 {
     Task<BarberModel?> GetByIdAsync(int id);
     Task<IEnumerable<BarberModel>> GetAllAsync();

@@ -67,8 +67,8 @@ public class BarberServiceRepository : IBarberServiceRepository
         _nightOwlsDbContext.barberServiceTable.Remove(foundBarberService);
         return foundBarberService;
     }
-    public async Task<int> SaveChangesAsync()
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return await _nightOwlsDbContext.SaveChangesAsync();
+        return _nightOwlsDbContext.SaveChangesAsync(cancellationToken);
     }
 }

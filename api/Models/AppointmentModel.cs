@@ -10,7 +10,7 @@ public class AppointmentModel
     // KEYS WILL BE PUBLIC IN DTO
     [Key]
     public int AppointmentId { get; set; }
-    public string Status { get; set; }
+    public string Status { get; set; } = "Pending";
 
     [Required]
     public int CustomerId { get; set; } // Foreign key

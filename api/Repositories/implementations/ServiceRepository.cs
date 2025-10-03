@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fadebook.Repositories;
 
-public class ServiceRepository: IServiceRepository
+public class ServiceRepository : IServiceRepository
 {
     private readonly NightOwlsDbContext _NightOwlsDbContext;
 
@@ -25,5 +25,10 @@ public class ServiceRepository: IServiceRepository
     public async Task<IEnumerable<ServiceModel>> GetAll()
     {
         return await _NightOwlsDbContext.serviceTable.ToListAsync();
+    }
+    
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return _NightOwlsDbContext.SaveChangesAsync(cancellationToken);
     }
 }
