@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Fadebook.Models;
 using Fadebook.Services;
-using Serilog;
+using AutoMapper;
+using Fadebook.DTOs;
 
 namespace Fadebook.Controllers
 {
@@ -12,12 +13,13 @@ namespace Fadebook.Controllers
     public class BarberController : ControllerBase
     {
         // Fields
-        private readonly ILogger<BarberController> _logger;
         private readonly IBarberManagementService _service;
+        private readonly IMapper _mapper;
 
-        public BarberController(IBarberManagementService service)
+        public BarberController(IBarberManagementService service, IMapper mapper)
         {
             _service = service;
+            _mapper = mapper;
         }
 
         // Methods
@@ -28,57 +30,71 @@ namespace Fadebook.Controllers
 
         // GET: api/barber
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BarberModel>>> GetAll()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<BarberDto>>> GetAll()
         {
             var result = await _service.GetAllAsync();
-            return Ok(result);
+            var dtos = _mapper.Map<IEnumerable<BarberDto>>(result);
+            return Ok(dtos);
         }
 
         // GET: api/barber/{id}
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<BarberModel>> GetById([FromRoute] int id)
+        [HttpGet("{id:int}", Name = "GetBarberById")]
+        public async Task<ActionResult<BarberDto>> GetById([FromRoute] int id)
         {
             var result = await _service.GetByIdAsync(id);
-            if (result is null) return NotFound();
-            return Ok(result);
+            if (result is null) 
+                return NotFound(new { message = $"Barber with ID {id} not found." });
+            
+            return Ok(_mapper.Map<BarberDto>(result));
         }
 
         // POST: api/barber
         [HttpPost]
-        public async Task<ActionResult<BarberModel>> Create([FromBody] BarberModel model)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        public async Task<ActionResult<BarberDto>> Create([FromBody] BarberDto dto)
         {
-            if (model is null) return BadRequest("Barber payload is required.");
+            var model = _mapper.Map<BarberModel>(dto);
             var created = await _service.AddAsync(model);
-            return Ok(created);
+            var createdDto = _mapper.Map<BarberDto>(created);
+            return CreatedAtAction("GetBarberById", new { id = created.BarberId }, createdDto);
         }
 
         // PUT: api/barber/{id}
         [HttpPut("{id:int}")]
-        public async Task<ActionResult<BarberModel>> Update([FromRoute] int id, [FromBody] BarberModel model)
+        public async Task<ActionResult<BarberDto>> Update([FromRoute] int id, [FromBody] BarberDto dto)
         {
-            if (model is null) return BadRequest("Barber payload is required.");
+            var model = _mapper.Map<BarberModel>(dto);
             model.BarberId = id;
             var updated = await _service.UpdateAsync(model);
-            if (updated is null) return NotFound();
-            return Ok(updated);
+            if (updated is null) 
+                return NotFound(new { message = $"Barber with ID {id} not found." });
+            
+            return Ok(_mapper.Map<BarberDto>(updated));
         }
 
         // DELETE: api/barber/{id}
         [HttpDelete("{id:int}")]
-        public async Task<ActionResult> Delete([FromRoute] int id)
+        public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var ok = await _service.DeleteByIdAsync(id);
-            if (!ok) return NotFound();
+            var deleted = await _service.DeleteByIdAsync(id);
+            if (!deleted) 
+                return NotFound(new { message = $"Barber with ID {id} not found." });
+            
             return NoContent();
         }
 
         // PUT: api/barber/{id}/services
         [HttpPut("{id:int}/services")]
-        public async Task<ActionResult> UpdateServices([FromRoute] int id, [FromBody] List<int> serviceIds)
+        public async Task<IActionResult> UpdateServices([FromRoute] int id, [FromBody] List<int> serviceIds)
         {
-            if (serviceIds is null) return BadRequest("serviceIds required");
-            var ok = await _service.UpdateBarberServicesAsync(id, serviceIds);
-            if (!ok) return NotFound();
+            if (serviceIds is null || !serviceIds.Any()) 
+                return BadRequest(new { message = "Service IDs are required." });
+            
+            var updated = await _service.UpdateBarberServicesAsync(id, serviceIds);
+            if (!updated) 
+                return NotFound(new { message = $"Barber with ID {id} not found." });
+            
             return NoContent();
         }
 

@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -15,19 +14,17 @@ public class AppointmentModel
     [Required]
     public int CustomerId { get; set; } // Foreign key
     [ForeignKey(nameof(CustomerId))]
-    public CustomerModel Customer { get; set; }
-
+    public CustomerModel Customer { get; set; } = null!;
 
     [Required]
     public int ServiceId { get; set; } // Foreign key
     [ForeignKey(nameof(ServiceId))]
-    public ServiceModel Service { get; set; }
+    public ServiceModel Service { get; set; } = null!;
 
     [Required]
     public int BarberId { get; set; } // Foreign key
     [ForeignKey(nameof(BarberId))]
-    public BarberModel Barber { get; set; }
+    public BarberModel Barber { get; set; } = null!;
 
     public DateTime appointmentDate { get; set; }
 }
-

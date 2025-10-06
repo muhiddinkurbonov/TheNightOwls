@@ -2,18 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Fadebook.Models;
 using Fadebook.DB;
 
-
-
-using Fadebook.Models;
-
 namespace Fadebook.Repositories;
 
 public class CustomerRepository : ICustomerRepository
 {
-
     private readonly NightOwlsDbContext _db;
-
-    //Constructor Injection
     public CustomerRepository(NightOwlsDbContext db)
     {
         _db = db;

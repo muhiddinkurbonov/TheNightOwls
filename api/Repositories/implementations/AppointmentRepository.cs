@@ -33,31 +33,57 @@ public class AppointmentRepository : IAppointmentRepository
             .Where(a => a.CustomerId == customerId)
             .ToListAsync();
     }
-    public async Task<AppointmentModel> AddAppointment(AppointmentModel appointmentModel)
+    public async Task<AppointmentModel?> AddAppointment(AppointmentModel appointmentModel)
     {
         var foundAppointment = await this.GetByIdAsync(appointmentModel.AppointmentId);
         // TODO: Throw exception to be handled -> throw, catch and return 40# code saying resource exists
         if (foundAppointment != null) return foundAppointment;
+        // Validate foreign keys exist
+        var customerExists = await _nightOwlsDbContext.customerTable
+            .AnyAsync(c => c.CustomerId == appointmentModel.CustomerId);
+        if (!customerExists) return null;
+
+        var barberExists = await _nightOwlsDbContext.barberTable
+            .AnyAsync(b => b.BarberId == appointmentModel.BarberId);
+        if (!barberExists) return null;
+
+        var serviceExists = await _nightOwlsDbContext.serviceTable
+            .AnyAsync(s => s.ServiceId == appointmentModel.ServiceId);
+        if (!serviceExists) return null;
 
         await _nightOwlsDbContext.appointmentTable.AddAsync(appointmentModel);
         await _nightOwlsDbContext.SaveChangesAsync();
         return appointmentModel;
     }
 
-    public async Task<AppointmentModel> UpdateAppointment(AppointmentModel appointmentModel)
+    public async Task<AppointmentModel?> UpdateAppointment(AppointmentModel appointmentModel)
     {
         var foundAppointmentModel = await this.GetByIdAsync(appointmentModel.AppointmentId);
-        // TODO: Throw exception
         if (foundAppointmentModel is null) return null;
+
+        // Validate foreign keys exist before updating
+        var customerExists = await _nightOwlsDbContext.customerTable
+            .AnyAsync(c => c.CustomerId == appointmentModel.CustomerId);
+        if (!customerExists) return null;
+
+        var barberExists = await _nightOwlsDbContext.barberTable
+            .AnyAsync(b => b.BarberId == appointmentModel.BarberId);
+        if (!barberExists) return null;
+
+        var serviceExists = await _nightOwlsDbContext.serviceTable
+            .AnyAsync(s => s.ServiceId == appointmentModel.ServiceId);
+        if (!serviceExists) return null;
+
         foundAppointmentModel.BarberId = appointmentModel.BarberId;
         foundAppointmentModel.CustomerId = appointmentModel.CustomerId;
         foundAppointmentModel.ServiceId = appointmentModel.ServiceId;
         foundAppointmentModel.appointmentDate = appointmentModel.appointmentDate;
+        foundAppointmentModel.Status = appointmentModel.Status;
         _nightOwlsDbContext.appointmentTable.Update(foundAppointmentModel);
         await _nightOwlsDbContext.SaveChangesAsync();
-        return appointmentModel;
+        return foundAppointmentModel;
     }
-    public async Task<AppointmentModel> DeleteApptById(int appointmentId)
+    public async Task<AppointmentModel?> DeleteApptById(int appointmentId)
     {
         // TODO: Throw exception for not found
         var appointment = await GetByIdAsync(appointmentId);

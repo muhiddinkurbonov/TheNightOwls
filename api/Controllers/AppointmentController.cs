@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Fadebook.Models;
 using Fadebook.Services;
-using Serilog;
+using AutoMapper;
+using Fadebook.DTOs;
 
 namespace Fadebook.Controllers;
 
@@ -12,15 +13,14 @@ namespace Fadebook.Controllers;
 public class AppointmentController : ControllerBase
 {
     // Fields
-    private readonly ILogger<AppointmentController> _logger;
     private readonly IAppointmentManagementService _service;
+    private readonly IMapper _mapper;
 
     // Constructor
-    public AppointmentController(ILogger<AppointmentController> logger, IAppointmentManagementService service)
+    public AppointmentController(IAppointmentManagementService service, IMapper mapper)
     {
-        Console.WriteLine("Test!");
-        _logger = logger;
         _service = service;
+        _mapper = mapper;
     }
 
     // Methods
@@ -30,49 +30,74 @@ public class AppointmentController : ControllerBase
 
     // POST: api/appointment
     [HttpPost]
-    public async Task<IActionResult> AddAppointment(AppointmentModel appointmentModel)
+    public async Task<ActionResult<AppointmentDto>> Create([FromBody] AppointmentDto appointmentDto)
     {
-        _logger.LogInformation($"Adding appointment for {appointmentModel.CustomerId} with barber - {appointmentModel.BarberId}");
-        var created = await _service.AddAppointment(appointmentModel);
-        if (created is null) return Conflict("Unable to create appointment.");
-        return Ok(created);
+        var model = _mapper.Map<AppointmentModel>(appointmentDto);
+        var created = await _service.AddAppointment(model);
+        if (created is null) 
+            return Conflict(new { message = "Unable to create appointment. Verify that Customer, Barber, and Service IDs exist." });
+        
+        var dto = _mapper.Map<AppointmentDto>(created);
+        return CreatedAtAction("GetAppointmentById", new { id = created.AppointmentId }, dto);
+    }
+
+    // GET: api/appointment/{id}
+    [HttpGet("{id:int}", Name = "GetAppointmentById")]
+    public async Task<ActionResult<AppointmentDto>> GetById([FromRoute] int id)
+    {
+        var appt = await _service.GetAppointmentById(id);
+        if (appt is null) 
+            return NotFound(new { message = $"Appointment with ID {id} not found." });
+        
+        return Ok(_mapper.Map<AppointmentDto>(appt));
     }
 
     // PUT: api/appointment/{id}
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<AppointmentModel>> Update([FromRoute] int id, [FromBody] AppointmentModel appointmentModel)
+    public async Task<ActionResult<AppointmentDto>> Update([FromRoute] int id, [FromBody] AppointmentDto appointmentDto)
     {
-        if (appointmentModel is null) return BadRequest("Appointment payload is required.");
-        appointmentModel.AppointmentId = id;
-        var updated = await _service.UpdateAppointment(appointmentModel);
-        if (updated is null) return NotFound();
-        return Ok(updated);
+        var model = _mapper.Map<AppointmentModel>(appointmentDto);
+        model.AppointmentId = id;
+        var updated = await _service.UpdateAppointment(model);
+        if (updated is null) 
+            return NotFound(new { message = $"Appointment with ID {id} not found or invalid foreign keys." });
+        
+        return Ok(_mapper.Map<AppointmentDto>(updated));
     }
 
     // GET: api/appointment/by-date?date=2025-01-01
     [HttpGet("by-date")]
-    public async Task<ActionResult<IEnumerable<AppointmentModel>>> GetByDate([FromQuery] DateTime date)
+    public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetByDate([FromQuery] DateTime date)
     {
         var appts = await _service.GetAppointmentsByDate(date);
-        return Ok(appts);
+        var dtos = _mapper.Map<IEnumerable<AppointmentDto>>(appts);
+        return Ok(dtos);
     }
 
     // GET: api/appointment/by-username/{username}
     [HttpGet("by-username/{username}")]
-    public async Task<ActionResult<IEnumerable<AppointmentModel>>> GetByUsername([FromRoute] string username)
+    public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetByUsername([FromRoute] string username)
     {
-        if (string.IsNullOrWhiteSpace(username)) return BadRequest("username is required");
+        if (string.IsNullOrWhiteSpace(username)) 
+            return BadRequest(new { message = "Username is required." });
+        
         var appts = await _service.LookupAppointmentsByUsername(username);
-        return Ok(appts);
+        if (appts == null) 
+            return NotFound(new { message = $"Customer with username '{username}' not found." });
+        
+        var dtos = _mapper.Map<IEnumerable<AppointmentDto>>(appts);
+        return Ok(dtos);
     }
 
     // DELETE: api/appointment/{id}
     [HttpDelete("{id:int}")]
-    public async Task<ActionResult<AppointmentModel>> Delete([FromRoute] int id)
+    public async Task<IActionResult> Delete([FromRoute] int id)
     {
         var result = await _service.DeleteAppointment(new AppointmentModel { AppointmentId = id });
-        if (result is null) return NotFound();
-        return Ok(result);
+        if (result is null) 
+            return NotFound(new { message = $"Appointment with ID {id} not found." });
+        
+        return NoContent();
     }
 
 }
