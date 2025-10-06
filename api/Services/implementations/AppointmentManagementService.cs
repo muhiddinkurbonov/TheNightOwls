@@ -74,7 +74,7 @@ public class AppointmentManagementService(
     {
         var foundCustomer = await _customerRepository.GetByUsernameAsync(username);
         if (foundCustomer == null)
-            throw new NoUsernameException();
+            throw new KeyNotFoundException($"Customer with the username \"{username}\" was not found");
         return await _appointmentRepository.GetByCustomerIdAsync(foundCustomer.CustomerId);
     }
 }
