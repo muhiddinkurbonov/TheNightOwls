@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace api.Migrations
 {
-    [DbContext(typeof(NightOwlsDbContext))]
+    [DbContext(typeof(FadebookDbContext))]
     [Migration("20251003193739_NewFix")]
     partial class NewFix
     {

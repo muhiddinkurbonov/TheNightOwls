@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Fadebook.Models;
 
-public class BarberServiceModel
+public class BarberServiceModel: AModel
 {
     [Key]
     public int Id { get; set; }

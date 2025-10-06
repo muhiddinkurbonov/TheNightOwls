@@ -5,66 +5,44 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fadebook.Repositories;
 
-public class BarberRepository: IBarberRepository
+public class BarberRepository(
+    FadebookDbContext _fadebookDbContext
+    ) : IBarberRepository
 {
-    private readonly NightOwlsDbContext _context;
-
-    public BarberRepository(NightOwlsDbContext context)
-    {
-        _context = context;
-    }
-
     public async Task<BarberModel?> GetByIdAsync(int id)
     {
-        return await _context.barberTable.FindAsync(id);
+        return await _fadebookDbContext.barberTable.FindAsync(id);
     }
 
     public async Task<IEnumerable<BarberModel>> GetAllAsync()
     {
-        return await _context.barberTable.ToListAsync();
+        return await _fadebookDbContext.barberTable.ToListAsync();
     }
 
     public async Task<BarberModel> AddAsync(BarberModel barber)
     {
-        var result = await _context.barberTable.AddAsync(barber);
-        //await _context.SaveChangesAsync();
+        var result = await _fadebookDbContext.barberTable.AddAsync(barber);
         return result.Entity;
     }
 
-    public async Task<BarberModel?> UpdateAsync(BarberModel barber)
+    public async Task<BarberModel> UpdateAsync(int barberId, BarberModel barberModel)
     {
-        // return await _context.barberTable.UpdateAsync(barber);
-        // if (await _context.Barbers.FindAsync(id) is null) throw new InvalidOperationException("*Barber with ID " + id + " not found*");
-        //     barber.Id = id;
 
-        //     var existing = await _context.Barbers.FindAsync(id);
-        //     _context.Entry(existing).CurrentValues.SetValues(barber);
-        //     await _context.SaveChangesAsync();
-        
-        var existing = await _context.barberTable.FirstOrDefaultAsync(b => b.BarberId == barber.BarberId);
-        if (existing is null) return null;
-
-        existing.Username = barber.Username;
-        existing.Name = barber.Name;
-        existing.Specialty = barber.Specialty;
-        existing.ContactInfo = barber.ContactInfo;
-
-        // Do not attach a second instance; the tracked 'existing' has been mutated.
-        //await _context.SaveChangesAsync();
-        return existing;
+        var foundBarberModel = await GetByIdAsync(barberId);
+        if (foundBarberModel is null)
+            throw new KeyNotFoundException($"Barber with ID {barberId} was not found.");
+        foundBarberModel.Update(barberModel);
+        _fadebookDbContext.barberTable.Update(foundBarberModel);
+        return foundBarberModel;
     }
 
-    public async Task<bool> DeleteByIdAsync(int id)
+    public async Task<BarberModel> RemoveByIdAsync(int barberId)
     {
-        var entity = await _context.barberTable.FindAsync(id);
-        if (entity is null) return false;
+        var foundBarberModel = await GetByIdAsync(barberId);
+        if (foundBarberModel is null)
+            throw new KeyNotFoundException($"Barber with ID {barberId} was not found.");
 
-        _context.barberTable.Remove(entity);
-        //await _context.SaveChangesAsync();
-        return true;
-    }
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        return _context.SaveChangesAsync(cancellationToken);
+        _fadebookDbContext.barberTable.Remove(foundBarberModel);
+        return foundBarberModel;
     }
 }

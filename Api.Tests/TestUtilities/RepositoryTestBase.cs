@@ -10,7 +10,7 @@ namespace Fadebook.Api.Tests.TestUtilities;
 /// </summary>
 public abstract class RepositoryTestBase : IDisposable
 {
-    protected readonly NightOwlsDbContext _context;
+    protected readonly FadebookDbContext _context;
     private readonly SqliteConnection _connection;
 
     protected RepositoryTestBase()

@@ -11,7 +11,7 @@ using Fadebook.DB;
 
 namespace api.Migrations
 {
-    [DbContext(typeof(NightOwlsDbContext))]
+    [DbContext(typeof(FadebookDbContext))]
     [Migration("20250929185716_InitialCreate")]
     partial class InitialCreate
     {

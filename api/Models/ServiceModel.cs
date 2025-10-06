@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Fadebook.Models;
 
-public class ServiceModel
+public class ServiceModel: AModel
 {
     [Key]
     public int ServiceId { get; set; }

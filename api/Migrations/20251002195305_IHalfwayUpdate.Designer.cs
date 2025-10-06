@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace api.Migrations
 {
-    [DbContext(typeof(NightOwlsDbContext))]
+    [DbContext(typeof(FadebookDbContext))]
     [Migration("20251002195305_IHalfwayUpdate")]
     partial class IHalfwayUpdate
     {

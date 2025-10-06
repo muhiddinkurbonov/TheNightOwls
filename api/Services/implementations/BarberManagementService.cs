@@ -4,56 +4,93 @@ using Fadebook.Repositories;
 namespace Fadebook.Services;
 
 
-public class BarberManagementService(IBarberRepository repo, IBarberServiceRepository barberServiceRepo) : IBarberManagementService
+public class BarberManagementService(
+    IDbTransactionContext _dbTransactionContext,
+    IBarberRepository _barberRepository,
+    IBarberServiceRepository _barberServiceRepository
+    ) : IBarberManagementService
 {
     public async Task<BarberModel?> GetByIdAsync(int id)
     {
-        var barberEntity = await repo.GetByIdAsync(id);
-        if (barberEntity is null) return null;
+        var barberEntity = await _barberRepository.GetByIdAsync(id);
         return barberEntity;
     }
 
     public async Task<IEnumerable<BarberModel>> GetAllAsync()
     {
-        return await repo.GetAllAsync();
+        return await _barberRepository.GetAllAsync();
     }
     public async Task<BarberModel> AddAsync(BarberModel barber)
     {
-        var result = await repo.AddAsync(barber);
-        await repo.SaveChangesAsync();
-        return result;
+        try
+        {
+            var newBarber = await _barberRepository.AddAsync(barber);
+            await _dbTransactionContext.SaveChangesAsync();
+            return newBarber;
+        }
+        catch
+        {
+            throw;
+        }
     }
-    public async Task<BarberModel?> UpdateAsync(BarberModel barber)
+    public async Task<BarberModel> UpdateAsync(int barberId, BarberModel barber)
     {
-        var updatedBarber = await repo.UpdateAsync(barber);
-        if (updatedBarber is null) return null;
-        await repo.SaveChangesAsync();
-        return updatedBarber;
+        try
+        {
+            var updatedBarber = await _barberRepository.UpdateAsync(barberId, barber);
+            await _dbTransactionContext.SaveChangesAsync();
+            return updatedBarber;
+        }
+        catch
+        {
+            throw;
+        }
     }
-    public async Task<bool> DeleteByIdAsync(int id)
+    public async Task<BarberModel> DeleteByIdAsync(int barberId)
     {
-        var result = await repo.DeleteByIdAsync(id);
-        await repo.SaveChangesAsync();
-        return result;
+        try
+        {
+            var deletedBarber = await _barberRepository.RemoveByIdAsync(barberId);
+            await _dbTransactionContext.SaveChangesAsync();
+            return deletedBarber;
+        }
+        catch
+        {
+            // Nothing for us to correct here
+            // So we pass the exception on.
+            // Also, apparently this is how we rethrow an expception per CS2200
+            // Manually rethrowing an exception results in a stack trace rewrite causing lost info.
+            throw;
+        }
     }
     // Update a barber's available services
-    public async Task<bool> UpdateBarberServicesAsync(int barberId, List<int> serviceIds)
+    public async Task<IEnumerable<BarberServiceModel>> UpdateBarberServicesAsync(int barberId, List<int> selectedServiceIds)
     {
         // Remove all current services for the barber
-        var currentLinks = await barberServiceRepo.GetBarberServiceByBarberId(barberId);
-        foreach (var link in currentLinks)
+        try
         {
-            await barberServiceRepo.RemoveBarberServiceByBarberIdServiceId(barberId, link.ServiceId);
+            var barberServices = await _barberServiceRepository.GetByBarberIdAsync(barberId);
+            IEnumerable<int> barberServiceIds = barberServices.Select(bsm => bsm.ServiceId);
+            IEnumerable<int> addServiceIds = selectedServiceIds.Except(barberServiceIds).ToList();
+            IEnumerable<int> removeServiceIds = barberServiceIds.Except(selectedServiceIds).ToList();
+            foreach (int addServiceId in addServiceIds)
+            {
+                await _barberServiceRepository.AddAsync(new BarberServiceModel { BarberId=barberId, ServiceId=addServiceId });
+            }
+            foreach (int removeServiceId in removeServiceIds)
+            {
+                await _barberServiceRepository.RemoveByBarberIdServiceId(barberId, removeServiceId);
+            }
+            await _dbTransactionContext.SaveChangesAsync();
+            return await _barberServiceRepository.GetByBarberIdAsync(barberId);
         }
-
-        // Add new services
-        foreach (var serviceId in serviceIds)
+        catch
         {
-            await barberServiceRepo.AddBarberService(barberId, serviceId);
+            // Nothing for us to correct here
+            // So we pass the exception on.
+            // Also, apparently this is how we rethrow an expception per CS2200
+            // Manually rethrowing an exception results in a stack trace rewrite causing lost info.
+            throw;
         }
-
-        if (barberServiceRepo.SaveChangesAsync != null)
-            await barberServiceRepo.SaveChangesAsync();
-        return true;
     }
 }

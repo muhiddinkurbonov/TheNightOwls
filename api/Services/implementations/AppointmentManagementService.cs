@@ -7,67 +7,74 @@ using Fadebook.Exceptions;
 
 namespace Fadebook.Services;
 
-public class AppointmentManagementService : IAppointmentManagementService
+public class AppointmentManagementService(
+    IDbTransactionContext _dbTransactionContext,
+    IAppointmentRepository _appointmentRepository,
+    ICustomerRepository _customerRepository
+    ) : IAppointmentManagementService
 {
-    private readonly NightOwlsDbContext _dbContext;
-    private readonly IAppointmentRepository _appointmentRepository;
-    private readonly ICustomerRepository _customerRepository;
-    private readonly IBarberRepository _barberRepository;
 
-    public AppointmentManagementService(
-        NightOwlsDbContext dbContext,
-        IAppointmentRepository appointmentRepository,
-        ICustomerRepository customerRepository,
-        IBarberRepository barberRepository
-        )
+    public async Task<AppointmentModel> AddAppointmentAsync(AppointmentModel appointmentModel)
     {
-        _dbContext = dbContext;
-        _appointmentRepository = appointmentRepository;
-        _customerRepository = customerRepository;
-        _barberRepository = barberRepository;
+        try
+        {
+            var newAppointment = await _appointmentRepository.AddAsync(appointmentModel);
+            await _dbTransactionContext.SaveChangesAsync();
+            return newAppointment;
+        }
+        catch
+        {
+            // Nothing for us to correct here
+            // So we pass the exception on.
+            // Also, apparently this is how we rethrow an expception per CS2200
+            // Manually rethrowing an exception results in a stack trace rewrite causing lost info.
+            throw;
+        }
     }
-
-    public async Task<AppointmentModel> AddAppointment(AppointmentModel appointmentModel)
+    public async Task<AppointmentModel> UpdateAppointmentAsync(int appointmentId, AppointmentModel appointmentModel)
     {
-        var foundAppointment = await _appointmentRepository.GetByIdAsync(appointmentModel.AppointmentId);
-        if (foundAppointment == null) return null;
-        return await _appointmentRepository.AddAppointment(appointmentModel);
+        try
+        {
+            var updatedAppointment = await _appointmentRepository.UpdateAsync(appointmentId, appointmentModel);
+            await _dbTransactionContext.SaveChangesAsync();
+            return updatedAppointment;
+        }
+        catch
+        {
+            throw;
+        }
     }
-
-    public async Task<AppointmentModel?> UpdateAppointment(AppointmentModel appointment)
+    public async Task<IEnumerable<AppointmentModel>> GetAppointmentsByDateAsync(DateTime dateTime)
     {
-        var foundAppointment = await _appointmentRepository.GetByIdAsync(appointment.AppointmentId);
-        // TODO: Throw error
-        if (foundAppointment == null) return null;
-        appointment = await _appointmentRepository.UpdateAppointment(appointment);
-        return appointment;
+        return await _appointmentRepository.GetByDateAsync(dateTime);
     }
-    public async Task<IEnumerable<AppointmentModel>> GetAppointmentsByDate(DateTime dateTime)
+    public async Task<IEnumerable<AppointmentModel>> GetAppointmentsByCustomerIdAsync(int customerId)
     {
-        return await _appointmentRepository.GetApptsByDate(dateTime);
+        return await _appointmentRepository.GetByCustomerIdAsync(customerId);
     }
-    public async Task<AppointmentModel?> DeleteAppointment(AppointmentModel appointment)
+    public async Task<IEnumerable<AppointmentModel>> GetAppointmentsByBarberIdAsync(int barberId)
     {
-        // var foundAppointment = await _appointmentRepository.GetByIdAsync(appointment.AppointmentId);
-        // if (foundAppointment == null) return null;
-        appointment = await _appointmentRepository.DeleteApptById(appointment.AppointmentId);
-        return appointment;
+        return await _appointmentRepository.GetByBarberIdAsync(barberId);
+    }
+    public async Task<AppointmentModel> DeleteAppointmentAsync(int appointmentId)
+    {
+        try
+        {
+            var removedAppointment = await _appointmentRepository.RemoveByIdAsync(appointmentId);
+            await _dbTransactionContext.SaveChangesAsync();
+            return removedAppointment;
+        }
+        catch
+        {
+            throw;
+        }
     }
     // Throws NoUsernameException
-    public async Task<IEnumerable<AppointmentModel>> LookupAppointmentsByUsername(string username)
+    public async Task<IEnumerable<AppointmentModel>> LookupAppointmentsByUsernameAsync(string username)
     {
         var foundCustomer = await _customerRepository.GetByUsernameAsync(username);
-        if (foundCustomer == null) throw new NoUsernameException();
-        return await _appointmentRepository.GetByCustomerId(foundCustomer.CustomerId);
+        if (foundCustomer == null)
+            throw new NoUsernameException();
+        return await _appointmentRepository.GetByCustomerIdAsync(foundCustomer.CustomerId);
     }
-
-    /*
-        Task<AppointmentModel?> GetByIdAsync(int appointmentId);
-        Task<IEnumerable<AppointmentModel>> GetAll();
-        Task<IEnumerable<AppointmentModel>> GetApptsByDate(DateTime dateTime);
-        Task<IEnumerable<AppointmentModel>> GetByCustomerId(int customerId);
-        Task<AppointmentModel> AddAppointment(AppointmentModel appointmentModel);
-        Task<AppointmentModel> UpdateAppointment(AppointmentModel appointmentModel);
-        Task<AppointmentModel> DeleteApptById(int appointmentId);
-    */
 }

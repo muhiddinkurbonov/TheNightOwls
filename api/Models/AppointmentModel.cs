@@ -5,18 +5,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Fadebook.Models;
 
-public class AppointmentModel
+public class AppointmentModel: AModel
 {
     // KEYS WILL BE PUBLIC IN DTO
     [Key]
     public int AppointmentId { get; set; }
+
+    [Required]
     public string Status { get; set; } = "Pending";
+    [Required]
+    public DateTime AppointmentDate { get; set; }
 
     [Required]
     public int CustomerId { get; set; } // Foreign key
     [ForeignKey(nameof(CustomerId))]
     public CustomerModel Customer { get; set; }
-
 
     [Required]
     public int ServiceId { get; set; } // Foreign key
@@ -27,7 +30,5 @@ public class AppointmentModel
     public int BarberId { get; set; } // Foreign key
     [ForeignKey(nameof(BarberId))]
     public BarberModel Barber { get; set; }
-
-    public DateTime appointmentDate { get; set; }
 }
 

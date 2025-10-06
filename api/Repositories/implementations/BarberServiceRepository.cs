@@ -6,69 +6,54 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fadebook.Repositories;
 
-public class BarberServiceRepository : IBarberServiceRepository
+public class BarberServiceRepository(
+    FadebookDbContext _fadebookDbContext
+    ) : IBarberServiceRepository
 {
-    private readonly NightOwlsDbContext _nightOwlsDbContext;
-
-    public BarberServiceRepository(NightOwlsDbContext nightOwlsDbContext)
-    {
-        _nightOwlsDbContext = nightOwlsDbContext;
-    }
-
     public async Task<BarberServiceModel?> GetByIdAsync(int barberServiceId)
     {
-        return await _nightOwlsDbContext.barberServiceTable.FindAsync(barberServiceId);
+        return await _fadebookDbContext.barberServiceTable.FindAsync(barberServiceId);
     }
-    public async Task<IEnumerable<BarberServiceModel>> GetBarberServiceByBarberId(int barberId)
+    public async Task<IEnumerable<BarberServiceModel>> GetByBarberIdAsync(int barberId)
     {
-        return await _nightOwlsDbContext.barberServiceTable
+        return await _fadebookDbContext.barberServiceTable
             .Where(bsm => bsm.BarberId == barberId)
             .ToListAsync();
     }
-    public async Task<IEnumerable<BarberServiceModel>> GetBarberServiceByServiceId(int serviceId)
+    public async Task<IEnumerable<BarberServiceModel>> GetByServiceIdAsync(int serviceId)
     {
-        return await _nightOwlsDbContext.barberServiceTable
+        return await _fadebookDbContext.barberServiceTable
             .Where(bsm => bsm.ServiceId == serviceId)
             .ToListAsync();
-        // select * from barberService where "ServiceId" == $serviceId
     }
-    public async Task<BarberServiceModel?> GetBarberServiceByBarberIdServiceId(int barberId, int serviceId)
+    public async Task<BarberServiceModel?> GetByBarberIdServiceIdAsync(int barberId, int serviceId)
     {
-        return await _nightOwlsDbContext.barberServiceTable
+        return await _fadebookDbContext.barberServiceTable
             .Where(bsm => bsm.BarberId == barberId && bsm.ServiceId == serviceId)
             .FirstAsync();
     }
-    public async Task<BarberServiceModel?> AddBarberService(int barberId, int servicerId)
+    public async Task<BarberServiceModel> AddAsync(BarberServiceModel barberServiceModel)
     {
-        // TODO: Get by, IF not null THEN return current 
-        var foundBarberService = await this.GetBarberServiceByBarberIdServiceId(barberId, servicerId);
-        // TODO: Throw exception to be handled -> throw, catch and return 40# code saying resource exists
-        if (foundBarberService != null) return foundBarberService;
-        BarberServiceModel barberServiceModel = new BarberServiceModel();
-        barberServiceModel.BarberId = barberId;
-        barberServiceModel.ServiceId = servicerId;
-        await _nightOwlsDbContext.barberServiceTable.AddAsync(barberServiceModel);
+        var foundBarberService = await this.GetByBarberIdServiceIdAsync(barberServiceModel.BarberId, barberServiceModel.ServiceId);
+        if (foundBarberService != null)
+            throw new InvalidOperationException($"BarberService with BarberId {barberServiceModel.BarberId} and ServiceId {barberServiceModel.ServiceId} already exists.");
+        await _fadebookDbContext.barberServiceTable.AddAsync(barberServiceModel);
         return barberServiceModel;
     }
-    public async Task<BarberServiceModel?> RemoveBarberServiceById(int barberServiceId)
+    public async Task<BarberServiceModel> RemoveByIdAsync(int barberServiceId)
     {
-        // TODO: Throw exception for not found
-        var barberSerice = await GetByIdAsync(barberServiceId);
-        if (barberSerice == null) return null;
-        // throw new NotFoundException($"There is no barber service with id: {barberServiceId}");
-        _nightOwlsDbContext.barberServiceTable.Remove(barberSerice);
-        return barberSerice;
-    }
-    public async Task<BarberServiceModel?> RemoveBarberServiceByBarberIdServiceId(int barberId, int serviceId)
-    {
-        // TODO: Throw exception for not found
-        var foundBarberService = await this.GetBarberServiceByBarberIdServiceId(barberId, serviceId);
-        if (foundBarberService == null) return null; // throw new NotFoundException($"There is no BarberService with barberId:{barberId}/serviceId{serviceId}");
-        _nightOwlsDbContext.barberServiceTable.Remove(foundBarberService);
+        var foundBarberService = await this.GetByIdAsync(barberServiceId);
+        if (foundBarberService is null)
+            throw new KeyNotFoundException($"BarberService with BarberServiceId {barberServiceId}");
+        _fadebookDbContext.barberServiceTable.Remove(foundBarberService);
         return foundBarberService;
     }
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task<BarberServiceModel> RemoveByBarberIdServiceId(int barberId, int serviceId)
     {
-        return _nightOwlsDbContext.SaveChangesAsync(cancellationToken);
+        var foundBarberService = await this.GetByBarberIdServiceIdAsync(barberId, serviceId);
+        if (foundBarberService is null)
+            throw new KeyNotFoundException($"BarberService with BarberId {barberId} and ServiceId {serviceId} not found.");
+        _fadebookDbContext.barberServiceTable.Remove(foundBarberService);
+        return foundBarberService;
     }
 }

@@ -5,7 +5,7 @@ using Fadebook.Models;
 
 namespace Fadebook.DB;
 
-public class NightOwlsDbContext : DbContext
+public class FadebookDbContext : DbContext
 {
     public DbSet<CustomerModel> customerTable { get; set; }
     public DbSet<BarberModel> barberTable { get; set; }
@@ -13,10 +13,18 @@ public class NightOwlsDbContext : DbContext
     public DbSet<BarberServiceModel> barberServiceTable { get; set; }
     public DbSet<AppointmentModel> appointmentTable { get; set; }
 
-    public NightOwlsDbContext(DbContextOptions<NightOwlsDbContext> options) : base(options) { }
+    public FadebookDbContext(DbContextOptions<FadebookDbContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<CustomerModel>()
+            .HasIndex(cm => cm.Username)
+            .IsUnique();
+
+        modelBuilder.Entity<BarberModel>()
+            .HasIndex(bm => bm.Username)
+            .IsUnique();
+
         modelBuilder.Entity<AppointmentModel>()
             .HasOne(am => am.Customer)
             .WithMany()
@@ -46,6 +54,9 @@ public class NightOwlsDbContext : DbContext
             .WithMany()
             .HasForeignKey(bsm => bsm.ServiceId)
             .IsRequired();
+
+        modelBuilder.Entity<BarberServiceModel>()
+            .HasKey(bsm => new { bsm.BarberId, bsm.ServiceId });
         
         // TODO: Add BarberService composite key
 

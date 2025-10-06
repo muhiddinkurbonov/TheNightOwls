@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Fadebook.Models;
 
-public class CustomerModel
+public class CustomerModel: AModel
 {
     [Key]
     public int CustomerId { get; set; }
@@ -16,6 +16,5 @@ public class CustomerModel
     [StringLength(50, ErrorMessage = "Name must be between 1 and 50 characters.")]
     public string Name { get; set; } = null!;
     [Required(ErrorMessage = "Contact info is required.")]
-    public string? ContactInfo { get; set; }
-    // public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+    public string ContactInfo { get; set; }
 }

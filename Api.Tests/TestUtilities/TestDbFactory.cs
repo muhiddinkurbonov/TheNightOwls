@@ -6,23 +6,23 @@ using Fadebook.DB;
 namespace Fadebook.Api.Tests.TestUtilities;
 
 /// <summary>
-/// Helpers to create and dispose a test <see cref="NightOwlsDbContext"/> using in-memory SQLite.
+/// Helpers to create and dispose a test <see cref="FadebookDbContext"/> using in-memory SQLite.
 /// </summary>
 public static class TestDbFactory
 {
     /// <summary>
-    /// Creates a <see cref="NightOwlsDbContext"/> backed by an in-memory SQLite database and returns the open connection.
+    /// Creates a <see cref="FadebookDbContext"/> backed by an in-memory SQLite database and returns the open connection.
     /// </summary>
-    public static (NightOwlsDbContext context, SqliteConnection connection) CreateSqliteInMemoryDb()
+    public static (FadebookDbContext context, SqliteConnection connection) CreateSqliteInMemoryDb()
     {
         var connection = new SqliteConnection("DataSource=:memory:");
         connection.Open();
 
-        var options = new DbContextOptionsBuilder<NightOwlsDbContext>()
+        var options = new DbContextOptionsBuilder<FadebookDbContext>()
             .UseSqlite(connection)
             .Options;
 
-        var context = new NightOwlsDbContext(options);
+        var context = new FadebookDbContext(options);
         context.Database.EnsureCreated();
         return (context, connection);
     }
@@ -32,7 +32,7 @@ public static class TestDbFactory
     /// </summary>
     /// <param name="context">Context to dispose.</param>
     /// <param name="connection">Open connection to close and dispose.</param>
-    public static void Dispose(NightOwlsDbContext context, SqliteConnection connection)
+    public static void Dispose(FadebookDbContext context, SqliteConnection connection)
     {
         context.Dispose();
         connection.Close();

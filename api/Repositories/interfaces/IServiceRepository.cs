@@ -3,10 +3,11 @@ using Fadebook.Models;
 
 namespace Fadebook.Repositories;
 
-public interface IServiceRepository: DbSaveChanges
+public interface IServiceRepository
 {
     Task<ServiceModel?> GetByIdAsync(int serviceId);
     Task<IEnumerable<ServiceModel>> GetAll();
+    Task<ServiceModel> AddAsync(ServiceModel serviceModel);
 }
 
 /*

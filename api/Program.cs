@@ -64,7 +64,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddAutoMapper(typeof(Program));
 
-builder.Services.AddDbContext<NightOwlsDbContext>((options) =>
+builder.Services.AddDbContext<FadebookDbContext>((options) =>
 {
     var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
     options.UseSqlServer(connectionString);
@@ -125,7 +125,7 @@ builder.Services.AddScoped<IBarberServiceRepository, BarberServiceRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 
 // service classes for DI
-builder.Services.AddScoped<ICustomerAppointmentService, CustomerAppointmentService>();
+// builder.Services.AddScoped<ICustomerAppointmentService, CustomerAppointmentService>();
 builder.Services.AddScoped<IAppointmentManagementService, AppointmentManagementService>();
 builder.Services.AddScoped<IBarberManagementService, BarberManagementService>();
 // builder.Services.AddScoped<IInstructorService, InstructorService>();
@@ -159,7 +159,7 @@ static async Task SeedApp(WebApplication app)
 {
     using (var scope = app.Services.CreateScope())
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<NightOwlsDbContext>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FadebookDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
         try
@@ -257,7 +257,7 @@ static async Task SeedApp(WebApplication app)
 
                 var muhidAppointmentWithDean = await dbContext.appointmentTable.AddAsync(new AppointmentModel
                 {
-                    appointmentDate = DateTime.UtcNow.AddYears(1),
+                    AppointmentDate = DateTime.UtcNow.AddYears(1),
                     Status = "Pending", // Pending, Completed, Cancelled, Expired
                     BarberId = barberDean.Entity.BarberId,
                     ServiceId = serviceBeard.Entity.ServiceId,
