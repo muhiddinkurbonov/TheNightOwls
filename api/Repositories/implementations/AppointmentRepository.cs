@@ -43,18 +43,54 @@ public class AppointmentRepository(
     }
     public async Task<AppointmentModel> AddAsync(AppointmentModel appointmentModel)
     {
+        // await _fadebookDbContext.appointmentTable.AddAsync(appointmentModel);
+        // return appointmentModel;
+        var foundAppointment = await this.GetByIdAsync(appointmentModel.AppointmentId);
+        // TODO: Throw exception to be handled -> throw, catch and return 40# code saying resource exists
+        if (foundAppointment != null) return foundAppointment;
+        // Validate foreign keys exist
+        var customerExists = await _fadebookDbContext.customerTable
+            .AnyAsync(c => c.CustomerId == appointmentModel.CustomerId);
+        if (!customerExists) return null;
+
+        var barberExists = await _fadebookDbContext.barberTable
+            .AnyAsync(b => b.BarberId == appointmentModel.BarberId);
+        if (!barberExists) return null;
+
+        var serviceExists = await _fadebookDbContext.serviceTable
+            .AnyAsync(s => s.ServiceId == appointmentModel.ServiceId);
+        if (!serviceExists) return null;
+
         await _fadebookDbContext.appointmentTable.AddAsync(appointmentModel);
         return appointmentModel;
     }
 
     public async Task<AppointmentModel> UpdateAsync(int appointmentId, AppointmentModel appointmentModel)
     {
+    
         var foundAppointmentModel = await this.GetByIdAsync(appointmentId);
-        if (foundAppointmentModel is null)
-            throw new KeyNotFoundException($"Appointment with ID {appointmentId} was not found.");
-        foundAppointmentModel.Update(appointmentModel);
+        if (foundAppointmentModel is null) return null;
+
+        // Validate foreign keys exist before updating
+        var customerExists = await _fadebookDbContext.customerTable
+            .AnyAsync(c => c.CustomerId == appointmentModel.CustomerId);
+        if (!customerExists) return null;
+
+        var barberExists = await _fadebookDbContext.barberTable
+            .AnyAsync(b => b.BarberId == appointmentModel.BarberId);
+        if (!barberExists) return null;
+
+        var serviceExists = await _fadebookDbContext.serviceTable
+            .AnyAsync(s => s.ServiceId == appointmentModel.ServiceId);
+        if (!serviceExists) return null;
+
+        foundAppointmentModel.BarberId = appointmentModel.BarberId;
+        foundAppointmentModel.CustomerId = appointmentModel.CustomerId;
+        foundAppointmentModel.ServiceId = appointmentModel.ServiceId;
+        foundAppointmentModel.AppointmentDate = appointmentModel.AppointmentDate;
+        foundAppointmentModel.Status = appointmentModel.Status;
         _fadebookDbContext.appointmentTable.Update(foundAppointmentModel);
-        return appointmentModel;
+        return foundAppointmentModel;
     }
     public async Task<AppointmentModel> RemoveByIdAsync(int appointmentId)
     {

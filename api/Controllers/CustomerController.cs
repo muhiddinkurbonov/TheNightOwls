@@ -9,19 +9,21 @@ namespace Fadebook.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    // "/students
+    // /api/customerappointment
     public class CustomerAppointmentController : ControllerBase
     {
         // Fields
         private readonly ILogger<CustomerAppointmentController> _logger;
-        private readonly ICustomerAppointmentService _service;
+        private readonly ICustomerAppointmentService _customerAppointmentService;
+        private readonly IUserAccountService _userAccountService;
         private readonly IMapper _mapper;
 
         // Constructor
-        public CustomerAppointmentController(ILogger<CustomerAppointmentController> logger, ICustomerAppointmentService service, IMapper mapper)
+        public CustomerAppointmentController(ILogger<CustomerAppointmentController> logger, ICustomerAppointmentService service, IUserAccountService userAccountService, IMapper mapper)
         {
             _logger = logger;
-            _service = service;
+            _customerAppointmentService = service;
+            _userAccountService = userAccountService;
             _mapper = mapper;
         }
 
@@ -58,20 +60,20 @@ namespace Fadebook.Controllers
         // }
 
         // POST: api/customerappointment
-        [HttpPost]
-        public async Task<ActionResult<CustomerDto>> Create([FromBody] CustomerDto customerDto)
-        {
-            var customer = _mapper.Map<CustomerModel>(customerDto);
-            var createdCustomer = await _service.AddCustomerAsync(customer);
-            var dto = _mapper.Map<CustomerDto>(createdCustomer);
-            return CreatedAtAction("GetCustomerById", new { id = createdCustomer.CustomerId }, dto);
-        }
+        // [HttpPost]
+        // public async Task<ActionResult<CustomerDto>> Create([FromBody] CustomerDto customerDto)
+        // {
+        //     var customer = _mapper.Map<CustomerModel>(customerDto);
+        //     var createdCustomer = await _userAccountService
+        //     var dto = _mapper.Map<CustomerDto>(createdCustomer);
+        //     return CreatedAtAction("GetCustomerById", new { id = createdCustomer.CustomerId }, dto);
+        // }
 
         // GET: /customer/{id}
         [HttpGet("/customer/{id}", Name = "GetCustomerById")]
         public async Task<ActionResult<CustomerDto>> GetById(int id)
         {
-            var customer = await _service.GetCustomerByIdAsync(id);
+            var customer = await _userAccountService.GetCustomerByIdAsync(id);
             if (customer == null) 
                 return NotFound(new { message = $"Customer with ID {id} not found." });
             
@@ -82,7 +84,7 @@ namespace Fadebook.Controllers
         [HttpGet("services")]
         public async Task<ActionResult<IEnumerable<ServiceDto>>> GetServices()
         {
-            var services = await _service.GetServicesAsync();
+            var services = await _customerAppointmentService.ListAvailableServicesAsync();
             var dtos = _mapper.Map<IEnumerable<ServiceDto>>(services);
             return Ok(dtos);
         }
@@ -91,7 +93,7 @@ namespace Fadebook.Controllers
         [HttpGet("barbers-by-service/{serviceId:int}")]
         public async Task<ActionResult<IEnumerable<BarberDto>>> GetBarbersByService([FromRoute] int serviceId)
         {
-            var barbers = await _service.GetBarbersByServiceAsync(serviceId);
+            var barbers = await _customerAppointmentService.ListAvailableBarbersByServiceAsync(serviceId);
             var dtos = _mapper.Map<IEnumerable<BarberDto>>(barbers);
             return Ok(dtos);
         }
@@ -102,7 +104,7 @@ namespace Fadebook.Controllers
         {
             var customer = _mapper.Map<CustomerModel>(request.Customer);
             var appointment = _mapper.Map<AppointmentModel>(request.Appointment);
-            var created = await _service.RequestAppointmentAsync(customer, appointment);
+            var created = await _customerAppointmentService.MakeAppointmentAsync(appointment);
             var dto = _mapper.Map<AppointmentDto>(created);
             return Created($"/api/appointment/{created.AppointmentId}", dto);
         }

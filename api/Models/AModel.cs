@@ -7,24 +7,24 @@ namespace Fadebook.Models;
 
 public abstract class AModel
 {
-    public void Update(AModel otherModel)
-    {
-        var properties = this.GetType()
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(prop =>
-                prop.CanRead && prop.CanWrite &&
-                prop.GetCustomAttribute<RequiredAttribute>() != null &&
-                prop.GetCustomAttribute<KeyAttribute>() == null);
+    // public void Update(AModel otherModel)
+    // {
+    //     var properties = this.GetType()
+    //         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+    //         .Where(prop =>
+    //             prop.CanRead && prop.CanWrite &&
+    //             prop.GetCustomAttribute<RequiredAttribute>() != null &&
+    //             prop.GetCustomAttribute<KeyAttribute>() == null);
 
-        foreach (var prop in properties)
-        {
-            var value = prop.GetValue(otherModel);
-            if (value is not null && !(prop.PropertyType.IsValueType && Equals(value, Activator.CreateInstance(prop.PropertyType))))
-            {
-                prop.SetValue(this, value);
-            }
-        }
-    }
+    //     foreach (var prop in properties)
+    //     {
+    //         var value = prop.GetValue(otherModel);
+    //         if (value is not null && !(prop.PropertyType.IsValueType && Equals(value, Activator.CreateInstance(prop.PropertyType))))
+    //         {
+    //             prop.SetValue(this, value);
+    //         }
+    //     }
+    // }
 
     public bool AreAllValuesNotNull(bool ignorePrimaryKey = true)
     {

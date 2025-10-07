@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace api.Migrations
 {
     [DbContext(typeof(FadebookDbContext))]
-    [Migration("20251002195305_IHalfwayUpdate")]
-    partial class IHalfwayUpdate
+    [Migration("20251006201001_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,6 +33,9 @@ namespace api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AppointmentId"));
 
+                    b.Property<DateTime>("AppointmentDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("BarberId")
                         .HasColumnType("int");
 
@@ -45,9 +48,6 @@ namespace api.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("appointmentDate")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("AppointmentId");
 
@@ -70,13 +70,13 @@ namespace api.Migrations
 
                     b.Property<string>("ContactInfo")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Specialty")
                         .IsRequired()
@@ -90,26 +90,24 @@ namespace api.Migrations
 
                     b.HasKey("BarberId");
 
+                    b.HasIndex("Username")
+                        .IsUnique();
+
                     b.ToTable("barberTable");
                 });
 
             modelBuilder.Entity("Fadebook.Models.BarberServiceModel", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
                     b.Property<int>("BarberId")
                         .HasColumnType("int");
 
                     b.Property<int>("ServiceId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
 
-                    b.HasIndex("BarberId");
+                    b.HasKey("BarberId", "ServiceId");
 
                     b.HasIndex("ServiceId");
 
@@ -130,13 +128,18 @@ namespace api.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("CustomerId");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
 
                     b.ToTable("customerTable");
                 });
@@ -151,7 +154,8 @@ namespace api.Migrations
 
                     b.Property<string>("ServiceName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<double>("ServicePrice")
                         .HasColumnType("float");

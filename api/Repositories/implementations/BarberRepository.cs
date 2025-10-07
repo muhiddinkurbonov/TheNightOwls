@@ -31,7 +31,16 @@ public class BarberRepository(
         var foundBarberModel = await GetByIdAsync(barberId);
         if (foundBarberModel is null)
             throw new KeyNotFoundException($"Barber with ID {barberId} was not found.");
-        foundBarberModel.Update(barberModel);
+        if (barberModel.Username != null && foundBarberModel.Username != barberModel.Username)
+        {
+            var usernameBarberModel = await _fadebookDbContext.barberTable.Where(bm => bm.Username == barberModel.Username).FirstAsync();
+            if (usernameBarberModel != null)
+                throw new InvalidOperationException($"Customer with username {barberModel.Username} already exists.");
+        }
+        foundBarberModel.Username = barberModel.Username;
+        foundBarberModel.Name = barberModel.Name;
+        foundBarberModel.Specialty = barberModel.Specialty;
+        foundBarberModel.ContactInfo = barberModel.ContactInfo;
         _fadebookDbContext.barberTable.Update(foundBarberModel);
         return foundBarberModel;
     }

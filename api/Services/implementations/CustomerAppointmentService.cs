@@ -22,9 +22,7 @@ public class CustomerAppointmentService(
     public async Task<IEnumerable<BarberModel>> ListAvailableBarbersByServiceAsync(int serviceId)
     {
         var barberServices = await _barberServiceRepository.GetByServiceIdAsync(serviceId);
-        var barberTasks = barberServices.Select(bsm => _barberRepository.GetByIdAsync(bsm.BarberId));
-        var barbers = await Task.WhenAll(barberTasks);
-        return barbers.Where(b => b != null)!;
+        return barberServices.Select(bsm => bsm.Barber);
     }
 
     public async Task<IEnumerable<AppointmentModel>> GetAppointmentsByCustomerIdAsync(int customerId)

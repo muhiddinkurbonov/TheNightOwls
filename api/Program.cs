@@ -118,6 +118,7 @@ builder.Services.AddAuthorization( options =>
 */
 
 // repository classes for DI
+builder.Services.AddScoped<IDbTransactionContext, DbTransactionContext>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IBarberRepository, BarberRepository>();
@@ -125,7 +126,8 @@ builder.Services.AddScoped<IBarberServiceRepository, BarberServiceRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 
 // service classes for DI
-// builder.Services.AddScoped<ICustomerAppointmentService, CustomerAppointmentService>();
+builder.Services.AddScoped<IUserAccountService, UserAccountService>();
+builder.Services.AddScoped<ICustomerAppointmentService, CustomerAppointmentService>();
 builder.Services.AddScoped<IAppointmentManagementService, AppointmentManagementService>();
 builder.Services.AddScoped<IBarberManagementService, BarberManagementService>();
 // builder.Services.AddScoped<IInstructorService, InstructorService>();
@@ -164,8 +166,8 @@ static async Task SeedApp(WebApplication app)
 
         try
         {
-            var testCustomer = await dbContext.customerTable.FindAsync(100000000);
-            if (testCustomer == null)
+            var customerList = await dbContext.customerTable.ToListAsync();
+            if (customerList.Count() == 0)
             {
                 var serviceHaircut = await dbContext.serviceTable.AddAsync(new ServiceModel
                 {

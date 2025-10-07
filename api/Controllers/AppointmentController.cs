@@ -9,7 +9,7 @@ namespace Fadebook.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-// "/appointmentcontroller
+// api/appointment
 public class AppointmentController : ControllerBase
 {
     // Fields
@@ -23,29 +23,24 @@ public class AppointmentController : ControllerBase
         _mapper = mapper;
     }
 
-    // Methods
-
-    // [Authorize(Roles = "Customer")]
-    // [Authorize(Roles = "Barber")]
-
     // POST: api/appointment
     [HttpPost]
     public async Task<ActionResult<AppointmentDto>> Create([FromBody] AppointmentDto appointmentDto)
     {
         var model = _mapper.Map<AppointmentModel>(appointmentDto);
-        var created = await _service.AddAppointment(model);
+        var created = await _service.AddAppointmentAsync(model);
         if (created is null) 
             return Conflict(new { message = "Unable to create appointment. Verify that Customer, Barber, and Service IDs exist." });
         
         var dto = _mapper.Map<AppointmentDto>(created);
-        return CreatedAtAction("GetAppointmentById", new { id = created.AppointmentId }, dto);
+        return Created($"api/appointment/{created.AppointmentId}", dto);
     }
 
     // GET: api/appointment/{id}
     [HttpGet("{id:int}", Name = "GetAppointmentById")]
     public async Task<ActionResult<AppointmentDto>> GetById([FromRoute] int id)
     {
-        var appt = await _service.GetAppointmentById(id);
+        var appt = await _service.GetAppointmentByIdAsync(id);
         if (appt is null) 
             return NotFound(new { message = $"Appointment with ID {id} not found." });
         
@@ -58,7 +53,7 @@ public class AppointmentController : ControllerBase
     {
         var model = _mapper.Map<AppointmentModel>(appointmentDto);
         model.AppointmentId = id;
-        var updated = await _service.UpdateAppointment(model);
+        var updated = await _service.UpdateAppointmentAsync(id, model);
         if (updated is null) 
             return NotFound(new { message = $"Appointment with ID {id} not found or invalid foreign keys." });
         
@@ -69,7 +64,7 @@ public class AppointmentController : ControllerBase
     [HttpGet("by-date")]
     public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetByDate([FromQuery] DateTime date)
     {
-        var appts = await _service.GetAppointmentsByDate(date);
+        var appts = await _service.GetAppointmentsByDateAsync(date);
         var dtos = _mapper.Map<IEnumerable<AppointmentDto>>(appts);
         return Ok(dtos);
     }
@@ -81,7 +76,7 @@ public class AppointmentController : ControllerBase
         if (string.IsNullOrWhiteSpace(username)) 
             return BadRequest(new { message = "Username is required." });
         
-        var appts = await _service.LookupAppointmentsByUsername(username);
+        var appts = await _service.LookupAppointmentsByUsernameAsync(username);
         if (appts == null) 
             return NotFound(new { message = $"Customer with username '{username}' not found." });
         
@@ -93,7 +88,7 @@ public class AppointmentController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {
-        var result = await _service.DeleteAppointment(new AppointmentModel { AppointmentId = id });
+        var result = await _service.DeleteAppointmentAsync(id);
         if (result is null) 
             return NotFound(new { message = $"Appointment with ID {id} not found." });
         

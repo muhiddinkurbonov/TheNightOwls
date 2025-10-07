@@ -39,7 +39,10 @@ public class CustomerRepository(
             if (usernameCustomerModel != null)
                 throw new InvalidOperationException($"Customer with username {customer.Username} already exists.");
         }
-        foundCustomerModel.Update(customer);
+        // foundCustomerModel.Update(customer);
+        foundCustomerModel.Username = customer.Username;
+        foundCustomerModel.Name = customer.Name;
+        foundCustomerModel.ContactInfo = customer.ContactInfo;
         _fadebookDbContext.customerTable.Update(foundCustomerModel);
         return foundCustomerModel;
     }

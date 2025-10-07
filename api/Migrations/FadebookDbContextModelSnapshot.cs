@@ -4,7 +4,6 @@ using Fadebook.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,11 +11,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace api.Migrations
 {
     [DbContext(typeof(FadebookDbContext))]
-    [Migration("20251003190443_FridayUpdate")]
-    partial class FridayUpdate
+    partial class FadebookDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,6 +30,9 @@ namespace api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AppointmentId"));
 
+                    b.Property<DateTime>("AppointmentDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("BarberId")
                         .HasColumnType("int");
 
@@ -45,9 +45,6 @@ namespace api.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("appointmentDate")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("AppointmentId");
 
@@ -90,26 +87,24 @@ namespace api.Migrations
 
                     b.HasKey("BarberId");
 
+                    b.HasIndex("Username")
+                        .IsUnique();
+
                     b.ToTable("barberTable");
                 });
 
             modelBuilder.Entity("Fadebook.Models.BarberServiceModel", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
                     b.Property<int>("BarberId")
                         .HasColumnType("int");
 
                     b.Property<int>("ServiceId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
 
-                    b.HasIndex("BarberId");
+                    b.HasKey("BarberId", "ServiceId");
 
                     b.HasIndex("ServiceId");
 
@@ -139,6 +134,9 @@ namespace api.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("CustomerId");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
 
                     b.ToTable("customerTable");
                 });

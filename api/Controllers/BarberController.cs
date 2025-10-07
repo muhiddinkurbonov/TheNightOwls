@@ -57,18 +57,18 @@ namespace Fadebook.Controllers
             var model = _mapper.Map<BarberModel>(dto);
             var created = await _service.AddAsync(model);
             var createdDto = _mapper.Map<BarberDto>(created);
-            return CreatedAtAction("GetBarberById", new { id = created.BarberId }, createdDto);
+            return Created($"api/barber/{created.BarberId}", createdDto); 
         }
 
         // PUT: api/barber/{id}
-        [HttpPut("{id:int}")]
-        public async Task<ActionResult<BarberDto>> Update([FromRoute] int id, [FromBody] BarberDto dto)
+        [HttpPut("{barberId}")]
+        public async Task<ActionResult<BarberDto>> Update([FromRoute] int barberId, [FromBody] BarberDto dto)
         {
             var model = _mapper.Map<BarberModel>(dto);
-            model.BarberId = id;
-            var updated = await _service.UpdateAsync(model);
+            model.BarberId = barberId;
+            var updated = await _service.UpdateAsync(barberId, model);
             if (updated is null) 
-                return NotFound(new { message = $"Barber with ID {id} not found." });
+                return NotFound(new { message = $"Barber with ID {barberId} not found." });
             
             return Ok(_mapper.Map<BarberDto>(updated));
         }
@@ -78,7 +78,7 @@ namespace Fadebook.Controllers
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
             var deleted = await _service.DeleteByIdAsync(id);
-            if (!deleted) 
+            if (deleted != null) 
                 return NotFound(new { message = $"Barber with ID {id} not found." });
             
             return NoContent();
@@ -92,7 +92,7 @@ namespace Fadebook.Controllers
                 return BadRequest(new { message = "Service IDs are required." });
             
             var updated = await _service.UpdateBarberServicesAsync(id, serviceIds);
-            if (!updated) 
+            if (updated != null) 
                 return NotFound(new { message = $"Barber with ID {id} not found." });
             
             return NoContent();

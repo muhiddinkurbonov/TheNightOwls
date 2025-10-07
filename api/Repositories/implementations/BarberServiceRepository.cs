@@ -18,19 +18,25 @@ public class BarberServiceRepository(
     {
         return await _fadebookDbContext.barberServiceTable
             .Where(bsm => bsm.BarberId == barberId)
+            .Include(bsm => bsm.Service)
+            .Include(bsm => bsm.Barber)
             .ToListAsync();
     }
     public async Task<IEnumerable<BarberServiceModel>> GetByServiceIdAsync(int serviceId)
     {
         return await _fadebookDbContext.barberServiceTable
             .Where(bsm => bsm.ServiceId == serviceId)
+            .Include(bsm => bsm.Service)
+            .Include(bsm => bsm.Barber)
             .ToListAsync();
     }
     public async Task<BarberServiceModel?> GetByBarberIdServiceIdAsync(int barberId, int serviceId)
     {
         return await _fadebookDbContext.barberServiceTable
             .Where(bsm => bsm.BarberId == barberId && bsm.ServiceId == serviceId)
-            .FirstAsync();
+            .Include(bsm => bsm.Service)
+            .Include(bsm => bsm.Barber)
+            .FirstOrDefaultAsync();
     }
     public async Task<BarberServiceModel> AddAsync(BarberServiceModel barberServiceModel)
     {

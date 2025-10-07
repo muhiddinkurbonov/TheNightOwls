@@ -52,6 +52,13 @@ public class AppointmentManagementService(
     {
         return await _appointmentRepository.GetByCustomerIdAsync(customerId);
     }
+    public async Task<AppointmentModel> GetAppointmentByIdAsync(int appointmentId)
+    {
+        var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
+        if (appointment is null)
+            throw new KeyNotFoundException($"Appointment with id \"{appointmentId} does not exist");
+        return appointment; 
+    }
     public async Task<IEnumerable<AppointmentModel>> GetAppointmentsByBarberIdAsync(int barberId)
     {
         return await _appointmentRepository.GetByBarberIdAsync(barberId);

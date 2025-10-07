@@ -9,6 +9,7 @@ public interface IAppointmentManagementService
     Task<AppointmentModel> UpdateAppointmentAsync(int appointmentId, AppointmentModel appointment);
     Task<IEnumerable<AppointmentModel>> GetAppointmentsByDateAsync(DateTime dateTime);
     Task<IEnumerable<AppointmentModel>> GetAppointmentsByCustomerIdAsync(int customerId);
+    Task<AppointmentModel> GetAppointmentByIdAsync(int appointmentId);
     Task<IEnumerable<AppointmentModel>> GetAppointmentsByBarberIdAsync(int barberId);
     Task<AppointmentModel> DeleteAppointmentAsync(int appointmentId);
     Task<IEnumerable<AppointmentModel>> LookupAppointmentsByUsernameAsync(string username);

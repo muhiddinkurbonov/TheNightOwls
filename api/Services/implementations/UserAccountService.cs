@@ -10,7 +10,7 @@ namespace Fadebook.Services;
 public class UserAccountService(
     IDbTransactionContext _dbTransactionContext,
     ICustomerRepository _customerRepository
-    ): IUserAccountService
+    ) : IUserAccountService
 {
     public async Task<CustomerModel> LoginAsync(string username)
     {
@@ -32,7 +32,7 @@ public class UserAccountService(
             throw new ValidationException($"Given customer model is incomplete: \n {customerModel.ToJson()}");
         var foundCustomer = await _customerRepository.GetByUsernameAsync(customerModel.Username);
         if (foundCustomer is null)
-            throw new InvalidOperationException($"Customer with username {customerModel.Username} already exists");
+            throw new InvalidOperationException($"Customer with username \"{customerModel.Username}\" already exists");
         try
         {
             await _customerRepository.AddAsync(customerModel);
@@ -43,5 +43,13 @@ public class UserAccountService(
         {
             throw;
         }
+    }
+
+    public async Task<CustomerModel> GetCustomerByIdAsync(int customerId)
+    {
+        var customer = await _customerRepository.GetByIdAsync(customerId);
+        if (customer is null)
+            throw new KeyNotFoundException($"Customer with id \"{customerId}\" does not exists");
+        return customer;
     }
 }

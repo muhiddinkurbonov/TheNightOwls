@@ -11,6 +11,6 @@ public interface IUserAccountService
 {
     Task<CustomerModel> LoginAsync(string username);
     Task<bool> CheckIfUsernameExistsAsync(string username);
-
     Task<CustomerModel> SignUpCustomerAsync(CustomerModel customerModel);
+    Task<CustomerModel> GetCustomerByIdAsync(int customerId);
 }
