@@ -25,6 +25,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers(); // let's add the controller classes as well...
 
+// CORS: allow Next.js dev server
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+        // .AllowCredentials(); // enable only if you use cookies
+    });
+});
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -149,6 +161,9 @@ app.UseHttpsRedirection();
 // app.UseAuthentication();
 // app.UseAuthorization();
 app.UseMiddleware<RequestLoggingMiddleware>();
+
+// Apply CORS before mapping controllers
+app.UseCors("Frontend");
 app.MapControllers(); 
 
 await SeedApp(app);

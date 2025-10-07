@@ -57,7 +57,7 @@ namespace Fadebook.Controllers
             var model = _mapper.Map<BarberModel>(dto);
             var created = await _service.AddAsync(model);
             var createdDto = _mapper.Map<BarberDto>(created);
-            return CreatedAtAction("GetBarberById", new { id = created.BarberId }, createdDto);
+            return Created($"api/barber/{created.BarberId}", createdDto); 
         }
 
         // PUT: api/barber/{id}

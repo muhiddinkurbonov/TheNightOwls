@@ -38,7 +38,7 @@ public class AppointmentController : ControllerBase
             return Conflict(new { message = "Unable to create appointment. Verify that Customer, Barber, and Service IDs exist." });
         
         var dto = _mapper.Map<AppointmentDto>(created);
-        return CreatedAtAction("GetAppointmentById", new { id = created.AppointmentId }, dto);
+        return Created($"api/appointment/{created.AppointmentId}", dto);
     }
 
     // GET: api/appointment/{id}
