@@ -25,7 +25,7 @@ public class CustomerRepository(
     //find customer by username
     public async Task<CustomerModel?> GetByUsernameAsync(string username)
     {
-        return await _fadebookDbContext.customerTable.Where(c => c.Username == username).FirstAsync();
+        return await _fadebookDbContext.customerTable.Where(c => c.Username == username).FirstOrDefaultAsync();
     }
 
     public async Task<CustomerModel> UpdateAsync(int customerId, CustomerModel customer)
@@ -35,7 +35,7 @@ public class CustomerRepository(
             throw new KeyNotFoundException($"Customer with CustomerId {customerId} was not found");
         if (customer.Username != null && foundCustomerModel.Username != customer.Username)
         {
-            var usernameCustomerModel = GetByUsernameAsync(customer.Username);
+            var usernameCustomerModel = await GetByUsernameAsync(customer.Username);
             if (usernameCustomerModel != null)
                 throw new InvalidOperationException($"Customer with username {customer.Username} already exists.");
         }
@@ -49,7 +49,7 @@ public class CustomerRepository(
 
     public async Task<CustomerModel> AddAsync(CustomerModel customer)
     {
-        var usernameCustomerModel = GetByUsernameAsync(customer.Username);
+        var usernameCustomerModel = await GetByUsernameAsync(customer.Username);
         if (usernameCustomerModel != null)
             throw new InvalidOperationException($"Customer with username {customer.Username} already exists.");
         await _fadebookDbContext.customerTable.AddAsync(customer);

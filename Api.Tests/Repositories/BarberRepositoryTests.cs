@@ -153,7 +153,8 @@ public class BarberRepositoryTests: RepositoryTestBase
         };
 
         // Act
-        var found = await _repo.UpdateAsync(updatedBarber);
+        var found = await _repo.UpdateAsync(testId, updatedBarber);
+        await _context.SaveChangesAsync();
 
         // Assert
         found.Should().NotBeNull();
@@ -165,7 +166,7 @@ public class BarberRepositoryTests: RepositoryTestBase
     }
 
     [Fact]
-    public async Task UpdateAsync_WhenBarberDoesNotExist_ShouldReturnNull()
+    public async Task UpdateAsync_WhenBarberDoesNotExist_ShouldThrowKeyNotFoundException()
     {
         // Arrange
         var testId = 1;
@@ -184,19 +185,17 @@ public class BarberRepositoryTests: RepositoryTestBase
             BarberId = testId + 1,
             Username = "tom_doe",
             Name = "Tom Doe",
-            Specialty = "Shape Ups",  
+            Specialty = "Shape Ups",
             ContactInfo = "tom@example.com"
         };
 
-        // Act
-        var found = await _repo.UpdateAsync(updatedBarber);
-
-        // Assert
-        found.Should().BeNull();
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+            await _repo.UpdateAsync(testId + 1, updatedBarber));
     }
 
     [Fact]
-    public async Task DeleteByIdAsync_WhenBarberExists_ShouldReturnTrue()
+    public async Task DeleteByIdAsync_WhenBarberExists_ShouldReturnDeletedBarber()
     {
         // Arrange
         var testId = 1;
@@ -212,14 +211,15 @@ public class BarberRepositoryTests: RepositoryTestBase
         await _context.SaveChangesAsync();
 
         // Act
-        var found = await _repo.DeleteByIdAsync(testId);
+        var found = await _repo.RemoveByIdAsync(testId);
 
         // Assert
-        found.Should().BeTrue();
+        found.Should().NotBeNull();
+        found.BarberId.Should().Be(testId);
     }
 
     [Fact]
-    public async Task DeleteByIdAsync_WhenBarberDoesNotExist_ShouldReturnFalse()
+    public async Task DeleteByIdAsync_WhenBarberDoesNotExist_ShouldThrowKeyNotFoundException()
     {
         // Arrange
         var testId = 1;
@@ -234,11 +234,9 @@ public class BarberRepositoryTests: RepositoryTestBase
         _context.barberTable.Add(barber);
         await _context.SaveChangesAsync();
 
-        // Act
-        var found = await _repo.DeleteByIdAsync(testId + 1);
-
-        // Assert
-        found.Should().BeFalse();
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+            await _repo.RemoveByIdAsync(testId + 1));
     }
 }
 

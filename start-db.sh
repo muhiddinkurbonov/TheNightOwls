@@ -60,13 +60,22 @@ done
 echo ""
 echo "SQL Server is ready!"
 
+# Drop and recreate the database
+echo ""
+echo "=========================================="
+echo "Dropping and Recreating Database"
+echo "=========================================="
+
+cd api
+
+echo "Dropping existing database if it exists..."
+dotnet ef database drop --force
+
 # Run EF Core migrations
 echo ""
 echo "=========================================="
 echo "Running EF Core Migrations"
 echo "=========================================="
-
-cd api
 
 # Check if migrations directory exists
 if [ ! -d "Migrations" ]; then
