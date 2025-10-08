@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace api.Migrations
 {
     [DbContext(typeof(FadebookDbContext))]
-    [Migration("20251006201001_Init")]
-    partial class Init
+    [Migration("20251008190344_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -98,18 +98,24 @@ namespace api.Migrations
 
             modelBuilder.Entity("Fadebook.Models.BarberServiceModel", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("BarberId")
                         .HasColumnType("int");
 
                     b.Property<int>("ServiceId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.HasKey("BarberId", "ServiceId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ServiceId");
+
+                    b.HasIndex("BarberId", "ServiceId")
+                        .IsUnique();
 
                     b.ToTable("barberServiceTable");
                 });
@@ -195,13 +201,13 @@ namespace api.Migrations
             modelBuilder.Entity("Fadebook.Models.BarberServiceModel", b =>
                 {
                     b.HasOne("Fadebook.Models.BarberModel", "Barber")
-                        .WithMany()
+                        .WithMany("BarberServices")
                         .HasForeignKey("BarberId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Fadebook.Models.ServiceModel", "Service")
-                        .WithMany()
+                        .WithMany("BarberServices")
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -209,6 +215,16 @@ namespace api.Migrations
                     b.Navigation("Barber");
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("Fadebook.Models.BarberModel", b =>
+                {
+                    b.Navigation("BarberServices");
+                });
+
+            modelBuilder.Entity("Fadebook.Models.ServiceModel", b =>
+                {
+                    b.Navigation("BarberServices");
                 });
 #pragma warning restore 612, 618
         }

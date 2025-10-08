@@ -22,13 +22,6 @@ namespace Fadebook.Controllers
             _mapper = mapper;
         }
 
-        // Methods
-
-        // Enroll Student In Course
-        //[Authorize(Roles = "Student")]
-        //[Authorize(Roles = "Instructor")]
-
-        // GET: api/barber
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<BarberDto>>> GetAll()
@@ -51,24 +44,22 @@ namespace Fadebook.Controllers
 
         // POST: api/barber
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        public async Task<ActionResult<BarberDto>> Create([FromBody] BarberDto dto)
+        public async Task<ActionResult<BarberDto>> Create([FromBody] CreateBarberDto dto)
         {
             var model = _mapper.Map<BarberModel>(dto);
-            var created = await _service.AddAsync(model);
+            var created = await _service.AddBarberWithServicesAsync(model, dto.ServiceIds);
             var createdDto = _mapper.Map<BarberDto>(created);
             return Created($"api/barber/{created.BarberId}", createdDto); 
         }
 
         // PUT: api/barber/{id}
-        [HttpPut("{barberId}")]
-        public async Task<ActionResult<BarberDto>> Update([FromRoute] int barberId, [FromBody] BarberDto dto)
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<BarberDto>> Update([FromRoute] int id, [FromBody] BarberDto dto)
         {
             var model = _mapper.Map<BarberModel>(dto);
-            model.BarberId = barberId;
-            var updated = await _service.UpdateAsync(barberId, model);
+            var updated = await _service.UpdateAsync(id, model);
             if (updated is null) 
-                return NotFound(new { message = $"Barber with ID {barberId} not found." });
+                return NotFound(new { message = $"Barber with ID {id} not found." });
             
             return Ok(_mapper.Map<BarberDto>(updated));
         }
@@ -78,10 +69,23 @@ namespace Fadebook.Controllers
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
             var deleted = await _service.DeleteByIdAsync(id);
-            if (deleted != null) 
+            if (deleted is null) 
                 return NotFound(new { message = $"Barber with ID {id} not found." });
             
             return NoContent();
+        }
+
+        // GET: api/barber/{id}/services
+        [HttpGet("{id:int}/services")]
+        public async Task<ActionResult<IEnumerable<ServiceDto>>> GetBarberServices([FromRoute] int id)
+        {
+            var barber = await _service.GetByIdAsync(id);
+            if (barber is null)
+                return NotFound(new { message = $"Barber with ID {id} not found." });
+
+            var services = await _service.GetBarberServicesAsync(id);
+            var serviceDtos = _mapper.Map<IEnumerable<ServiceDto>>(services);
+            return Ok(serviceDtos);
         }
 
         // PUT: api/barber/{id}/services
@@ -91,11 +95,15 @@ namespace Fadebook.Controllers
             if (serviceIds is null || !serviceIds.Any()) 
                 return BadRequest(new { message = "Service IDs are required." });
             
-            var updated = await _service.UpdateBarberServicesAsync(id, serviceIds);
-            if (updated != null) 
-                return NotFound(new { message = $"Barber with ID {id} not found." });
-            
-            return NoContent();
+            try
+            {
+                var updated = await _service.UpdateBarberServicesAsync(id, serviceIds);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
 
 

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 using System.Text.Json;
@@ -35,7 +35,7 @@ public abstract class AModel
                 // Ignore mapped navigation properties (those with [ForeignKey] attribute on another property)
                 prop.GetCustomAttribute<ForeignKeyAttribute>() == null &&
                 // Optionally ignore primary key
-                (ignorePrimaryKey || prop.GetCustomAttribute<KeyAttribute>() == null));
+                (!ignorePrimaryKey || prop.GetCustomAttribute<KeyAttribute>() == null));
 
         foreach (var prop in properties)
         {

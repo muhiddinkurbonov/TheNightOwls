@@ -1,4 +1,4 @@
-﻿
+
 using Fadebook.DB;
 using Fadebook.Models;
 using Fadebook.Repositories;
@@ -13,4 +13,5 @@ public interface IUserAccountService
     Task<bool> CheckIfUsernameExistsAsync(string username);
     Task<CustomerModel> SignUpCustomerAsync(CustomerModel customerModel);
     Task<CustomerModel> GetCustomerByIdAsync(int customerId);
+    Task<IEnumerable<CustomerModel>> GetAllCustomersAsync();
 }

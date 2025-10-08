@@ -17,4 +17,7 @@ public class ServiceModel: AModel
     [Required]
     [Range(0, 1000)]
     public double ServicePrice { get; set; }
+
+    // Navigation property for explicit many-to-many relationship
+    public ICollection<BarberServiceModel> BarberServices { get; set; } = new List<BarberServiceModel>();
 }

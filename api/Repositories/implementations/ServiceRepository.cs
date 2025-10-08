@@ -26,4 +26,14 @@ public class ServiceRepository(
         await _fadebookDbContext.serviceTable.AddAsync(serviceModel);
         return serviceModel;
     }
+
+    public async Task<ServiceModel?> DeleteAsync(int serviceId)
+    {
+        var service = await GetByIdAsync(serviceId);
+        if (service is null)
+            return null;
+        
+        _fadebookDbContext.serviceTable.Remove(service);
+        return service;
+    }
 }

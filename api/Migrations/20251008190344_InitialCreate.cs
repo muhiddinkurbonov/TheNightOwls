@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace api.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -95,13 +95,14 @@ namespace api.Migrations
                 name: "barberServiceTable",
                 columns: table => new
                 {
-                    BarberId = table.Column<int>(type: "int", nullable: false),
-                    ServiceId = table.Column<int>(type: "int", nullable: false),
                     Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BarberId = table.Column<int>(type: "int", nullable: false),
+                    ServiceId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_barberServiceTable", x => new { x.BarberId, x.ServiceId });
+                    table.PrimaryKey("PK_barberServiceTable", x => x.Id);
                     table.ForeignKey(
                         name: "FK_barberServiceTable_barberTable_BarberId",
                         column: x => x.BarberId,
@@ -130,6 +131,12 @@ namespace api.Migrations
                 name: "IX_appointmentTable_ServiceId",
                 table: "appointmentTable",
                 column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_barberServiceTable_BarberId_ServiceId",
+                table: "barberServiceTable",
+                columns: new[] { "BarberId", "ServiceId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_barberServiceTable_ServiceId",
