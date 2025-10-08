@@ -1,5 +1,3 @@
-
-
 using AutoMapper;
 using Serilog;
 using System.Text.Json.Serialization;
@@ -75,6 +73,19 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddAutoMapper(typeof(Program));
+
+// Register HttpClientFactory
+builder.Services.AddHttpClient();
+
+// Make Configuration explicitly available for DI
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+
+// Register HttpClient factory and a named client for Google APIs
+// builder.Services.AddHttpClient("google", client =>
+// {
+//     client.BaseAddress = new Uri("https://www.googleapis.com/");
+//     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+// });
 
 builder.Services.AddDbContext<FadebookDbContext>((options) =>
 {
