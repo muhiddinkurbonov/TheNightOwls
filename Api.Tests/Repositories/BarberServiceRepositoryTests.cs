@@ -140,7 +140,7 @@ public class BarberServiceRepositoryTests: RepositoryTestBase
     }
 
     [Fact]
-    public async Task AddBarberService_WhenDuplicateExists_ShouldThrowInvalidOperationException()
+    public async Task AddBarberService_WhenDuplicateExists_ShouldReturnExisting()
     {
         // Arrange
         var barberId = 1;
@@ -157,10 +157,14 @@ public class BarberServiceRepositoryTests: RepositoryTestBase
         _context.barberServiceTable.Add(entity);
         await _context.SaveChangesAsync();
 
-        // Act & Assert
+        // Act
         var newEntity = new BarberServiceModel { BarberId = barberId, ServiceId = serviceId };
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await _repo.AddAsync(newEntity));
+        var returned = await _repo.AddAsync(newEntity);
+
+        // Assert
+        returned.Should().NotBeNull();
+        returned.BarberId.Should().Be(barberId);
+        returned.ServiceId.Should().Be(serviceId);
     }
 
     [Fact]
@@ -189,11 +193,12 @@ public class BarberServiceRepositoryTests: RepositoryTestBase
     }
 
     [Fact]
-    public async Task RemoveBarberServiceById_WhenNotExists_ShouldThrowKeyNotFoundException()
+    public async Task RemoveBarberServiceById_WhenNotExists_ShouldReturnNull()
     {
-        // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-            await _repo.RemoveByIdAsync(999));
+        // Act
+        var removed = await _repo.RemoveByIdAsync(999);
+        // Assert
+        removed.Should().BeNull();
     }
 
     [Fact]

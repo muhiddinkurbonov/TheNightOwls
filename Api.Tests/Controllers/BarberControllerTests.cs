@@ -9,6 +9,7 @@ using Fadebook.Controllers;
 using Fadebook.Models;
 using Fadebook.Services;
 using Fadebook.DTOs;
+using Fadebook.Exceptions;
 
 namespace Api.Tests.Controllers;
 
@@ -72,32 +73,29 @@ public class BarberControllerTests
     }
 
     [Fact]
-    public async Task GetById_ReturnsNotFound_WhenBarberDoesNotExist()
+    public async Task GetById_ThrowsNotFound_WhenBarberDoesNotExist()
     {
         // Arrange
-        _mockService.Setup(s => s.GetByIdAsync(1)).ReturnsAsync((BarberModel)null);
+        _mockService.Setup(s => s.GetByIdAsync(1)).ThrowsAsync(new NotFoundException(""));
 
-        // Act
-        var result = await _controller.GetById(1);
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() => _controller.GetById(1));
     }
 
     [Fact]
     public async Task Create_ReturnsCreated_WhenBarberIsValid()
     {
         // Arrange
-        var barberDto = new BarberDto { Username = "barber3", Name = "Bob Barber" };
+        var createDto = new CreateBarberDto { Username = "barber3", Name = "Bob Barber", ServiceIds = new List<int> { 1, 2 } };
         var barberModel = new BarberModel { Username = "barber3", Name = "Bob Barber" };
         var createdModel = new BarberModel { BarberId = 3, Username = "barber3", Name = "Bob Barber" };
 
-        _mockMapper.Setup(m => m.Map<BarberModel>(barberDto)).Returns(barberModel);
-        _mockService.Setup(s => s.AddAsync(barberModel)).ReturnsAsync(createdModel);
-        _mockMapper.Setup(m => m.Map<BarberDto>(createdModel)).Returns(barberDto);
+        _mockMapper.Setup(m => m.Map<BarberModel>(createDto)).Returns(barberModel);
+        _mockService.Setup(s => s.AddBarberWithServicesAsync(barberModel, createDto.ServiceIds)).ReturnsAsync(createdModel);
+        _mockMapper.Setup(m => m.Map<BarberDto>(createdModel)).Returns(new BarberDto { BarberId = 3, Username = "barber3", Name = "Bob Barber" });
 
         // Act
-        var result = await _controller.Create(barberDto);
+        var result = await _controller.Create(createDto);
 
         // Assert
         result.Result.Should().BeOfType<CreatedResult>();
@@ -124,27 +122,24 @@ public class BarberControllerTests
     }
 
     [Fact]
-    public async Task Update_ReturnsNotFound_WhenBarberDoesNotExist()
+    public async Task Update_ThrowsNotFound_WhenBarberDoesNotExist()
     {
         // Arrange
         var barberDto = new BarberDto();
         var barberModel = new BarberModel();
 
         _mockMapper.Setup(m => m.Map<BarberModel>(barberDto)).Returns(barberModel);
-        _mockService.Setup(s => s.UpdateAsync(1, It.IsAny<BarberModel>())).ReturnsAsync((BarberModel)null);
+        _mockService.Setup(s => s.UpdateAsync(1, It.IsAny<BarberModel>())).ThrowsAsync(new NotFoundException(""));
 
-        // Act
-        var result = await _controller.Update(1, barberDto);
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() => _controller.Update(1, barberDto));
     }
 
     [Fact]
     public async Task Delete_ReturnsNoContent_WhenBarberIsDeleted()
     {
         // Arrange
-        _mockService.Setup(s => s.DeleteByIdAsync(1)).ReturnsAsync((BarberModel)null);
+        _mockService.Setup(s => s.DeleteByIdAsync(1)).ReturnsAsync(new BarberModel { BarberId = 1 });
 
         // Act
         var result = await _controller.Delete(1);
@@ -154,17 +149,13 @@ public class BarberControllerTests
     }
 
     [Fact]
-    public async Task Delete_ReturnsNotFound_WhenBarberDoesNotExist()
+    public async Task Delete_ThrowsNotFound_WhenBarberDoesNotExist()
     {
         // Arrange
-        var barberModel = new BarberModel { BarberId = 1 };
-        _mockService.Setup(s => s.DeleteByIdAsync(1)).ReturnsAsync(barberModel);
+        _mockService.Setup(s => s.DeleteByIdAsync(1)).ThrowsAsync(new NotFoundException(""));
 
-        // Act
-        var result = await _controller.Delete(1);
-
-        // Assert
-        result.Should().BeOfType<NotFoundObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() => _controller.Delete(1));
     }
 
     [Fact]
@@ -172,7 +163,7 @@ public class BarberControllerTests
     {
         // Arrange
         var serviceIds = new List<int> { 1, 2, 3 };
-        _mockService.Setup(s => s.UpdateBarberServicesAsync(1, serviceIds)).ReturnsAsync((IEnumerable<BarberServiceModel>)null);
+        _mockService.Setup(s => s.UpdateBarberServicesAsync(1, serviceIds)).ReturnsAsync(new List<BarberServiceModel>());
 
         // Act
         var result = await _controller.UpdateServices(1, serviceIds);
@@ -195,17 +186,13 @@ public class BarberControllerTests
     }
 
     [Fact]
-    public async Task UpdateServices_ReturnsNotFound_WhenBarberDoesNotExist()
+    public async Task UpdateServices_ThrowsNotFound_WhenServiceThrows()
     {
         // Arrange
         var serviceIds = new List<int> { 1, 2, 3 };
-        var barberServices = new List<BarberServiceModel>();
-        _mockService.Setup(s => s.UpdateBarberServicesAsync(1, serviceIds)).ReturnsAsync(barberServices);
+        _mockService.Setup(s => s.UpdateBarberServicesAsync(1, serviceIds)).ThrowsAsync(new NotFoundException(""));
 
-        // Act
-        var result = await _controller.UpdateServices(1, serviceIds);
-
-        // Assert
-        result.Should().BeOfType<NotFoundObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() => _controller.UpdateServices(1, serviceIds));
     }
 }

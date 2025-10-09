@@ -411,10 +411,11 @@ public class AppointmentRepositoryTests: RepositoryTestBase
     }
 
     [Fact]
-    public async Task DeleteApptById_WhenAppointmentDoesNotExist_ShouldThrowKeyNotFoundException()
+    public async Task DeleteApptById_WhenAppointmentDoesNotExist_ShouldReturnNull()
     {
-        // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-            await _repo.RemoveByIdAsync(999));
+        // Act
+        var deleted = await _repo.RemoveByIdAsync(999);
+        // Assert
+        deleted.Should().BeNull();
     }
 }

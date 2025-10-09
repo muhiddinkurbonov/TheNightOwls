@@ -4,31 +4,28 @@ using Xunit;
 using Moq;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Fadebook.Controllers;
 using Fadebook.Models;
 using Fadebook.Services;
 using Fadebook.DTOs;
+using Fadebook.Exceptions;
 
 namespace Api.Tests.Controllers;
 
 public class CustomerAppointmentControllerTests
 {
-    private readonly Mock<ILogger<CustomerAppointmentController>> _mockLogger;
     private readonly Mock<ICustomerAppointmentService> _mockCustomerAppointmentService;
     private readonly Mock<IUserAccountService> _mockUserAccountService;
     private readonly Mock<IMapper> _mockMapper;
-    private readonly CustomerAppointmentController _controller;
+    private readonly CustomerController _controller;
 
     public CustomerAppointmentControllerTests()
     {
-        _mockLogger = new Mock<ILogger<CustomerAppointmentController>>();
         _mockCustomerAppointmentService = new Mock<ICustomerAppointmentService>();
         _mockUserAccountService = new Mock<IUserAccountService>();
         _mockMapper = new Mock<IMapper>();
-        _controller = new CustomerAppointmentController(
-            _mockLogger.Object,
+        _controller = new CustomerController(
             _mockCustomerAppointmentService.Object,
             _mockUserAccountService.Object,
             _mockMapper.Object
@@ -67,16 +64,13 @@ public class CustomerAppointmentControllerTests
     }
 
     [Fact]
-    public async Task GetById_ReturnsNotFound_WhenCustomerDoesNotExist()
+    public async Task GetById_ThrowsNotFound_WhenCustomerDoesNotExist()
     {
         // Arrange
-        _mockUserAccountService.Setup(s => s.GetCustomerByIdAsync(1)).ReturnsAsync((CustomerModel)null);
+        _mockUserAccountService.Setup(s => s.GetCustomerByIdAsync(1)).ThrowsAsync(new NotFoundException("not found"));
 
-        // Act
-        var result = await _controller.GetById(1);
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() => _controller.GetById(1));
     }
 
     [Fact]
