@@ -31,4 +31,10 @@ export const customersApi = {
     const { data } = await axiosInstance.post('/api/customer/request-appointment', request);
     return data;
   },
+
+  // GET: api/customeraccount/username-exists/{username}
+  usernameExists: async (username: string): Promise<boolean> => {
+    const { data } = await axiosInstance.get(`/api/customeraccount/username-exists/${encodeURIComponent(username)}`);
+    return Boolean(data?.exists);
+  },
 };
