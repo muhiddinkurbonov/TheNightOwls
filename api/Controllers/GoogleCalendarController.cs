@@ -17,6 +17,7 @@ public class GoogleCalendarController(
     IHttpClientFactory _httpClientFactory,
     IAppointmentManagementService _appointmentManagementService,
     IConfiguration _configuration
+    // ILogger _logger
     ) : ControllerBase
 {
     [HttpGet("google-auth", Name = "GoogleAuth")]
@@ -66,9 +67,14 @@ public class GoogleCalendarController(
         var response = await client.PostAsync("https://oauth2.googleapis.com/token", body);
         var json = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
-            return BadRequest(json);
+        {
 
-        var tokenData = JsonSerializer.Deserialize<JsonElement>(json);
+            // _logger.LogDebug("--------------------JSON TOKENS--------------------");
+            // _logger.LogDebug(json.ToString());
+            return BadRequest(json);
+        }
+
+            var tokenData = JsonSerializer.Deserialize<JsonElement>(json);
         var accessToken = tokenData.GetProperty("access_token").GetString();
         var refreshToken = tokenData.TryGetProperty("refresh_token", out var rt) ? rt.GetString() : null;
 
