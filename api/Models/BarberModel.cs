@@ -25,4 +25,7 @@ public class BarberModel : AModel
     [Required]
     [StringLength(50, ErrorMessage = "Name must be between 1 and 50 characters.")]
     public string ContactInfo { get; set; } = "";
+
+    // Navigation property for explicit many-to-many relationship
+    public ICollection<BarberServiceModel> BarberServices { get; set; } = new List<BarberServiceModel>();
 }

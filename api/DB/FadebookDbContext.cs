@@ -43,22 +43,27 @@ public class FadebookDbContext : DbContext
             .HasForeignKey(am => am.BarberId)
             .IsRequired();
 
+        // Configure explicit many-to-many relationship between Barber and Service
+        modelBuilder.Entity<BarberServiceModel>()
+            .HasKey(bsm => bsm.Id);
+
+        modelBuilder.Entity<BarberServiceModel>()
+            .HasIndex(bsm => new { bsm.BarberId, bsm.ServiceId })
+            .IsUnique();
+
         modelBuilder.Entity<BarberServiceModel>()
             .HasOne(bsm => bsm.Barber)
-            .WithMany()
+            .WithMany(b => b.BarberServices)
             .HasForeignKey(bsm => bsm.BarberId)
+            .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
         modelBuilder.Entity<BarberServiceModel>()
             .HasOne(bsm => bsm.Service)
-            .WithMany()
+            .WithMany(s => s.BarberServices)
             .HasForeignKey(bsm => bsm.ServiceId)
+            .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
-
-        modelBuilder.Entity<BarberServiceModel>()
-            .HasKey(bsm => new { bsm.BarberId, bsm.ServiceId });
-        
-        // TODO: Add BarberService composite key
 
         base.OnModelCreating(modelBuilder);
     }

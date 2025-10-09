@@ -4,6 +4,7 @@ using Fadebook.Models;
 using Fadebook.Services;
 using AutoMapper;
 using Fadebook.DTOs;
+using System.ComponentModel.DataAnnotations;
 
 namespace Fadebook.Controllers
 {
@@ -11,16 +12,44 @@ namespace Fadebook.Controllers
     [Route("api/[controller]")]
     // "/students
     public class CustomerAccountController(
-        ICustomerAppointmentService _customerAppointmentService,
-        IUserAccountService _userAccountService
+        IUserAccountService _userAccountService,
+        IMapper _mapper 
     ) : ControllerBase
     {
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IsTakenDTO>> CheckUsername([FromBody] NameDTO nameDTO)
+        [HttpPost("signup")]
+        public async Task<ActionResult<CustomerDto>> SignUp([FromBody] CustomerDto customerDto)
         {
-            var result = await _userAccountService.CheckIfUsernameExistsAsync(nameDTO.Name);
-            return Ok(new IsTakenDTO { IsTaken=result });
+            try
+            {
+                var customer = _mapper.Map<CustomerModel>(customerDto);
+                var createdCustomer = await _userAccountService.SignUpCustomerAsync(customer);
+                var dto = _mapper.Map<CustomerDto>(createdCustomer);
+                return Created($"/customer/{createdCustomer.CustomerId}", dto);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // POST: api/customerappointment/login
+        [HttpPost("login")]
+        public async Task<ActionResult<CustomerDto>> Login([FromBody] LoginRequestDto loginRequest)
+        {
+            try
+            {
+                var customer = await _userAccountService.LoginAsync(loginRequest.Username);
+                var dto = _mapper.Map<CustomerDto>(customer);
+                return Ok(dto);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = "Username not found. Please sign up first." });
+            }
         }
 
 

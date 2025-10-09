@@ -33,6 +33,36 @@ public class BarberManagementService(
             throw;
         }
     }
+
+    public async Task<BarberModel> AddBarberWithServicesAsync(BarberModel barber, List<int> serviceIds)
+    {
+        try
+        {
+            // Create the barber first
+            var createdBarber = await _barberRepository.AddAsync(barber);
+            await _dbTransactionContext.SaveChangesAsync();
+
+            // Add services if any were provided
+            if (serviceIds != null && serviceIds.Any())
+            {
+                foreach (var serviceId in serviceIds)
+                {
+                    await _barberServiceRepository.AddAsync(new BarberServiceModel 
+                    { 
+                        BarberId = createdBarber.BarberId, 
+                        ServiceId = serviceId 
+                    });
+                }
+                await _dbTransactionContext.SaveChangesAsync();
+            }
+
+            return createdBarber;
+        }
+        catch
+        {
+            throw;
+        }
+    }
     public async Task<BarberModel> UpdateAsync(int barberId, BarberModel barber)
     {
         try
@@ -63,6 +93,14 @@ public class BarberManagementService(
             throw;
         }
     }
+
+    // Get all services for a specific barber
+    public async Task<IEnumerable<ServiceModel>> GetBarberServicesAsync(int barberId)
+    {
+        var barberServices = await _barberServiceRepository.GetByBarberIdAsync(barberId);
+        return barberServices.Select(bs => bs.Service);
+    }
+
     // Update a barber's available services
     public async Task<IEnumerable<BarberServiceModel>> UpdateBarberServicesAsync(int barberId, List<int> selectedServiceIds)
     {

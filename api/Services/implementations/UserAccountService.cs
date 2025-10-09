@@ -1,4 +1,4 @@
-﻿
+
 using Fadebook.DB;
 using Fadebook.Models;
 using Fadebook.Repositories;
@@ -28,10 +28,10 @@ public class UserAccountService(
 
     public async Task<CustomerModel> SignUpCustomerAsync(CustomerModel customerModel)
     {
-        if (!customerModel.AreAllValuesNotNull())
+        if (!customerModel.AreAllValuesNotNull(ignorePrimaryKey: true))
             throw new ValidationException($"Given customer model is incomplete: \n {customerModel.ToJson()}");
         var foundCustomer = await _customerRepository.GetByUsernameAsync(customerModel.Username);
-        if (foundCustomer is null)
+        if (foundCustomer is not null)
             throw new InvalidOperationException($"Customer with username \"{customerModel.Username}\" already exists");
         try
         {
@@ -51,5 +51,10 @@ public class UserAccountService(
         if (customer is null)
             throw new KeyNotFoundException($"Customer with id \"{customerId}\" does not exists");
         return customer;
+    }
+
+    public async Task<IEnumerable<CustomerModel>> GetAllCustomersAsync()
+    {
+        return await _customerRepository.GetAllAsync();
     }
 }

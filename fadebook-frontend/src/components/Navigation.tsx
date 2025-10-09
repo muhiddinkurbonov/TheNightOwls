@@ -1,16 +1,40 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export function Navigation() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    // Check authentication status
+    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
+    const storedUsername = localStorage.getItem('username') || '';
+    setIsAuthenticated(authStatus);
+    setUsername(storedUsername);
+  }, [pathname]);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('username');
+    localStorage.removeItem('customerId');
+    setIsAuthenticated(false);
+    setUsername('');
+    router.push('/');
+  };
 
   const links = [
     { href: '/', label: 'Home' },
-    { href: '/appointments', label: 'Appointments' },
+    { href: '/my-appointments', label: 'My Appointments' },
     { href: '/barbers', label: 'Barbers' },
     { href: '/book', label: 'Book Appointment' },
+    { href: '/admin', label: 'Admin' },
   ];
 
   return (
@@ -19,7 +43,7 @@ export function Navigation() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
             <Link href="/" className="text-xl font-bold">
-              Night Owls Barbershop
+              Fadebook
             </Link>
             <div className="flex gap-4">
               {links.map((link) => (
@@ -36,6 +60,33 @@ export function Navigation() {
                 </Link>
               ))}
             </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            {isAuthenticated ? (
+              <>
+                <span className="text-sm text-muted-foreground">
+                  Welcome, <span className="font-medium text-foreground">{username}</span>
+                </span>
+                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/signin">
+                  <Button variant="ghost" size="sm">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button size="sm">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
