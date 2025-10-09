@@ -43,11 +43,10 @@ public class AppointmentRepository(
     }
     public async Task<AppointmentModel> AddAsync(AppointmentModel appointmentModel)
     {
-        // await _fadebookDbContext.appointmentTable.AddAsync(appointmentModel);
-        // return appointmentModel;
+      
         var foundAppointment = await this.GetByIdAsync(appointmentModel.AppointmentId);
-        // TODO: Throw exception to be handled -> throw, catch and return 40# code saying resource exists
         if (foundAppointment != null) return foundAppointment;
+
         // Validate foreign keys exist
         var customerExists = await _fadebookDbContext.customerTable
             .AnyAsync(c => c.CustomerId == appointmentModel.CustomerId);
@@ -95,8 +94,7 @@ public class AppointmentRepository(
     public async Task<AppointmentModel> RemoveByIdAsync(int appointmentId)
     {
         var foundAppointmentModel = await this.GetByIdAsync(appointmentId);
-        if (foundAppointmentModel is null)
-            throw new KeyNotFoundException($"Appointment with ID {appointmentId} was not found.");
+        if (foundAppointmentModel is null) return null;
         _fadebookDbContext.appointmentTable.Remove(foundAppointmentModel);
         return foundAppointmentModel;
     }

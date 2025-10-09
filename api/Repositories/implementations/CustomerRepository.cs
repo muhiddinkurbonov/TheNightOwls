@@ -32,12 +32,12 @@ public class CustomerRepository(
     {
         var foundCustomerModel = await GetByIdAsync(customerId);
         if (foundCustomerModel is null)
-            throw new KeyNotFoundException($"Customer with CustomerId {customerId} was not found");
+            return null!;
         if (customer.Username != null && foundCustomerModel.Username != customer.Username)
         {
             var usernameCustomerModel = await GetByUsernameAsync(customer.Username);
             if (usernameCustomerModel != null)
-                throw new InvalidOperationException($"Customer with username {customer.Username} already exists.");
+                return null!; // conflict
         }
         // foundCustomerModel.Update(customer);
         foundCustomerModel.Username = customer.Username;
@@ -51,7 +51,7 @@ public class CustomerRepository(
     {
         var usernameCustomerModel = await GetByUsernameAsync(customer.Username);
         if (usernameCustomerModel != null)
-            throw new InvalidOperationException($"Customer with username {customer.Username} already exists.");
+            return null!; // conflict
         await _fadebookDbContext.customerTable.AddAsync(customer);
         return customer;
     }

@@ -4,6 +4,7 @@
 using Fadebook.DB;
 using Fadebook.Models;
 using Microsoft.EntityFrameworkCore;
+using Fadebook.Exceptions;
 
 namespace Fadebook.Repositories;
 

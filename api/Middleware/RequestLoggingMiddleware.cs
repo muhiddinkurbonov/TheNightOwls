@@ -1,5 +1,7 @@
 using System.Diagnostics;
 
+namespace Fadebook.Middleware;
+
 public class RequestLoggingMiddleware
 {
     private readonly RequestDelegate _next;

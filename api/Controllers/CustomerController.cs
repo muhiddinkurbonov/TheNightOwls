@@ -41,9 +41,6 @@ namespace Fadebook.Controllers
         public async Task<ActionResult<CustomerDto>> GetById(int id)
         {
             var customer = await _userAccountService.GetCustomerByIdAsync(id);
-            if (customer == null) 
-                return NotFound(new { message = $"Customer with ID {id} not found." });
-            
             return Ok(_mapper.Map<CustomerDto>(customer));
         }
 

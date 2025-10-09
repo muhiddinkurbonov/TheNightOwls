@@ -16,6 +16,7 @@ using Fadebook.DB;
 using Fadebook.Services;
 using Fadebook.Repositories;
 using Fadebook.Models;
+using Fadebook.Middleware;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -30,8 +31,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000")
               .AllowAnyHeader()
-              .AllowAnyMethod();
-        // .AllowCredentials(); // enable only if you use cookies
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -153,6 +154,7 @@ builder.Services.AddScoped<IUserAccountService, UserAccountService>();
 builder.Services.AddScoped<ICustomerAppointmentService, CustomerAppointmentService>();
 builder.Services.AddScoped<IAppointmentManagementService, AppointmentManagementService>();
 builder.Services.AddScoped<IBarberManagementService, BarberManagementService>();
+builder.Services.AddScoped<IServiceManagementService, ServiceManagementService>();
 // builder.Services.AddScoped<IInstructorService, InstructorService>();
 // builder.Services.AddScoped<ICourseService, CourseService>();
 
@@ -171,6 +173,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Exception handling middleware should be first in the pipeline
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 // app.UseAuthentication();
 // app.UseAuthorization();
 app.UseMiddleware<RequestLoggingMiddleware>();

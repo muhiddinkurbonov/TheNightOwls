@@ -19,6 +19,8 @@ public class AppointmentManagementService(
         try
         {
             var newAppointment = await _appointmentRepository.AddAsync(appointmentModel);
+            if (newAppointment is null)
+                throw new BadRequestException("Unable to create appointment. Verify that Customer, Barber, and Service IDs exist.");
             await _dbTransactionContext.SaveChangesAsync();
             return newAppointment;
         }
@@ -36,6 +38,8 @@ public class AppointmentManagementService(
         try
         {
             var updatedAppointment = await _appointmentRepository.UpdateAsync(appointmentId, appointmentModel);
+            if (updatedAppointment is null)
+                throw new NotFoundException($"Appointment with ID {appointmentId} not found or invalid foreign keys.");
             await _dbTransactionContext.SaveChangesAsync();
             return updatedAppointment;
         }
@@ -56,7 +60,7 @@ public class AppointmentManagementService(
     {
         var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
         if (appointment is null)
-            throw new KeyNotFoundException($"Appointment with id \"{appointmentId} does not exist");
+            throw new NotFoundException($"Appointment with id \"{appointmentId} does not exist");
         return appointment; 
     }
     public async Task<IEnumerable<AppointmentModel>> GetAppointmentsByBarberIdAsync(int barberId)
@@ -68,6 +72,8 @@ public class AppointmentManagementService(
         try
         {
             var removedAppointment = await _appointmentRepository.RemoveByIdAsync(appointmentId);
+            if (removedAppointment is null)
+                throw new NotFoundException($"Appointment with ID {appointmentId} not found.");
             await _dbTransactionContext.SaveChangesAsync();
             return removedAppointment;
         }
@@ -81,7 +87,7 @@ public class AppointmentManagementService(
     {
         var foundCustomer = await _customerRepository.GetByUsernameAsync(username);
         if (foundCustomer == null)
-            throw new KeyNotFoundException($"Customer with the username \"{username}\" was not found");
+            throw new NotFoundException($"Customer with the username \"{username}\" was not found");
         return await _appointmentRepository.GetByCustomerIdAsync(foundCustomer.CustomerId);
     }
 }

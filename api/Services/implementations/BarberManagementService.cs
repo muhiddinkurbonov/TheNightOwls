@@ -1,5 +1,6 @@
 using Fadebook.Models;
 using Fadebook.Repositories;
+using Fadebook.Exceptions;
 
 namespace Fadebook.Services;
 
@@ -13,6 +14,8 @@ public class BarberManagementService(
     public async Task<BarberModel?> GetByIdAsync(int id)
     {
         var barberEntity = await _barberRepository.GetByIdAsync(id);
+        if (barberEntity is null)
+            throw new NotFoundException($"Barber with ID {id} not found.");
         return barberEntity;
     }
 
@@ -68,6 +71,8 @@ public class BarberManagementService(
         try
         {
             var updatedBarber = await _barberRepository.UpdateAsync(barberId, barber);
+            if (updatedBarber is null)
+                throw new NotFoundException($"Barber with ID {barberId} not found or username already exists.");
             await _dbTransactionContext.SaveChangesAsync();
             return updatedBarber;
         }
@@ -81,6 +86,8 @@ public class BarberManagementService(
         try
         {
             var deletedBarber = await _barberRepository.RemoveByIdAsync(barberId);
+            if (deletedBarber is null)
+                throw new NotFoundException($"Barber with ID {barberId} not found.");
             await _dbTransactionContext.SaveChangesAsync();
             return deletedBarber;
         }

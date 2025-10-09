@@ -4,6 +4,7 @@ using Fadebook.Models;
 using Fadebook.Repositories;
 using Microsoft.Identity.Client;
 using System.ComponentModel.DataAnnotations;
+using Fadebook.Exceptions;
 
 namespace Fadebook.Services;
 
@@ -14,14 +15,18 @@ public class UserAccountService(
 {
     public async Task<CustomerModel> LoginAsync(string username)
     {
+        if (string.IsNullOrWhiteSpace(username))
+            throw new BadRequestException("Username is required.");
         var foundCustomer = await _customerRepository.GetByUsernameAsync(username);
         if (foundCustomer is null)
-            throw new KeyNotFoundException($"Customer with username {username} does not exist");
+            throw new NotFoundException($"Customer with username {username} does not exist");
         return foundCustomer;
     }
 
     public async Task<bool> CheckIfUsernameExistsAsync(string username)
     {
+        if (string.IsNullOrWhiteSpace(username))
+            throw new BadRequestException("Username is required.");
         var foundCustomer = await _customerRepository.GetByUsernameAsync(username);
         return (foundCustomer is not null);
     }
@@ -49,7 +54,7 @@ public class UserAccountService(
     {
         var customer = await _customerRepository.GetByIdAsync(customerId);
         if (customer is null)
-            throw new KeyNotFoundException($"Customer with id \"{customerId}\" does not exists");
+            throw new NotFoundException($"Customer with id \"{customerId}\" does not exists");
         return customer;
     }
 
