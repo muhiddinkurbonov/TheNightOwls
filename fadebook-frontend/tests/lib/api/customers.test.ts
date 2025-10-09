@@ -69,7 +69,7 @@ describe('customersApi', () => {
 
       const result = await customersApi.getServices();
 
-      expect(axiosInstance.get).toHaveBeenCalledWith('/api/customerappointment/services');
+      expect(axiosInstance.get).toHaveBeenCalledWith('/api/customer/services');
       expect(result).toEqual(mockServices);
     });
   });
@@ -90,7 +90,7 @@ describe('customersApi', () => {
 
       const result = await customersApi.getBarbersByService(1);
 
-      expect(axiosInstance.get).toHaveBeenCalledWith('/api/customerappointment/barbers-by-service/1');
+      expect(axiosInstance.get).toHaveBeenCalledWith('/api/customer/barbers-by-service/1');
       expect(result).toEqual(mockBarbers);
     });
   });
@@ -127,7 +127,7 @@ describe('customersApi', () => {
 
       const result = await customersApi.requestAppointment(request);
 
-      expect(axiosInstance.post).toHaveBeenCalledWith('/api/customerappointment/request-appointment', request);
+      expect(axiosInstance.post).toHaveBeenCalledWith('/api/customer/request-appointment', request);
       expect(result).toEqual(mockResponse);
     });
   });
