@@ -97,12 +97,13 @@ public class AppointmentServiceTests : RepositoryTestBase
             Service = serviceModel,
             BarberId = barberModel.BarberId,
             Barber = barberModel,
-            appointmentDate = DateTime.UtcNow.AddDays(1),
+            AppointmentDate = DateTime.UtcNow.AddDays(1),
             Status = "Pending"
         };
 
-        AppointmentModel newAppointment = await _appointmentRepository.AddAppointment(appointmentModel);
-        
+        AppointmentModel newAppointment = await _appointmentRepository.AddAsync(appointmentModel);
+        await _context.SaveChangesAsync();
+
         // Assert
         // Assert.True(_context.appointmentTable.Count() > 0);
         _context.appointmentTable.Should().NotBeEmpty();
@@ -129,13 +130,15 @@ public class AppointmentServiceTests : RepositoryTestBase
             Service = serviceModel,
             BarberId = barberModel.BarberId,
             Barber = barberModel,
-            appointmentDate = DateTime.UtcNow.AddDays(1),
+            AppointmentDate = DateTime.UtcNow.AddDays(1),
             Status = "Pending"
         };
-        await _appointmentRepository.AddAppointment(appointmentModel);
+        await _appointmentRepository.AddAsync(appointmentModel);
+        await _context.SaveChangesAsync();
 
         appointmentModel.Status = "Completed";
-        await _appointmentRepository.UpdateAppointment(appointmentModel);
+        await _appointmentRepository.UpdateAsync(appointmentModel.AppointmentId, appointmentModel);
+        await _context.SaveChangesAsync();
 
         _context.appointmentTable.Should().HaveCount(1);
         _context.appointmentTable.First().Status.Should().Be("Completed");

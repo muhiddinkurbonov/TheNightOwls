@@ -1,5 +1,3 @@
-
-
 using AutoMapper;
 using Serilog;
 using System.Text.Json.Serialization;
@@ -24,6 +22,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddControllers(); // let's add the controller classes as well...
+
+// CORS: allow Next.js dev server
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+        // .AllowCredentials(); // enable only if you use cookies
+    });
+});
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -64,7 +74,20 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddAutoMapper(typeof(Program));
 
-builder.Services.AddDbContext<NightOwlsDbContext>((options) =>
+// Register HttpClientFactory
+builder.Services.AddHttpClient();
+
+// Make Configuration explicitly available for DI
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+
+// Register HttpClient factory and a named client for Google APIs
+// builder.Services.AddHttpClient("google", client =>
+// {
+//     client.BaseAddress = new Uri("https://www.googleapis.com/");
+//     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+// });
+
+builder.Services.AddDbContext<FadebookDbContext>((options) =>
 {
     var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
     options.UseSqlServer(connectionString);
@@ -118,6 +141,7 @@ builder.Services.AddAuthorization( options =>
 */
 
 // repository classes for DI
+builder.Services.AddScoped<IDbTransactionContext, DbTransactionContext>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IBarberRepository, BarberRepository>();
@@ -125,6 +149,7 @@ builder.Services.AddScoped<IBarberServiceRepository, BarberServiceRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 
 // service classes for DI
+builder.Services.AddScoped<IUserAccountService, UserAccountService>();
 builder.Services.AddScoped<ICustomerAppointmentService, CustomerAppointmentService>();
 builder.Services.AddScoped<IAppointmentManagementService, AppointmentManagementService>();
 builder.Services.AddScoped<IBarberManagementService, BarberManagementService>();
@@ -149,6 +174,9 @@ app.UseHttpsRedirection();
 // app.UseAuthentication();
 // app.UseAuthorization();
 app.UseMiddleware<RequestLoggingMiddleware>();
+
+// Apply CORS before mapping controllers
+app.UseCors("Frontend");
 app.MapControllers(); 
 
 await SeedApp(app);
@@ -159,13 +187,13 @@ static async Task SeedApp(WebApplication app)
 {
     using (var scope = app.Services.CreateScope())
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<NightOwlsDbContext>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FadebookDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
         try
         {
-            var testCustomer = await dbContext.customerTable.FindAsync(100000000);
-            if (testCustomer == null)
+            var customerList = await dbContext.customerTable.ToListAsync();
+            if (customerList.Count() == 0)
             {
                 var serviceHaircut = await dbContext.serviceTable.AddAsync(new ServiceModel
                 {
@@ -257,7 +285,7 @@ static async Task SeedApp(WebApplication app)
 
                 var muhidAppointmentWithDean = await dbContext.appointmentTable.AddAsync(new AppointmentModel
                 {
-                    appointmentDate = DateTime.UtcNow.AddYears(1),
+                    AppointmentDate = DateTime.UtcNow.AddYears(1),
                     Status = "Pending", // Pending, Completed, Cancelled, Expired
                     BarberId = barberDean.Entity.BarberId,
                     ServiceId = serviceBeard.Entity.ServiceId,

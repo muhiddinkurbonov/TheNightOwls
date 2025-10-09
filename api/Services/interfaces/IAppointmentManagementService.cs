@@ -5,9 +5,13 @@ namespace Fadebook.Services;
 
 public interface IAppointmentManagementService
 {
-    Task<AppointmentModel> AddAppointment(AppointmentModel appointmentModel);
-    Task<AppointmentModel?> UpdateAppointment(AppointmentModel appointment);
-    Task<IEnumerable<AppointmentModel>> GetAppointmentsByDate(DateTime dateTime);
-    Task<AppointmentModel?> DeleteAppointment(AppointmentModel appointment);
-    Task<IEnumerable<AppointmentModel>> LookupAppointmentsByUsername(string username);
+    Task<AppointmentModel> AddAppointmentAsync(AppointmentModel appointmentModel);
+    Task<AppointmentModel> UpdateAppointmentAsync(int appointmentId, AppointmentModel appointment);
+    Task<IEnumerable<AppointmentModel>> GetAppointmentsByDateAsync(DateTime dateTime);
+    Task<IEnumerable<AppointmentModel>> GetAppointmentsByCustomerIdAsync(int customerId);
+    Task<AppointmentModel> GetAppointmentByIdAsync(int appointmentId);
+    Task<IEnumerable<AppointmentModel>> GetAppointmentsByBarberIdAsync(int barberId);
+    Task<AppointmentModel> DeleteAppointmentAsync(int appointmentId);
+    Task<IEnumerable<AppointmentModel>> LookupAppointmentsByUsernameAsync(string username);
+
 }

@@ -2,33 +2,22 @@ using Microsoft.EntityFrameworkCore;
 using Fadebook.Models;
 using Fadebook.DB;
 
-
-
-using Fadebook.Models;
-
 namespace Fadebook.Repositories;
 
-public class CustomerRepository : ICustomerRepository
+public class CustomerRepository(
+    FadebookDbContext _fadebookDbContext
+    ) : ICustomerRepository
 {
-
-    private readonly NightOwlsDbContext _db;
-
-    //Constructor Injection
-    public CustomerRepository(NightOwlsDbContext db)
-    {
-        _db = db;
-    }
-
     //find customer by id
     public async Task<CustomerModel?> GetByIdAsync(int id)
     {
-        return await _db.customerTable.FindAsync(id);
+        return await _fadebookDbContext.customerTable.FindAsync(id);
     }
 
     //get all customers
     public async Task<IEnumerable<CustomerModel>> GetAllAsync()
     {
-        return await _db.customerTable.ToListAsync();
+        return await _fadebookDbContext.customerTable.ToListAsync();
     }
 
     // TODO: Add Customer
@@ -36,40 +25,34 @@ public class CustomerRepository : ICustomerRepository
     //find customer by username
     public async Task<CustomerModel?> GetByUsernameAsync(string username)
     {
-        return await _db.customerTable.Where(c => c.Username == username).SingleOrDefaultAsync();
+        return await _fadebookDbContext.customerTable.Where(c => c.Username == username).FirstOrDefaultAsync();
     }
 
-    public async Task<CustomerModel?> UpdateCustomerAsync(CustomerModel customer)
+    public async Task<CustomerModel> UpdateAsync(int customerId, CustomerModel customer)
     {
-        var existingCustomer = await _db.customerTable.FindAsync(customer.CustomerId);
-
-        if (existingCustomer == null)
+        var foundCustomerModel = await GetByIdAsync(customerId);
+        if (foundCustomerModel is null)
+            throw new KeyNotFoundException($"Customer with CustomerId {customerId} was not found");
+        if (customer.Username != null && foundCustomerModel.Username != customer.Username)
         {
-            return null;
+            var usernameCustomerModel = await GetByUsernameAsync(customer.Username);
+            if (usernameCustomerModel != null)
+                throw new InvalidOperationException($"Customer with username {customer.Username} already exists.");
         }
-
-        // Update the properties of the existing customer
-        existingCustomer.Username = customer.Username;
-        existingCustomer.Name = customer.Name;
-        existingCustomer.ContactInfo = customer.ContactInfo;
-        _db.customerTable.Update(existingCustomer);
-        // await _db.SaveChangesAsync();
-        return existingCustomer;
-
+        // foundCustomerModel.Update(customer);
+        foundCustomerModel.Username = customer.Username;
+        foundCustomerModel.Name = customer.Name;
+        foundCustomerModel.ContactInfo = customer.ContactInfo;
+        _fadebookDbContext.customerTable.Update(foundCustomerModel);
+        return foundCustomerModel;
     }
 
-    public async Task<CustomerModel> AddCustomerAsync(CustomerModel customer)
+    public async Task<CustomerModel> AddAsync(CustomerModel customer)
     {
-        var foundCustomer = await GetByUsernameAsync(customer.Username);
-        // TODO: Throw exception for adding a duplicate
-        if (foundCustomer != null) return foundCustomer;
-        await _db.customerTable.AddAsync(customer);
-        await _db.SaveChangesAsync();
+        var usernameCustomerModel = await GetByUsernameAsync(customer.Username);
+        if (usernameCustomerModel != null)
+            throw new InvalidOperationException($"Customer with username {customer.Username} already exists.");
+        await _fadebookDbContext.customerTable.AddAsync(customer);
         return customer;
-    }
-
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        return _db.SaveChangesAsync(cancellationToken);
     }
 }

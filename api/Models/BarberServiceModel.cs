@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Fadebook.Models;
 
-public class BarberServiceModel
+public class BarberServiceModel: AModel
 {
     [Key]
     public int Id { get; set; }
@@ -13,10 +13,10 @@ public class BarberServiceModel
     [Required]
     public int BarberId { get; set; } // Foreign key
     [ForeignKey(nameof(BarberId))]
-    public BarberModel Barber { get; set; }
+    public BarberModel Barber { get; set; } = null!;
     
     [Required]
     public int ServiceId { get; set; } // Foreign key
     [ForeignKey(nameof(ServiceId))]
-    public ServiceModel Service { get; set; }
+    public ServiceModel Service { get; set; } = null!;
 }

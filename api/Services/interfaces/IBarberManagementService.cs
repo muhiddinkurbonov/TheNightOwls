@@ -3,10 +3,12 @@ namespace Fadebook.Services;
 
 public interface IBarberManagementService
 {
-    public Task<BarberModel?> GetByIdAsync(int id);
-    public Task<IEnumerable<BarberModel?>> GetAllAsync();
-    public Task<BarberModel> AddAsync(BarberModel barber);
-    public Task<BarberModel?> UpdateAsync(BarberModel barber);
-    public Task<bool> DeleteByIdAsync(int id);
-    public Task<bool> UpdateBarberServicesAsync(int barberId, List<int> serviceIds);
+    Task<BarberModel?> GetByIdAsync(int id);
+    Task<IEnumerable<BarberModel>> GetAllAsync();
+    Task<BarberModel> AddAsync(BarberModel barber);
+    Task<BarberModel> AddBarberWithServicesAsync(BarberModel barber, List<int> serviceIds);
+    Task<BarberModel> UpdateAsync(int barberId, BarberModel barber);
+    Task<BarberModel> DeleteByIdAsync(int barberId);
+    Task<IEnumerable<ServiceModel>> GetBarberServicesAsync(int barberId);
+    Task<IEnumerable<BarberServiceModel>> UpdateBarberServicesAsync(int barberId, List<int> selectedServiceIds);
 }

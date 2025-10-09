@@ -5,18 +5,10 @@ namespace Fadebook.Services;
 
 public interface ICustomerAppointmentService
 {
-    // requestAppointment
-    Task<AppointmentModel> RequestAppointmentAsync(CustomerModel customer, AppointmentModel appointment);
+    Task<IEnumerable<ServiceModel>> ListAvailableServicesAsync();
 
-    //getBarberByService
-    Task<IEnumerable<BarberModel>> GetBarbersByServiceAsync(int serviceId);
-
-    //getServices/*
-    Task<IEnumerable<ServiceModel>> GetServicesAsync();
-
-    //getCustomerById
-    Task<CustomerModel?> GetCustomerByIdAsync(int customerId);
-
-    //addCustomer
-    Task<CustomerModel> AddCustomerAsync(CustomerModel customer);
+    // Task<IEnumerable<CustomerModel>> AddCustomerAsync(CustomerModel customerModel);
+    Task<IEnumerable<BarberModel>> ListAvailableBarbersByServiceAsync(int serviceId);
+    Task<IEnumerable<AppointmentModel>> GetAppointmentsByCustomerIdAsync(int customerId);
+    Task<AppointmentModel> MakeAppointmentAsync(AppointmentModel appointmentModel);
 }

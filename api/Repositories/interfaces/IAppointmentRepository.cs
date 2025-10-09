@@ -1,15 +1,17 @@
-
+using Fadebook.DB;
 using Fadebook.Models;
 
 namespace Fadebook.Repositories;
 
-public interface IAppointmentRepository: DbSaveChanges
+public interface IAppointmentRepository
 {
     Task<AppointmentModel?> GetByIdAsync(int appointmentId);
-    Task<IEnumerable<AppointmentModel>> GetAll();
-    Task<IEnumerable<AppointmentModel>> GetApptsByDate(DateTime dateTime);
-    Task<IEnumerable<AppointmentModel>> GetByCustomerId(int customerId);
-    Task<AppointmentModel> AddAppointment(AppointmentModel appointmentModel);
-    Task<AppointmentModel> UpdateAppointment(AppointmentModel appointmentModel);
-    Task<AppointmentModel> DeleteApptById(int appointmentId);
+    Task<IEnumerable<AppointmentModel>> GetAllAsync();
+    Task<IEnumerable<AppointmentModel>> GetByDateAsync(DateTime targetDate);
+    Task<IEnumerable<AppointmentModel>> GetByCustomerIdAsync(int customerId);
+    Task<IEnumerable<AppointmentModel>> GetByBarberIdAsync(int barberId);
+    Task<IEnumerable<AppointmentModel>> GetByServiceIdAsync(int serviceId);
+    Task<AppointmentModel> AddAsync(AppointmentModel appointmentModel);
+    Task<AppointmentModel> UpdateAsync(int appointmentId, AppointmentModel appointmentModel);
+    Task<AppointmentModel> RemoveByIdAsync(int appointmentId);
 }

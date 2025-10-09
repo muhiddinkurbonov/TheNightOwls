@@ -3,110 +3,77 @@ using Microsoft.AspNetCore.Mvc;
 using Fadebook.Models;
 using Fadebook.Services;
 using Fadebook.DTOs;
-using Serilog;
+using AutoMapper;
+using System.ComponentModel.DataAnnotations;
 
 namespace Fadebook.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    // "/students
-    public class CustomerAppointmentController : ControllerBase
+    // /api/customer
+    public class CustomerController : ControllerBase
     {
         // Fields
-        private readonly ILogger<CustomerAppointmentController> _logger;
-        private readonly ICustomerAppointmentService _service;
+        private readonly ICustomerAppointmentService _customerAppointmentService;
+        private readonly IUserAccountService _userAccountService;
+        private readonly IMapper _mapper;
 
         // Constructor
-        public CustomerAppointmentController(ILogger<CustomerAppointmentController> logger, ICustomerAppointmentService service)
+        public CustomerController(ICustomerAppointmentService service, IUserAccountService userAccountService, IMapper mapper)
         {
-            _logger = logger;
-            _service = service;
+            _customerAppointmentService = service;
+            _userAccountService = userAccountService;
+            _mapper = mapper;
         }
 
-        // Task<AppointmentModel> RequestAppointmentAsync(CustomerModel customer, AppointmentModel appointment);
-        // //getBarberByService
-        // Task<IEnumerable<BarberModel>> GetBarbersByServiceAsync(int serviceId);
-        // //getServices/*
-        // Task<IEnumerable<ServiceModel>> GetServicesAsync();
-
-        // Methods
-
-        // Enroll Student In Course
-        // [Authorize(Roles = "Student")]
-        // [Authorize(Roles = "Instructor")]
-        // /CustomerAppointment/RequestAppointment
-        // [HttpPost("/RequestAppointment", Name = "EnrollStudentInCourse")] // Name lets us short hand out the endpoint for use by our code somehow
-        // public async Task<IActionResult> RequestAppointment([FromBody] AppointmentDto appointmentDt0)
-        // {
-        //     if (!ModelState.IsValid)
-        //     {
-        //         return BadRequest(ModelState);
-        //     }
-        //     try{
-        //         var appointment = await _service.RequestAppointmentAsync(appointmentDt0.CustomerId, appointmentDt0.AppointmentId);
-        //         return Ok(appointment);
-        //     }
-        //     catch(Exception ex)
-        //     {
-        //         _logger.LogError(ex, "Error requesting appointment");
-        //         return StatusCode(500, "Internal server error");
-        //     }
-
-
-        // }
-
-        [HttpPost]
-        public async Task<ActionResult<CustomerModel>> CreateCustomer([FromBody] CustomerModel customer)
+    
+        // GET: api/customer/customers (for admin)
+        [HttpGet("customers")]
+        public async Task<ActionResult<IEnumerable<CustomerDto>>> GetAllCustomers()
         {
-            if (customer == null)
-                return BadRequest();
-
-            var createdCustomer = await _service.AddCustomerAsync(customer);
-            return CreatedAtAction(nameof(GetCustomerById), new { id = createdCustomer.CustomerId }, createdCustomer);
+            var customers = await _userAccountService.GetAllCustomersAsync();
+            var dtos = _mapper.Map<IEnumerable<CustomerDto>>(customers);
+            return Ok(dtos);
         }
 
-        [HttpGet("/customer/{id}")]
-        public async Task<ActionResult<CustomerModel>> GetCustomerById(int id)
+        // GET: /customer/{id}
+        [HttpGet("/customer/{id}", Name = "GetCustomerById")]
+        public async Task<ActionResult<CustomerDto>> GetById(int id)
         {
-
-            var customer = await _service.GetCustomerByIdAsync(id);
-            if(customer == null) 
-                return NotFound();
-            return Ok(customer);
+            var customer = await _userAccountService.GetCustomerByIdAsync(id);
+            if (customer == null) 
+                return NotFound(new { message = $"Customer with ID {id} not found." });
+            
+            return Ok(_mapper.Map<CustomerDto>(customer));
         }
 
         // GET: api/customer/services
-        //Utlized for making an appointment
         [HttpGet("services")]
-        public async Task<ActionResult<IEnumerable<ServiceModel>>> GetServices()
+        public async Task<ActionResult<IEnumerable<ServiceDto>>> GetServices()
         {
-            var services = await _service.GetServicesAsync();
-            return Ok(services);
+            var services = await _customerAppointmentService.ListAvailableServicesAsync();
+            var dtos = _mapper.Map<IEnumerable<ServiceDto>>(services);
+            return Ok(dtos);
         }
 
         // GET: api/customer/barbers-by-service/{serviceId}
         [HttpGet("barbers-by-service/{serviceId:int}")]
-        public async Task<ActionResult<IEnumerable<BarberModel>>> GetBarbersByService([FromRoute] int serviceId)
+        public async Task<ActionResult<IEnumerable<BarberDto>>> GetBarbersByService([FromRoute] int serviceId)
         {
-            var barbers = await _service.GetBarbersByServiceAsync(serviceId);
-            return Ok(barbers);
-        }
-
-        public class AppointmentRequestDto
-        {
-            public CustomerModel Customer { get; set; }
-            public AppointmentModel Appointment { get; set; }
+            var barbers = await _customerAppointmentService.ListAvailableBarbersByServiceAsync(serviceId);
+            var dtos = _mapper.Map<IEnumerable<BarberDto>>(barbers);
+            return Ok(dtos);
         }
 
         // POST: api/customer/request-appointment
         [HttpPost("request-appointment")]
-        public async Task<ActionResult<AppointmentModel>> RequestAppointment([FromBody] AppointmentRequestDto request)
+        public async Task<ActionResult<AppointmentDto>> RequestAppointment([FromBody] AppointmentRequestDto request)
         {
-            if (request is null || request.Customer is null || request.Appointment is null)
-                return BadRequest("Customer and Appointment are required.");
-
-            var created = await _service.RequestAppointmentAsync(request.Customer, request.Appointment);
-            return Ok(created);
+            var customer = _mapper.Map<CustomerModel>(request.Customer);
+            var appointment = _mapper.Map<AppointmentModel>(request.Appointment);
+            var created = await _customerAppointmentService.MakeAppointmentAsync(appointment);
+            var dto = _mapper.Map<AppointmentDto>(created);
+            return Created($"/api/appointment/{created.AppointmentId}", dto);
         }
 
 
