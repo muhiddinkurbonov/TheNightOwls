@@ -102,7 +102,7 @@ public class GoogleCalendarController(
         await RevokeTokenAsync(refreshToken);
         // await RevokeTokenAsync(accessToken);
 
-        return Redirect($"localhost:3000/book/confirmation/{apptId}");
+        return Redirect($"http://localhost:3000/success?appointmentId={apptId}&gcal=success");
     }
  
     [HttpPost("add-event")]

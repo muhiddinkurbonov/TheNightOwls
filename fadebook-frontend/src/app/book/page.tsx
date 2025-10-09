@@ -75,7 +75,14 @@ export default function BookAppointmentPage() {
       localStorage.setItem('lastServiceName', selectedService?.serviceName || 'Unknown');
       
       // Redirect to success page
-      router.push('/success');
+      const qs = new URLSearchParams({
+        appointmentId: newAppointment.appointmentId.toString(),
+        date: appointmentDateTime.toLocaleDateString(),
+        time: appointmentDateTime.toLocaleTimeString(),
+        barberName: selectedBarber?.name || 'Unknown',
+        serviceName: selectedService?.serviceName || 'Unknown',
+      }).toString();
+      router.push(`/success?${qs}`);
     } catch (error) {
       alert('Failed to book appointment. Please try again.');
     }
