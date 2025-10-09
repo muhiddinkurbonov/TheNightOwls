@@ -297,7 +297,8 @@ run_tests_coverlet() {
         --verbosity normal \
         --logger "trx;LogFileName=${trx_path}" \
         --collect:"XPlat Code Coverage" \
-        --results-directory "${REPORT_BASE_DIR}"
+        --results-directory "${REPORT_BASE_DIR}" \
+        --settings .runsettings
 
     local test_exit_code=$?
 
@@ -352,6 +353,8 @@ run_tests_runsettings() {
           <Format>cobertura</Format>
           <OutputPath>${REPORT_BASE_DIR}</OutputPath>
           <FileName>${COVERAGE_REPORT_FILE}</FileName>
+          <Exclude>[*]*.Migrations.*</Exclude>
+          <ExcludeByFile>**/Migrations/**</ExcludeByFile>
         </Configuration>
       </DataCollector>
     </DataCollectors>
