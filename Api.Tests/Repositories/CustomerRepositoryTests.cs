@@ -122,7 +122,8 @@ public class CustomerRepositoryTests: RepositoryTestBase
         var update = new CustomerModel { CustomerId = 5, Username = "u5_new", Name = "n5_new", ContactInfo = "c5_new" };
 
         // Act
-        var result = await _repo.UpdateCustomerAsync(update);
+        var result = await _repo.UpdateAsync(5, update);
+        await _context.SaveChangesAsync();
 
         // Assert
         result.Should().NotBeNull();
@@ -133,20 +134,18 @@ public class CustomerRepositoryTests: RepositoryTestBase
     }
 
     [Fact]
-    public async Task UpdateCustomerAsync_WhenCustomerDoesNotExist_ShouldReturnNull()
+    public async Task UpdateCustomerAsync_WhenCustomerDoesNotExist_ShouldThrowKeyNotFoundException()
     {
         // Arrange
         var update = new CustomerModel { CustomerId = 99, Username = "nope", Name = "none", ContactInfo = "none" };
 
-        // Act
-        var result = await _repo.UpdateCustomerAsync(update);
-
-        // Assert
-        result.Should().BeNull();
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+            await _repo.UpdateAsync(99, update));
     }
 
     [Fact]
-    public async Task AddCustomerAsync_WhenDuplicateUsernameExists_ShouldReturnExisting()
+    public async Task AddCustomerAsync_WhenDuplicateUsernameExists_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var existing = new CustomerModel { CustomerId = 7, Username = "dup", Name = "n7", ContactInfo = "c7" };
@@ -155,13 +154,9 @@ public class CustomerRepositoryTests: RepositoryTestBase
 
         var toAdd = new CustomerModel { CustomerId = 8, Username = "dup", Name = "n8", ContactInfo = "c8" };
 
-        // Act
-        var result = await _repo.AddCustomerAsync(toAdd);
-
-        // Assert
-        result.Should().NotBeNull();
-        result!.CustomerId.Should().Be(7);
-        result.Username.Should().Be("dup");
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await _repo.AddAsync(toAdd));
     }
 
     [Fact]
@@ -171,7 +166,7 @@ public class CustomerRepositoryTests: RepositoryTestBase
         var toAdd = new CustomerModel { CustomerId = 12, Username = "newuser", Name = "new name", ContactInfo = "new contact" };
 
         // Act
-        var added = await _repo.AddCustomerAsync(toAdd);
+        var added = await _repo.AddAsync(toAdd);
         await _context.SaveChangesAsync();
         var found = await _repo.GetByIdAsync(12);
 

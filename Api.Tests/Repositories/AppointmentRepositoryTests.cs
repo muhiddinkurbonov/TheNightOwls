@@ -37,7 +37,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = customer.CustomerId,
             ServiceId = service.ServiceId,
             BarberId = barber.BarberId,
-            appointmentDate = new DateTime(2025, 01, 02),
+            AppointmentDate = new DateTime(2025, 01, 02),
             Status = "Scheduled"
         };
         _context.appointmentTable.Add(appt);
@@ -69,7 +69,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = customer.CustomerId,
             ServiceId = service.ServiceId,
             BarberId = barber.BarberId,
-            appointmentDate = new DateTime(2025, 01, 02),
+            AppointmentDate = new DateTime(2025, 01, 02),
             Status = "Scheduled"
         };
         _context.appointmentTable.Add(appt);
@@ -102,7 +102,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = customer1.CustomerId,
             ServiceId = service1.ServiceId,
             BarberId = barber1.BarberId,
-            appointmentDate = new DateTime(2025, 01, 02),
+            AppointmentDate = new DateTime(2025, 01, 02),
             Status = "Scheduled"
         };
         var appt2 = new AppointmentModel
@@ -110,7 +110,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = customer2.CustomerId,
             ServiceId = service2.ServiceId,
             BarberId = barber2.BarberId,
-            appointmentDate = new DateTime(2025, 01, 03),
+            AppointmentDate = new DateTime(2025, 01, 03),
             Status = "Scheduled"
         };
         _context.appointmentTable.Add(appt1);
@@ -118,7 +118,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
         await _context.SaveChangesAsync();
 
         // Act
-        var found = await _repo.GetAll();
+        var found = await _repo.GetAllAsync();
 
         // Assert
         found.Should().NotBeNull();
@@ -151,7 +151,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c1.CustomerId,
             ServiceId = s1.ServiceId,
             BarberId = b1.BarberId,
-            appointmentDate = date,
+            AppointmentDate = date,
             Status = "Scheduled"
         };
         var appt2 = new AppointmentModel
@@ -159,7 +159,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c2.CustomerId,
             ServiceId = s2.ServiceId,
             BarberId = b2.BarberId,
-            appointmentDate = date,
+            AppointmentDate = date,
             Status = "Scheduled"
         };
         var apptOtherDay = new AppointmentModel
@@ -167,18 +167,18 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c3.CustomerId,
             ServiceId = s3.ServiceId,
             BarberId = b3.BarberId,
-            appointmentDate = date.AddDays(1),
+            AppointmentDate = date.AddDays(1),
             Status = "Scheduled"
         };
         _context.appointmentTable.AddRange(appt1, appt2, apptOtherDay);
         await _context.SaveChangesAsync();
 
         // Act
-        var found = await _repo.GetApptsByDate(date);
+        var found = await _repo.GetByDateAsync(date);
 
         // Assert
         found.Should().HaveCount(2);
-        found.Should().OnlyContain(a => a.appointmentDate.Date == date.Date);
+        found.Should().OnlyContain(a => a.AppointmentDate.Date == date.Date);
     }
 
     [Fact]
@@ -203,7 +203,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c1.CustomerId,
             ServiceId = s1.ServiceId,
             BarberId = b1.BarberId,
-            appointmentDate = DateTime.UtcNow.Date,
+            AppointmentDate = DateTime.UtcNow.Date,
             Status = "Scheduled"
         };
         var appt2 = new AppointmentModel
@@ -211,7 +211,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c1.CustomerId,
             ServiceId = s2.ServiceId,
             BarberId = b2.BarberId,
-            appointmentDate = DateTime.UtcNow.Date,
+            AppointmentDate = DateTime.UtcNow.Date,
             Status = "Scheduled"
         };
         var apptOther = new AppointmentModel
@@ -219,14 +219,14 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c2.CustomerId,
             ServiceId = s3.ServiceId,
             BarberId = b3.BarberId,
-            appointmentDate = DateTime.UtcNow.Date,
+            AppointmentDate = DateTime.UtcNow.Date,
             Status = "Scheduled"
         };
         _context.appointmentTable.AddRange(appt1, appt2, apptOther);
         await _context.SaveChangesAsync();
 
         // Act
-        var found = await _repo.GetByCustomerId(c1.CustomerId);
+        var found = await _repo.GetByCustomerIdAsync(c1.CustomerId);
 
         // Assert
         found.Should().HaveCount(2);
@@ -250,7 +250,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c.CustomerId,
             ServiceId = s.ServiceId,
             BarberId = b.BarberId,
-            appointmentDate = DateTime.UtcNow.Date,
+            AppointmentDate = DateTime.UtcNow.Date,
             Status = "Scheduled"
         };
         _context.appointmentTable.Add(existing);
@@ -262,13 +262,13 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c.CustomerId,
             ServiceId = s.ServiceId,
             BarberId = b.BarberId,
-            appointmentDate = DateTime.UtcNow.Date,
+            AppointmentDate = DateTime.UtcNow.Date,
             Status = "Scheduled"
         }
             ;
 
         // Act
-        var result = await _repo.AddAppointment(toAdd);
+        var result = await _repo.AddAsync(toAdd);
 
         // Assert
         result.Should().NotBeNull();
@@ -292,12 +292,12 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c.CustomerId,
             ServiceId = s.ServiceId,
             BarberId = b.BarberId,
-            appointmentDate = DateTime.UtcNow.Date,
+            AppointmentDate = DateTime.UtcNow.Date,
             Status = "Scheduled"
         };
 
         // Act
-        var added = await _repo.AddAppointment(toAdd);
+        var added = await _repo.AddAsync(toAdd);
         await _context.SaveChangesAsync();
         var found = await _repo.GetByIdAsync(added.AppointmentId);
 
@@ -325,7 +325,7 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c.CustomerId,
             ServiceId = s1.ServiceId,
             BarberId = b1.BarberId,
-            appointmentDate = DateTime.UtcNow.Date,
+            AppointmentDate = DateTime.UtcNow.Date,
             Status = "Scheduled"
         };
         _context.appointmentTable.Add(existing);
@@ -337,12 +337,12 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c.CustomerId,
             ServiceId = s2.ServiceId,
             BarberId = b2.BarberId,
-            appointmentDate = DateTime.UtcNow.Date.AddDays(1),
+            AppointmentDate = DateTime.UtcNow.Date.AddDays(1),
             Status = "Scheduled"
         };
 
         // Act
-        var result = await _repo.UpdateAppointment(updated);
+        var result = await _repo.UpdateAsync(existing.AppointmentId, updated);
 
         // Assert
         result.Should().NotBeNull();
@@ -368,12 +368,12 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c.CustomerId,
             ServiceId = s.ServiceId,
             BarberId = b.BarberId,
-            appointmentDate = DateTime.UtcNow.Date,
+            AppointmentDate = DateTime.UtcNow.Date,
             Status = "Scheduled"
         };
 
         // Act
-        var result = await _repo.UpdateAppointment(updated);
+        var result = await _repo.UpdateAsync(999, updated);
 
         // Assert
         result.Should().BeNull();
@@ -396,14 +396,14 @@ public class AppointmentRepositoryTests: RepositoryTestBase
             CustomerId = c.CustomerId,
             ServiceId = s.ServiceId,
             BarberId = b.BarberId,
-            appointmentDate = DateTime.UtcNow.Date,
+            AppointmentDate = DateTime.UtcNow.Date,
             Status = "Scheduled"
         };
         _context.appointmentTable.Add(existing);
         await _context.SaveChangesAsync();
 
         // Act
-        var deleted = await _repo.DeleteApptById(existing.AppointmentId);
+        var deleted = await _repo.RemoveByIdAsync(existing.AppointmentId);
 
         // Assert
         deleted.Should().NotBeNull();
@@ -411,12 +411,10 @@ public class AppointmentRepositoryTests: RepositoryTestBase
     }
 
     [Fact]
-    public async Task DeleteApptById_WhenAppointmentDoesNotExist_ShouldReturnNull()
+    public async Task DeleteApptById_WhenAppointmentDoesNotExist_ShouldThrowKeyNotFoundException()
     {
-        // Act
-        var deleted = await _repo.DeleteApptById(999);
-
-        // Assert
-        deleted.Should().BeNull();
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+            await _repo.RemoveByIdAsync(999));
     }
 }

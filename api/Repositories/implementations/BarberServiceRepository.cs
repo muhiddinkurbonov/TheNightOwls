@@ -12,7 +12,11 @@ public class BarberServiceRepository(
 {
     public async Task<BarberServiceModel?> GetByIdAsync(int barberServiceId)
     {
-        return await _fadebookDbContext.barberServiceTable.FindAsync(barberServiceId);
+        // Note: BarberServiceModel uses composite key (BarberId, ServiceId), not Id
+        // This method searches by the Id field which is not the primary key
+        return await _fadebookDbContext.barberServiceTable
+            .Where(bsm => bsm.Id == barberServiceId)
+            .FirstOrDefaultAsync();
     }
     public async Task<IEnumerable<BarberServiceModel>> GetByBarberIdAsync(int barberId)
     {

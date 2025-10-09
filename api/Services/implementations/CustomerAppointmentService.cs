@@ -32,7 +32,10 @@ public class CustomerAppointmentService(
 
     public async Task<AppointmentModel> MakeAppointmentAsync(AppointmentModel appointmentModel)
     {
-        if (!appointmentModel.AreAllValuesNotNull())
+        // Validate required fields
+        if (appointmentModel.CustomerId == 0 || appointmentModel.ServiceId == 0 || appointmentModel.BarberId == 0)
+            throw new InvalidOperationException($"Provide a complete appointment model\n{appointmentModel.ToJson()}");
+        if (string.IsNullOrEmpty(appointmentModel.Status))
             throw new InvalidOperationException($"Provide a complete appointment model\n{appointmentModel.ToJson()}");
         try
         {

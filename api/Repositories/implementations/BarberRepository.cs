@@ -33,7 +33,7 @@ public class BarberRepository(
             throw new KeyNotFoundException($"Barber with ID {barberId} was not found.");
         if (barberModel.Username != null && foundBarberModel.Username != barberModel.Username)
         {
-            var usernameBarberModel = await _fadebookDbContext.barberTable.Where(bm => bm.Username == barberModel.Username).FirstAsync();
+            var usernameBarberModel = await _fadebookDbContext.barberTable.Where(bm => bm.Username == barberModel.Username).FirstOrDefaultAsync();
             if (usernameBarberModel != null)
                 throw new InvalidOperationException($"Customer with username {barberModel.Username} already exists.");
         }

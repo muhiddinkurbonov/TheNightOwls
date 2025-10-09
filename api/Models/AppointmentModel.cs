@@ -12,6 +12,7 @@ public class AppointmentModel : AModel
 
     [Required]
     public string Status { get; set; } = "Pending";
+    
     [Required]
     public DateTime AppointmentDate { get; set; } = DateTime.MinValue;
 
