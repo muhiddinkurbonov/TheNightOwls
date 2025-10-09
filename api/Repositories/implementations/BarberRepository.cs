@@ -27,15 +27,14 @@ public class BarberRepository(
 
     public async Task<BarberModel> UpdateAsync(int barberId, BarberModel barberModel)
     {
-
         var foundBarberModel = await GetByIdAsync(barberId);
         if (foundBarberModel is null)
-            throw new KeyNotFoundException($"Barber with ID {barberId} was not found.");
+            return null!;
         if (barberModel.Username != null && foundBarberModel.Username != barberModel.Username)
         {
             var usernameBarberModel = await _fadebookDbContext.barberTable.Where(bm => bm.Username == barberModel.Username).FirstOrDefaultAsync();
             if (usernameBarberModel != null)
-                throw new InvalidOperationException($"Customer with username {barberModel.Username} already exists.");
+                return null!; // signal conflict/not-updated
         }
         foundBarberModel.Username = barberModel.Username;
         foundBarberModel.Name = barberModel.Name;
@@ -49,7 +48,7 @@ public class BarberRepository(
     {
         var foundBarberModel = await GetByIdAsync(barberId);
         if (foundBarberModel is null)
-            throw new KeyNotFoundException($"Barber with ID {barberId} was not found.");
+            return null!;
 
         _fadebookDbContext.barberTable.Remove(foundBarberModel);
         return foundBarberModel;

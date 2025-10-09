@@ -36,9 +36,6 @@ namespace Fadebook.Controllers
         public async Task<ActionResult<BarberDto>> GetById([FromRoute] int id)
         {
             var result = await _service.GetByIdAsync(id);
-            if (result is null) 
-                return NotFound(new { message = $"Barber with ID {id} not found." });
-            
             return Ok(_mapper.Map<BarberDto>(result));
         }
 
@@ -58,9 +55,6 @@ namespace Fadebook.Controllers
         {
             var model = _mapper.Map<BarberModel>(dto);
             var updated = await _service.UpdateAsync(id, model);
-            if (updated is null) 
-                return NotFound(new { message = $"Barber with ID {id} not found." });
-            
             return Ok(_mapper.Map<BarberDto>(updated));
         }
 
@@ -68,10 +62,7 @@ namespace Fadebook.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            var deleted = await _service.DeleteByIdAsync(id);
-            if (deleted is null) 
-                return NotFound(new { message = $"Barber with ID {id} not found." });
-            
+            await _service.DeleteByIdAsync(id);
             return NoContent();
         }
 
@@ -80,9 +71,6 @@ namespace Fadebook.Controllers
         public async Task<ActionResult<IEnumerable<ServiceDto>>> GetBarberServices([FromRoute] int id)
         {
             var barber = await _service.GetByIdAsync(id);
-            if (barber is null)
-                return NotFound(new { message = $"Barber with ID {id} not found." });
-
             var services = await _service.GetBarberServicesAsync(id);
             var serviceDtos = _mapper.Map<IEnumerable<ServiceDto>>(services);
             return Ok(serviceDtos);
@@ -94,16 +82,9 @@ namespace Fadebook.Controllers
         {
             if (serviceIds is null || !serviceIds.Any()) 
                 return BadRequest(new { message = "Service IDs are required." });
-            
-            try
-            {
-                var updated = await _service.UpdateBarberServicesAsync(id, serviceIds);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
+
+            await _service.UpdateBarberServicesAsync(id, serviceIds);
+            return NoContent();
         }
 
 

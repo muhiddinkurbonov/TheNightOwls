@@ -46,7 +46,7 @@ public class BarberServiceRepository(
     {
         var foundBarberService = await this.GetByBarberIdServiceIdAsync(barberServiceModel.BarberId, barberServiceModel.ServiceId);
         if (foundBarberService != null)
-            throw new InvalidOperationException($"BarberService with BarberId {barberServiceModel.BarberId} and ServiceId {barberServiceModel.ServiceId} already exists.");
+            return foundBarberService; // idempotent
         await _fadebookDbContext.barberServiceTable.AddAsync(barberServiceModel);
         return barberServiceModel;
     }
@@ -54,7 +54,7 @@ public class BarberServiceRepository(
     {
         var foundBarberService = await this.GetByIdAsync(barberServiceId);
         if (foundBarberService is null)
-            throw new KeyNotFoundException($"BarberService with BarberServiceId {barberServiceId}");
+            return null!;
         _fadebookDbContext.barberServiceTable.Remove(foundBarberService);
         return foundBarberService;
     }
@@ -62,7 +62,7 @@ public class BarberServiceRepository(
     {
         var foundBarberService = await this.GetByBarberIdServiceIdAsync(barberId, serviceId);
         if (foundBarberService is null)
-            throw new KeyNotFoundException($"BarberService with BarberId {barberId} and ServiceId {serviceId} not found.");
+            return null!;
         _fadebookDbContext.barberServiceTable.Remove(foundBarberService);
         return foundBarberService;
     }

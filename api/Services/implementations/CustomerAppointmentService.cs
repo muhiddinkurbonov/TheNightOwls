@@ -2,6 +2,7 @@
 using Fadebook.DB;
 using Fadebook.Models;
 using Fadebook.Repositories;
+using Fadebook.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fadebook.Services;
@@ -34,12 +35,14 @@ public class CustomerAppointmentService(
     {
         // Validate required fields
         if (appointmentModel.CustomerId == 0 || appointmentModel.ServiceId == 0 || appointmentModel.BarberId == 0)
-            throw new InvalidOperationException($"Provide a complete appointment model\n{appointmentModel.ToJson()}");
+            throw new BadRequestException($"Provide a complete appointment model\n{appointmentModel.ToJson()}");
         if (string.IsNullOrEmpty(appointmentModel.Status))
-            throw new InvalidOperationException($"Provide a complete appointment model\n{appointmentModel.ToJson()}");
+            throw new BadRequestException($"Provide a complete appointment model\n{appointmentModel.ToJson()}");
         try
         {
             var appointment = await _appointmentRepository.AddAsync(appointmentModel);
+            if (appointment is null)
+                throw new BadRequestException("Unable to create appointment. Verify that Customer, Barber, and Service IDs exist.");
             await _dbTransactionContext.SaveChangesAsync();
             return appointment;
         }

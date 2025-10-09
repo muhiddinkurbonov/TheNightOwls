@@ -105,7 +105,8 @@ public class GoogleCalendarController(
 
         return Redirect($"localhost:3000/book/confirmation/{apptId}");
     }
-
+ 
+    [HttpPost("add-event")]
     public async Task AddEventAsync(int apptId, string accessToken)
     {
         // retrieve appointment from the service
@@ -148,6 +149,7 @@ public class GoogleCalendarController(
         // return Ok(JsonSerializer.Deserialize<JsonElement>(responseBody));
     }
 
+    [HttpPost("revoke-token")]
     private async Task RevokeTokenAsync(string token)
     {
         // revoke tokens: https://oauth2.googleapis.com/revoke?token={token}

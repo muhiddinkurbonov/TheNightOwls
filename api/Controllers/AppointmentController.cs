@@ -29,9 +29,6 @@ public class AppointmentController : ControllerBase
     {
         var model = _mapper.Map<AppointmentModel>(appointmentDto);
         var created = await _service.AddAppointmentAsync(model);
-        if (created is null) 
-            return Conflict(new { message = "Unable to create appointment. Verify that Customer, Barber, and Service IDs exist." });
-        
         var dto = _mapper.Map<AppointmentDto>(created);
         return Created($"api/appointment/{created.AppointmentId}", dto);
     }
@@ -41,9 +38,6 @@ public class AppointmentController : ControllerBase
     public async Task<ActionResult<AppointmentDto>> GetById([FromRoute] int id)
     {
         var appt = await _service.GetAppointmentByIdAsync(id);
-        if (appt is null) 
-            return NotFound(new { message = $"Appointment with ID {id} not found." });
-        
         return Ok(_mapper.Map<AppointmentDto>(appt));
     }
 
@@ -54,9 +48,6 @@ public class AppointmentController : ControllerBase
         var model = _mapper.Map<AppointmentModel>(appointmentDto);
         model.AppointmentId = id;
         var updated = await _service.UpdateAppointmentAsync(id, model);
-        if (updated is null) 
-            return NotFound(new { message = $"Appointment with ID {id} not found or invalid foreign keys." });
-        
         return Ok(_mapper.Map<AppointmentDto>(updated));
     }
 
@@ -75,11 +66,7 @@ public class AppointmentController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(username)) 
             return BadRequest(new { message = "Username is required." });
-        
         var appts = await _service.LookupAppointmentsByUsernameAsync(username);
-        if (appts == null) 
-            return NotFound(new { message = $"Customer with username '{username}' not found." });
-        
         var dtos = _mapper.Map<IEnumerable<AppointmentDto>>(appts);
         return Ok(dtos);
     }
@@ -89,9 +76,6 @@ public class AppointmentController : ControllerBase
     public async Task<IActionResult> Delete([FromRoute] int id)
     {
         var result = await _service.DeleteAppointmentAsync(id);
-        if (result is null) 
-            return NotFound(new { message = $"Appointment with ID {id} not found." });
-        
         return NoContent();
     }
 
