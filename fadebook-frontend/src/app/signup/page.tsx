@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navigation } from '@/components/Navigation';
 import { axiosInstance } from '@/lib/axios';
+import { customersApi } from '@/lib/api/customers';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,9 @@ export default function SignUpPage() {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isUsernameTaken, setIsUsernameTaken] = useState<boolean | null>(null);
+  const [usernameCheckError, setUsernameCheckError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +76,38 @@ export default function SignUpPage() {
     }
   };
 
+  // Debounced username availability check
+  
+  // use inline debounce to avoid adding a new hook file
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const onUsernameChange = (value: string) => {
+    setFormData({ ...formData, username: value });
+    setError('');
+    setUsernameCheckError('');
+    setIsUsernameTaken(null);
+    if (debounceTimer) clearTimeout(debounceTimer);
+    const t = setTimeout(async () => {
+      const uname = value.trim();
+      if (!uname) {
+        setIsCheckingUsername(false);
+        setIsUsernameTaken(null);
+        return;
+      }
+      setIsCheckingUsername(true);
+      try {
+        const exists = await customersApi.usernameExists(uname);
+        setIsUsernameTaken(exists);
+      } catch (e: any) {
+        // Backend returns 400 for blank; we already guard. Show generic message otherwise.
+        setUsernameCheckError(e?.response?.data?.message || 'Unable to verify username.');
+        setIsUsernameTaken(null);
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    }, 400);
+    setDebounceTimer(t);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
@@ -96,11 +132,23 @@ export default function SignUpPage() {
                   type="text"
                   required
                   value={formData.username}
-                  onChange={(e) =>
-                    setFormData({ ...formData, username: e.target.value })
-                  }
+                  onChange={(e) => onUsernameChange(e.target.value)}
                   placeholder="Choose a username"
                 />
+                <div className="text-sm min-h-5">
+                  {isCheckingUsername && (
+                    <span className="text-muted-foreground">Checking username...</span>
+                  )}
+                  {!isCheckingUsername && usernameCheckError && (
+                    <span className="text-destructive">{usernameCheckError}</span>
+                  )}
+                  {!isCheckingUsername && isUsernameTaken === true && (
+                    <span className="text-destructive">Username already taken.</span>
+                  )}
+                  {!isCheckingUsername && isUsernameTaken === false && (
+                    <span className="text-primary">Username available.</span>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -134,7 +182,7 @@ export default function SignUpPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading}
+                disabled={isLoading || isUsernameTaken === true}
               >
                 {isLoading ? 'Creating account...' : 'Sign Up'}
               </Button>
