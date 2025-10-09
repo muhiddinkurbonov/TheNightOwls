@@ -7,10 +7,10 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
-      <main className="flex-1">
+      <main className="flex justify-center items-center min-h-screen flex-col">
         <section className="py-20 px-4">
           <div className="container mx-auto text-center">
-            <h1 className="text-5xl font-bold mb-6">Welcome to Night Owls Barbershop</h1>
+            <h1 className="text-5xl font-bold mb-6">Fadebook</h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Book your appointment with our expert barbers and get the perfect cut every time.
             </p>

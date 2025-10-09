@@ -46,6 +46,7 @@ export interface CreateBarberDto {
   name: string;
   specialty: string;
   contactInfo: string;
+  serviceIds: number[];
 }
 
 export interface CreateCustomerDto {

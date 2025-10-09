@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Navigation } from '@/components/Navigation';
 import { useServices, useBarbersByService } from '@/hooks/useCustomers';
 import { useCreateAppointment } from '@/hooks/useAppointments';
@@ -18,13 +19,28 @@ import {
 import type { CreateAppointmentDto } from '@/types/api';
 
 export default function BookAppointmentPage() {
+  const router = useRouter();
+  const [customerId, setCustomerId] = useState<string>('');
   const [formData, setFormData] = useState({
-    customerId: '',
     serviceId: '',
     barberId: '',
     appointmentDate: '',
     status: 'Pending',
   });
+
+  useEffect(() => {
+    // Get customer ID from localStorage
+    const storedCustomerId = localStorage.getItem('customerId');
+    const isAuthenticated = localStorage.getItem('isAuthenticated');
+    
+    if (!isAuthenticated || !storedCustomerId) {
+      // Redirect to sign in if not authenticated
+      router.push('/signin');
+      return;
+    }
+    
+    setCustomerId(storedCustomerId);
+  }, [router]);
 
   const { data: services, isLoading: servicesLoading } = useServices();
   const { data: barbers, isLoading: barbersLoading } = useBarbersByService(
@@ -36,7 +52,7 @@ export default function BookAppointmentPage() {
     e.preventDefault();
 
     const appointmentData: CreateAppointmentDto = {
-      customerId: Number(formData.customerId),
+      customerId: Number(customerId),
       serviceId: Number(formData.serviceId),
       barberId: Number(formData.barberId),
       appointmentDate: new Date(formData.appointmentDate).toISOString(),
@@ -44,15 +60,22 @@ export default function BookAppointmentPage() {
     };
 
     try {
-      await createAppointment.mutateAsync(appointmentData);
-      alert('Appointment booked successfully!');
-      setFormData({
-        customerId: '',
-        serviceId: '',
-        barberId: '',
-        appointmentDate: '',
-        status: 'Pending',
-      });
+      const newAppointment = await createAppointment.mutateAsync(appointmentData);
+      
+      // Find service and barber names for success page
+      const selectedService = services?.find(s => s.serviceId === Number(formData.serviceId));
+      const selectedBarber = barbers?.find(b => b.barberId === Number(formData.barberId));
+      
+      // Store appointment details in localStorage for success page
+      const appointmentDateTime = new Date(formData.appointmentDate);
+      localStorage.setItem('lastAppointmentId', newAppointment.appointmentId.toString());
+      localStorage.setItem('lastAppointmentDate', appointmentDateTime.toLocaleDateString());
+      localStorage.setItem('lastAppointmentTime', appointmentDateTime.toLocaleTimeString());
+      localStorage.setItem('lastBarberName', selectedBarber?.name || 'Unknown');
+      localStorage.setItem('lastServiceName', selectedService?.serviceName || 'Unknown');
+      
+      // Redirect to success page
+      router.push('/success');
     } catch (error) {
       alert('Failed to book appointment. Please try again.');
     }
@@ -72,20 +95,6 @@ export default function BookAppointmentPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="customerId">Customer ID</Label>
-                  <Input
-                    id="customerId"
-                    type="number"
-                    required
-                    value={formData.customerId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customerId: e.target.value })
-                    }
-                    placeholder="Enter your customer ID"
-                  />
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="service">Service</Label>
                   <Select

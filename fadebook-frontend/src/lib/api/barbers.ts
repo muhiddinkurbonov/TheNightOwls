@@ -1,5 +1,5 @@
 import { axiosInstance } from '../axios';
-import type { BarberDto, CreateBarberDto } from '@/types/api';
+import type { BarberDto, CreateBarberDto, ServiceDto } from '@/types/api';
 
 export const barbersApi = {
   // GET: api/barber
@@ -29,6 +29,12 @@ export const barbersApi = {
   // DELETE: api/barber/{id}
   delete: async (id: number): Promise<void> => {
     await axiosInstance.delete(`/api/barber/${id}`);
+  },
+
+  // GET: api/barber/{id}/services
+  getBarberServices: async (id: number): Promise<ServiceDto[]> => {
+    const { data } = await axiosInstance.get(`/api/barber/${id}/services`);
+    return data;
   },
 
   // PUT: api/barber/{id}/services

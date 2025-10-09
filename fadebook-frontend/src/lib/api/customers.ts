@@ -14,21 +14,21 @@ export const customersApi = {
     return data;
   },
 
-  // GET: api/customerappointment/services
+  // GET: api/customer/services
   getServices: async (): Promise<ServiceDto[]> => {
-    const { data } = await axiosInstance.get('/api/customerappointment/services');
+    const { data } = await axiosInstance.get('/api/customer/services');
     return data;
   },
 
-  // GET: api/customerappointment/barbers-by-service/{serviceId}
+  // GET: api/customer/barbers-by-service/{serviceId}
   getBarbersByService: async (serviceId: number): Promise<BarberDto[]> => {
-    const { data } = await axiosInstance.get(`/api/customerappointment/barbers-by-service/${serviceId}`);
+    const { data } = await axiosInstance.get(`/api/customer/barbers-by-service/${serviceId}`);
     return data;
   },
 
-  // POST: api/customerappointment/request-appointment
+  // POST: api/customer/request-appointment
   requestAppointment: async (request: AppointmentRequestDto): Promise<AppointmentDto> => {
-    const { data } = await axiosInstance.post('/api/customerappointment/request-appointment', request);
+    const { data } = await axiosInstance.post('/api/customer/request-appointment', request);
     return data;
   },
 };
