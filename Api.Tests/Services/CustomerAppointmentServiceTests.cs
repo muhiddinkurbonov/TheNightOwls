@@ -9,6 +9,7 @@ using FluentAssertions;
 using Fadebook.Models;
 using Fadebook.Repositories;
 using Fadebook.Services;
+using Fadebook.Exceptions;
 
 namespace Api.Tests.Services;
 
@@ -136,7 +137,7 @@ public class CustomerAppointmentServiceTests
     }
 
     [Fact]
-    public async Task MakeAppointmentAsync_ThrowsException_WhenAppointmentIsIncomplete()
+    public async Task MakeAppointmentAsync_ThrowsBadRequest_WhenAppointmentIsIncomplete()
     {
         // Arrange
         var incompleteAppointment = new AppointmentModel
@@ -146,7 +147,7 @@ public class CustomerAppointmentServiceTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<BadRequestException>(() =>
             _service.MakeAppointmentAsync(incompleteAppointment));
     }
 }

@@ -5,69 +5,66 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Fadebook.Controllers;
 using Fadebook.Services;
-using Fadebook.DTOs;
+using AutoMapper;
 
 namespace Api.Tests.Controllers;
 
 public class CustomerAccountControllerTests
 {
-    private readonly Mock<ICustomerAppointmentService> _mockCustomerAppointmentService;
     private readonly Mock<IUserAccountService> _mockUserAccountService;
+    private readonly Mock<IMapper> _mockMapper;
     private readonly CustomerAccountController _controller;
 
     public CustomerAccountControllerTests()
     {
-        _mockCustomerAppointmentService = new Mock<ICustomerAppointmentService>();
         _mockUserAccountService = new Mock<IUserAccountService>();
+        _mockMapper = new Mock<IMapper>();
         _controller = new CustomerAccountController(
-            _mockCustomerAppointmentService.Object,
-            _mockUserAccountService.Object
+            _mockUserAccountService.Object,
+            _mockMapper.Object
         );
     }
 
     [Fact]
-    public async Task CheckUsername_ReturnsOk_WithTrue_WhenUsernameExists()
+    public async Task UsernameExists_ReturnsOk_WithTrue_WhenUsernameExists()
     {
         // Arrange
-        var nameDto = new NameDTO { Name = "existinguser" };
         _mockUserAccountService.Setup(s => s.CheckIfUsernameExistsAsync("existinguser")).ReturnsAsync(true);
 
         // Act
-        var result = await _controller.CheckUsername(nameDto);
+        var result = await _controller.UsernameExists("existinguser");
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
         var okResult = result.Result as OkObjectResult;
-        var isTakenDto = okResult.Value as IsTakenDTO;
-        isTakenDto.IsTaken.Should().BeTrue();
+        var existsProp = okResult!.Value!.GetType().GetProperty("exists");
+        ((bool)existsProp!.GetValue(okResult.Value)!).Should().BeTrue();
     }
 
     [Fact]
-    public async Task CheckUsername_ReturnsOk_WithFalse_WhenUsernameDoesNotExist()
+    public async Task UsernameExists_ReturnsOk_WithFalse_WhenUsernameDoesNotExist()
     {
         // Arrange
-        var nameDto = new NameDTO { Name = "newuser" };
         _mockUserAccountService.Setup(s => s.CheckIfUsernameExistsAsync("newuser")).ReturnsAsync(false);
 
         // Act
-        var result = await _controller.CheckUsername(nameDto);
+        var result = await _controller.UsernameExists("newuser");
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
         var okResult = result.Result as OkObjectResult;
-        var isTakenDto = okResult.Value as IsTakenDTO;
-        isTakenDto.IsTaken.Should().BeFalse();
+        var existsProp = okResult!.Value!.GetType().GetProperty("exists");
+        ((bool)existsProp!.GetValue(okResult.Value)!).Should().BeFalse();
     }
 
     [Fact]
-    public async Task CheckUsername_CallsServiceWithCorrectUsername()
+    public async Task UsernameExists_CallsServiceWithCorrectUsername()
     {
         // Arrange
-        var nameDto = new NameDTO { Name = "testuser" };
         _mockUserAccountService.Setup(s => s.CheckIfUsernameExistsAsync("testuser")).ReturnsAsync(false);
 
         // Act
-        await _controller.CheckUsername(nameDto);
+        await _controller.UsernameExists("testuser");
 
         // Assert
         _mockUserAccountService.Verify(s => s.CheckIfUsernameExistsAsync("testuser"), Times.Once);

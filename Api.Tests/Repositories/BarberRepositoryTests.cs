@@ -166,7 +166,7 @@ public class BarberRepositoryTests: RepositoryTestBase
     }
 
     [Fact]
-    public async Task UpdateAsync_WhenBarberDoesNotExist_ShouldThrowKeyNotFoundException()
+    public async Task UpdateAsync_WhenBarberDoesNotExist_ShouldReturnNull()
     {
         // Arrange
         var testId = 1;
@@ -189,9 +189,10 @@ public class BarberRepositoryTests: RepositoryTestBase
             ContactInfo = "tom@example.com"
         };
 
-        // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-            await _repo.UpdateAsync(testId + 1, updatedBarber));
+        // Act
+        var found = await _repo.UpdateAsync(testId + 1, updatedBarber);
+        // Assert
+        found.Should().BeNull();
     }
 
     [Fact]
@@ -219,7 +220,7 @@ public class BarberRepositoryTests: RepositoryTestBase
     }
 
     [Fact]
-    public async Task DeleteByIdAsync_WhenBarberDoesNotExist_ShouldThrowKeyNotFoundException()
+    public async Task DeleteByIdAsync_WhenBarberDoesNotExist_ShouldReturnNull()
     {
         // Arrange
         var testId = 1;
@@ -234,9 +235,10 @@ public class BarberRepositoryTests: RepositoryTestBase
         _context.barberTable.Add(barber);
         await _context.SaveChangesAsync();
 
-        // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-            await _repo.RemoveByIdAsync(testId + 1));
+        // Act
+        var removed = await _repo.RemoveByIdAsync(testId + 1);
+        // Assert
+        removed.Should().BeNull();
     }
 }
 

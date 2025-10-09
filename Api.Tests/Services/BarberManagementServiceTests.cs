@@ -8,6 +8,7 @@ using FluentAssertions;
 using Fadebook.Models;
 using Fadebook.Repositories;
 using Fadebook.Services;
+using Fadebook.Exceptions;
 
 namespace Api.Tests.Services;
 
@@ -47,16 +48,13 @@ public class BarberManagementServiceTests
     }
 
     [Fact]
-    public async Task GetByIdAsync_ReturnsNull_WhenBarberDoesNotExist()
+    public async Task GetByIdAsync_ThrowsNotFound_WhenBarberDoesNotExist()
     {
         // Arrange
         _mockBarberRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((BarberModel)null);
 
-        // Act
-        var result = await _service.GetByIdAsync(1);
-
-        // Assert
-        result.Should().BeNull();
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() => _service.GetByIdAsync(1));
     }
 
     [Fact]

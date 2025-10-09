@@ -7,6 +7,7 @@ using FluentAssertions;
 using Fadebook.Models;
 using Fadebook.Repositories;
 using Fadebook.Services;
+using Fadebook.Exceptions;
 
 namespace Api.Tests.Services;
 
@@ -49,13 +50,20 @@ public class UserAccountServiceTests
     }
 
     [Fact]
-    public async Task LoginAsync_ThrowsKeyNotFoundException_WhenUsernameDoesNotExist()
+    public async Task LoginAsync_ThrowsNotFoundException_WhenUsernameDoesNotExist()
     {
         // Arrange
         _mockCustomerRepository.Setup(r => r.GetByUsernameAsync("nonexistent")).ReturnsAsync((CustomerModel)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.LoginAsync("nonexistent"));
+        await Assert.ThrowsAsync<NotFoundException>(() => _service.LoginAsync("nonexistent"));
+    }
+
+    [Fact]
+    public async Task LoginAsync_ThrowsBadRequestException_WhenUsernameBlank()
+    {
+        await Assert.ThrowsAsync<BadRequestException>(() => _service.LoginAsync(" "));
+        await Assert.ThrowsAsync<BadRequestException>(() => _service.LoginAsync(string.Empty));
     }
 
     [Fact]
@@ -83,6 +91,12 @@ public class UserAccountServiceTests
 
         // Assert
         result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CheckIfUsernameExistsAsync_ThrowsBadRequestException_WhenUsernameBlank()
+    {
+        await Assert.ThrowsAsync<BadRequestException>(() => _service.CheckIfUsernameExistsAsync(""));
     }
 
     [Fact]
@@ -121,12 +135,12 @@ public class UserAccountServiceTests
     }
 
     [Fact]
-    public async Task GetCustomerByIdAsync_ThrowsKeyNotFoundException_WhenCustomerDoesNotExist()
+    public async Task GetCustomerByIdAsync_ThrowsNotFoundException_WhenCustomerDoesNotExist()
     {
         // Arrange
         _mockCustomerRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((CustomerModel)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.GetCustomerByIdAsync(1));
+        await Assert.ThrowsAsync<NotFoundException>(() => _service.GetCustomerByIdAsync(1));
     }
 }

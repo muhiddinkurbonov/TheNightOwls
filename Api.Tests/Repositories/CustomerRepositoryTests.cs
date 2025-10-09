@@ -134,18 +134,19 @@ public class CustomerRepositoryTests: RepositoryTestBase
     }
 
     [Fact]
-    public async Task UpdateCustomerAsync_WhenCustomerDoesNotExist_ShouldThrowKeyNotFoundException()
+    public async Task UpdateCustomerAsync_WhenCustomerDoesNotExist_ShouldReturnNull()
     {
         // Arrange
         var update = new CustomerModel { CustomerId = 99, Username = "nope", Name = "none", ContactInfo = "none" };
 
-        // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-            await _repo.UpdateAsync(99, update));
+        // Act
+        var result = await _repo.UpdateAsync(99, update);
+        // Assert
+        result.Should().BeNull();
     }
 
     [Fact]
-    public async Task AddCustomerAsync_WhenDuplicateUsernameExists_ShouldThrowInvalidOperationException()
+    public async Task AddCustomerAsync_WhenDuplicateUsernameExists_ShouldReturnNull()
     {
         // Arrange
         var existing = new CustomerModel { CustomerId = 7, Username = "dup", Name = "n7", ContactInfo = "c7" };
@@ -154,9 +155,10 @@ public class CustomerRepositoryTests: RepositoryTestBase
 
         var toAdd = new CustomerModel { CustomerId = 8, Username = "dup", Name = "n8", ContactInfo = "c8" };
 
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await _repo.AddAsync(toAdd));
+        // Act
+        var added = await _repo.AddAsync(toAdd);
+        // Assert
+        added.Should().BeNull();
     }
 
     [Fact]

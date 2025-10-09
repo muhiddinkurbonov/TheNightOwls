@@ -10,6 +10,7 @@ using Fadebook.Controllers;
 using Fadebook.Models;
 using Fadebook.Services;
 using Fadebook.DTOs;
+using Fadebook.Exceptions;
 
 namespace Api.Tests.Controllers;
 
@@ -72,7 +73,7 @@ public class AppointmentControllerTests
     }
 
     [Fact]
-    public async Task Create_ReturnsConflict_WhenServiceReturnsNull()
+    public async Task Create_ThrowsBadRequest_WhenServiceRejects()
     {
         // Arrange
         var appointmentDto = new AppointmentDto
@@ -86,13 +87,10 @@ public class AppointmentControllerTests
 
         var appointmentModel = new AppointmentModel();
         _mockMapper.Setup(m => m.Map<AppointmentModel>(appointmentDto)).Returns(appointmentModel);
-        _mockService.Setup(s => s.AddAppointmentAsync(appointmentModel)).ReturnsAsync((AppointmentModel)null);
+        _mockService.Setup(s => s.AddAppointmentAsync(appointmentModel)).ThrowsAsync(new BadRequestException("Invalid appointment"));
 
-        // Act
-        var result = await _controller.Create(appointmentDto);
-
-        // Assert
-        result.Result.Should().BeOfType<ConflictObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<BadRequestException>(() => _controller.Create(appointmentDto));
     }
 
     [Fact]
@@ -132,16 +130,13 @@ public class AppointmentControllerTests
     }
 
     [Fact]
-    public async Task GetById_ReturnsNotFound_WhenAppointmentDoesNotExist()
+    public async Task GetById_ThrowsNotFound_WhenAppointmentDoesNotExist()
     {
         // Arrange
-        _mockService.Setup(s => s.GetAppointmentByIdAsync(1)).ReturnsAsync((AppointmentModel)null);
+        _mockService.Setup(s => s.GetAppointmentByIdAsync(1)).ThrowsAsync(new NotFoundException("not found"));
 
-        // Act
-        var result = await _controller.GetById(1);
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() => _controller.GetById(1));
     }
 
     [Fact]
@@ -179,20 +174,17 @@ public class AppointmentControllerTests
     }
 
     [Fact]
-    public async Task Update_ReturnsNotFound_WhenAppointmentDoesNotExist()
+    public async Task Update_ThrowsNotFound_WhenAppointmentDoesNotExist()
     {
         // Arrange
         var appointmentDto = new AppointmentDto();
         var appointmentModel = new AppointmentModel();
 
         _mockMapper.Setup(m => m.Map<AppointmentModel>(appointmentDto)).Returns(appointmentModel);
-        _mockService.Setup(s => s.UpdateAppointmentAsync(1, It.IsAny<AppointmentModel>())).ReturnsAsync((AppointmentModel)null);
+        _mockService.Setup(s => s.UpdateAppointmentAsync(1, It.IsAny<AppointmentModel>())).ThrowsAsync(new NotFoundException("not found"));
 
-        // Act
-        var result = await _controller.Update(1, appointmentDto);
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() => _controller.Update(1, appointmentDto));
     }
 
     [Fact]
@@ -258,16 +250,13 @@ public class AppointmentControllerTests
     }
 
     [Fact]
-    public async Task GetByUsername_ReturnsNotFound_WhenUsernameDoesNotExist()
+    public async Task GetByUsername_ThrowsNotFound_WhenUsernameDoesNotExist()
     {
         // Arrange
-        _mockService.Setup(s => s.LookupAppointmentsByUsernameAsync("nonexistent")).ReturnsAsync((IEnumerable<AppointmentModel>)null);
+        _mockService.Setup(s => s.LookupAppointmentsByUsernameAsync("nonexistent")).ThrowsAsync(new NotFoundException(""));
 
-        // Act
-        var result = await _controller.GetByUsername("nonexistent");
-
-        // Assert
-        result.Result.Should().BeOfType<NotFoundObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() => _controller.GetByUsername("nonexistent"));
     }
 
     [Fact]
@@ -285,15 +274,12 @@ public class AppointmentControllerTests
     }
 
     [Fact]
-    public async Task Delete_ReturnsNotFound_WhenAppointmentDoesNotExist()
+    public async Task Delete_ThrowsNotFound_WhenAppointmentDoesNotExist()
     {
         // Arrange
-        _mockService.Setup(s => s.DeleteAppointmentAsync(1)).ReturnsAsync((AppointmentModel)null);
+        _mockService.Setup(s => s.DeleteAppointmentAsync(1)).ThrowsAsync(new NotFoundException(""));
 
-        // Act
-        var result = await _controller.Delete(1);
-
-        // Assert
-        result.Should().BeOfType<NotFoundObjectResult>();
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() => _controller.Delete(1));
     }
 }
