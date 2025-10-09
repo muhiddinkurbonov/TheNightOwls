@@ -17,7 +17,6 @@ public class GoogleCalendarController(
     IHttpClientFactory _httpClientFactory,
     IAppointmentManagementService _appointmentManagementService,
     IConfiguration _configuration
-    // ILogger _logger
     ) : ControllerBase
 {
     [HttpGet("google-auth", Name = "GoogleAuth")]
@@ -60,7 +59,7 @@ public class GoogleCalendarController(
             new KeyValuePair<string, string>("code", code),
             new KeyValuePair<string, string>("client_id", clientId),
             new KeyValuePair<string, string>("client_secret", clientSecret),
-            new KeyValuePair<string, string>("redirect_uri", redirectUri!),
+            new KeyValuePair<string, string>("redirect_uri", redirectUri),
             new KeyValuePair<string, string>("grant_type", "authorization_code")
         });
 
@@ -74,7 +73,7 @@ public class GoogleCalendarController(
             return BadRequest(json);
         }
 
-            var tokenData = JsonSerializer.Deserialize<JsonElement>(json);
+        var tokenData = JsonSerializer.Deserialize<JsonElement>(json);
         var accessToken = tokenData.GetProperty("access_token").GetString();
         var refreshToken = tokenData.TryGetProperty("refresh_token", out var rt) ? rt.GetString() : null;
 
@@ -101,7 +100,7 @@ public class GoogleCalendarController(
         await AddEventAsync(apptId, accessToken);
 
         await RevokeTokenAsync(refreshToken);
-        await RevokeTokenAsync(accessToken);
+        // await RevokeTokenAsync(accessToken);
 
         return Redirect($"localhost:3000/book/confirmation/{apptId}");
     }
