@@ -1,0 +1,76 @@
+<mxfile host="65bd71144e">
+    <diagram id="6fcfAubZn13I3NkKI272" name="Page-1">
+        <mxGraphModel dx="1733" dy="984" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Frontend NextJS" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=25;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="80" width="280" height="780" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="Backend API" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=25;" vertex="1" parent="1">
+                    <mxGeometry x="400" y="80" width="340" height="780" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="Google Auth" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=25;" vertex="1" parent="1">
+                    <mxGeometry x="800" y="80" width="370" height="780" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="5" target="6">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="&lt;div&gt;On Confirmation Page&lt;/div&gt;User Clicks&lt;div&gt;Add to Calender&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="160" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="6" target="9">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="/api/GoogleCalender/google-auth&lt;div&gt;Redirect user to Google Auth&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="425" y="160" width="290" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="9" target="11">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="Google Auth Login&lt;div&gt;On login, calls back to an api endpoint&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="850" y="160" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="/api/GoogleCalender/google-callback" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="425" y="280" width="290" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="13" target="14">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="Extract code from the callback query params&lt;div&gt;Exchange for tokens&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="425" y="360" width="290" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="Google Auth Tokens&lt;div&gt;Returns tokens for a valid code&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="860" y="340" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="16" target="19">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="Use token to generate Google Calendar Event" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="425" y="440" width="290" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="Google Calender API&lt;div&gt;Adds a calendar event&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="860" y="440" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="Google Auth Tokens&lt;div&gt;Revokes token&amp;nbsp;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="860" y="540" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="22" target="21">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="Revoke token access since we are done with it" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="425" y="520" width="290" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="24" target="25">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="Redirect back to confirmation page" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="425" y="600" width="290" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="Confirmation page with confirmed google calender event" style="rounded=0;whiteSpace=wrap;html=1;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="60" y="600" width="240" height="80" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
