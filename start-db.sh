@@ -9,7 +9,7 @@ echo "Starting MSSQL Server Express in Docker"
 echo "=========================================="
 
 # Check if .env file exists
-if [ ! -f .env ]; then
+if [ ! -f api/.env ]; then
     echo "ERROR: .env file not found!"
     echo "Please create a .env file based on .env.example"
     echo "Example: cp .env.example .env"
@@ -18,7 +18,7 @@ fi
 
 # Load environment variables from .env
 set -a  # automatically export all variables
-source .env
+source api/.env
 set +a  # stop automatically exporting
 
 # Check if MSSQL_SA_PASSWORD is set
