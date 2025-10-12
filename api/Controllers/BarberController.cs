@@ -41,6 +41,7 @@ namespace Fadebook.Controllers
 
         // POST: api/barber
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<BarberDto>> Create([FromBody] CreateBarberDto dto)
         {
             var model = _mapper.Map<BarberModel>(dto);
@@ -51,6 +52,7 @@ namespace Fadebook.Controllers
 
         // PUT: api/barber/{id}
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<BarberDto>> Update([FromRoute] int id, [FromBody] BarberDto dto)
         {
             var model = _mapper.Map<BarberModel>(dto);
@@ -60,6 +62,7 @@ namespace Fadebook.Controllers
 
         // DELETE: api/barber/{id}
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
             await _service.DeleteByIdAsync(id);
@@ -78,6 +81,7 @@ namespace Fadebook.Controllers
 
         // PUT: api/barber/{id}/services
         [HttpPut("{id:int}/services")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateServices([FromRoute] int id, [FromBody] List<int> serviceIds)
         {
             if (serviceIds is null || !serviceIds.Any()) 

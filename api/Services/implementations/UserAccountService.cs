@@ -58,6 +58,16 @@ public class UserAccountService(
         return customer;
     }
 
+    public async Task<CustomerModel> GetCustomerByUsernameAsync(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+            throw new BadRequestException("Username is required.");
+        var customer = await _customerRepository.GetByUsernameAsync(username);
+        if (customer is null)
+            throw new NotFoundException($"Customer with username \"{username}\" does not exist");
+        return customer;
+    }
+
     public async Task<IEnumerable<CustomerModel>> GetAllCustomersAsync()
     {
         return await _customerRepository.GetAllAsync();

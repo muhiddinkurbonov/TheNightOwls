@@ -16,6 +16,8 @@ export const useServices = () => {
       const { data } = await axiosInstance.get<ServiceDto[]>('/api/service');
       return data;
     },
+    refetchInterval: 15000, // Auto-refetch every 15 seconds
+    refetchIntervalInBackground: false, // Only refetch when tab is active
   });
 };
 
@@ -26,6 +28,21 @@ export const useCreateService = () => {
   return useMutation({
     mutationFn: async (service: CreateServiceDto) => {
       const { data } = await axiosInstance.post<ServiceDto>('/api/service', service);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+    },
+  });
+};
+
+// Update service
+export const useUpdateService = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, service }: { id: number; service: CreateServiceDto }) => {
+      const { data } = await axiosInstance.put<ServiceDto>(`/api/service/${id}`, service);
       return data;
     },
     onSuccess: () => {

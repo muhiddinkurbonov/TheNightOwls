@@ -1,111 +1,71 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navigation } from '@/components/Navigation';
-import { axiosInstance } from '@/lib/axios';
-import { customersApi } from '@/lib/api/customers';
+import { useAuth } from '@/providers/AuthProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { CustomerDto } from '@/types/api';
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { register, isAuthenticated, isLoading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
+    email: '',
+    password: '',
     name: '',
-    contactInfo: '',
+    phoneNumber: '',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  const [isUsernameTaken, setIsUsernameTaken] = useState<boolean | null>(null);
-  const [usernameCheckError, setUsernameCheckError] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/book');
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    const customerData: CustomerDto = {
-      customerId: 0, // Will be set by backend
-      username: formData.username,
-      name: formData.name,
-      contactInfo: formData.contactInfo,
-    };
-
     try {
-      console.log('Attempting signup with data:', customerData);
-      
-      // Call signup API
-      const { data } = await axiosInstance.post<CustomerDto>(
-        '/api/customeraccount/signup',
-        customerData
-      );
-      
-      console.log('Signup successful:', data);
-      
-      // Store user info in localStorage
-      localStorage.setItem('username', data.username);
-      localStorage.setItem('customerId', data.customerId.toString());
-      localStorage.setItem('isAuthenticated', 'true');
-      
-      // Redirect to booking page
+      await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        phoneNumber: formData.phoneNumber || undefined,
+        role: 'Customer',
+      });
+
       router.push('/book');
     } catch (err: any) {
       console.error('Signup error:', err);
-      console.error('Error response:', err.response);
-      console.error('Error response data:', err.response?.data);
-      console.error('Error status:', err.response?.status);
-      
-      if (err.response?.status === 409) {
-        setError('Username already taken. Please choose a different username.');
-      } else if (err.response?.status === 400) {
-        const errorMsg = err.response?.data?.message || err.response?.data?.title || 'Invalid data. Please check all fields.';
-        setError(errorMsg);
+
+      if (err.response?.status === 400) {
+        const errors = err.response?.data?.errors;
+        if (errors) {
+          // Extract validation errors
+          const errorMessages = Object.values(errors).flat().join(' ');
+          setError(errorMessages as string);
+        } else {
+          setError(err.response?.data?.message || 'Invalid data. Please check all fields.');
+        }
       } else if (err.code === 'ERR_NETWORK') {
-        setError('Cannot connect to server. Please make sure the API is running on http://localhost:5288');
+        setError('Cannot connect to server. Please make sure the API is running.');
       } else {
         setError(err.response?.data?.message || 'Failed to create account. Please try again.');
       }
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Debounced username availability check
-  
-  // use inline debounce to avoid adding a new hook file
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
-  const onUsernameChange = (value: string) => {
-    setFormData({ ...formData, username: value });
-    setError('');
-    setUsernameCheckError('');
-    setIsUsernameTaken(null);
-    if (debounceTimer) clearTimeout(debounceTimer);
-    const t = setTimeout(async () => {
-      const uname = value.trim();
-      if (!uname) {
-        setIsCheckingUsername(false);
-        setIsUsernameTaken(null);
-        return;
-      }
-      setIsCheckingUsername(true);
-      try {
-        const exists = await customersApi.usernameExists(uname);
-        setIsUsernameTaken(exists);
-      } catch (e: any) {
-        // Backend returns 400 for blank; we already guard. Show generic message otherwise.
-        setUsernameCheckError(e?.response?.data?.message || 'Unable to verify username.');
-        setIsUsernameTaken(null);
-      } finally {
-        setIsCheckingUsername(false);
-      }
-    }, 400);
-    setDebounceTimer(t);
   };
 
   return (
@@ -132,23 +92,36 @@ export default function SignUpPage() {
                   type="text"
                   required
                   value={formData.username}
-                  onChange={(e) => onUsernameChange(e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   placeholder="Choose a username"
                 />
-                <div className="text-sm min-h-5">
-                  {isCheckingUsername && (
-                    <span className="text-muted-foreground">Checking username...</span>
-                  )}
-                  {!isCheckingUsername && usernameCheckError && (
-                    <span className="text-destructive">{usernameCheckError}</span>
-                  )}
-                  {!isCheckingUsername && isUsernameTaken === true && (
-                    <span className="text-destructive">Username already taken.</span>
-                  )}
-                  {!isCheckingUsername && isUsernameTaken === false && (
-                    <span className="text-primary">Username available.</span>
-                  )}
-                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Create a password"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Must be at least 8 characters with uppercase, lowercase, number, and special character
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -158,32 +131,23 @@ export default function SignUpPage() {
                   type="text"
                   required
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Enter your full name"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="contactInfo">Contact Info</Label>
+                <Label htmlFor="phoneNumber">Phone Number (Optional)</Label>
                 <Input
-                  id="contactInfo"
-                  type="text"
-                  required
-                  value={formData.contactInfo}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contactInfo: e.target.value })
-                  }
-                  placeholder="Email or phone number"
+                  id="phoneNumber"
+                  type="tel"
+                  value={formData.phoneNumber}
+                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                  placeholder="Enter your phone number"
                 />
               </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || isUsernameTaken === true}
-              >
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Creating account...' : 'Sign Up'}
               </Button>
 

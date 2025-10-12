@@ -5,6 +5,9 @@ export interface AppointmentDto {
   serviceId: number;
   barberId: number;
   appointmentDate: string;
+  customerName?: string;
+  barberName?: string;
+  serviceName?: string;
 }
 
 export interface BarberDto {
@@ -53,4 +56,43 @@ export interface CreateCustomerDto {
   username: string;
   name: string;
   contactInfo: string;
+}
+
+// Auth types
+export interface UserDto {
+  userId: number;
+  username: string;
+  email: string;
+  name: string;
+  phoneNumber?: string;
+  role: string;
+  createdAt: string;
+  lastLoginAt?: string;
+  isActive: boolean;
+  barberId?: number;
+  customerId?: number;
+}
+
+export interface RegisterDto {
+  username: string;
+  email: string;
+  password: string;
+  name: string;
+  phoneNumber?: string;
+  role?: string;
+}
+
+export interface LoginDto {
+  usernameOrEmail: string;
+  password: string;
+}
+
+export interface LoginResponseDto {
+  token: string;
+  user: UserDto;
+}
+
+export interface ChangePasswordDto {
+  currentPassword: string;
+  newPassword: string;
 }

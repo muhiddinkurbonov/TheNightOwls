@@ -6,6 +6,8 @@ export const useBarbers = () => {
   return useQuery({
     queryKey: ['barbers'],
     queryFn: () => barbersApi.getAll(),
+    refetchInterval: 15000, // Auto-refetch every 15 seconds
+    refetchIntervalInBackground: false, // Only refetch when tab is active
   });
 };
 

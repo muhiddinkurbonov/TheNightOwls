@@ -2,6 +2,12 @@ import { axiosInstance } from '../axios';
 import type { AppointmentDto, CreateAppointmentDto } from '@/types/api';
 
 export const appointmentsApi = {
+  // GET: api/appointment
+  getAll: async (): Promise<AppointmentDto[]> => {
+    const { data } = await axiosInstance.get('/api/appointment');
+    return data;
+  },
+
   // GET: api/appointment/{id}
   getById: async (id: number): Promise<AppointmentDto> => {
     const { data } = await axiosInstance.get(`/api/appointment/${id}`);
@@ -36,6 +42,12 @@ export const appointmentsApi = {
   // GET: api/appointment/by-username/{username}
   getByUsername: async (username: string): Promise<AppointmentDto[]> => {
     const { data } = await axiosInstance.get(`/api/appointment/by-username/${username}`);
+    return data;
+  },
+
+  // GET: api/appointment/by-barber/{barberId}
+  getByBarberId: async (barberId: number): Promise<AppointmentDto[]> => {
+    const { data } = await axiosInstance.get(`/api/appointment/by-barber/${barberId}`);
     return data;
   },
 };

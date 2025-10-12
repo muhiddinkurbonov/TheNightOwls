@@ -3,9 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navigation } from '@/components/Navigation';
-import { axiosInstance } from '@/lib/axios';
+import { useAuth } from '@/providers/AuthProvider';
+import { useAppointmentsByUsername, useUpdateAppointment } from '@/hooks/useAppointments';
+import { useBarbers } from '@/hooks/useBarbers';
+import { useServices } from '@/hooks/useServices';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -14,7 +18,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Calendar, Clock, User, Scissors } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Calendar, Clock, User, Scissors, XCircle } from 'lucide-react';
 import type { AppointmentDto, BarberDto, ServiceDto } from '@/types/api';
 
 interface AppointmentWithDetails extends AppointmentDto {
@@ -25,53 +39,37 @@ interface AppointmentWithDetails extends AppointmentDto {
 
 export default function MyAppointmentsPage() {
   const router = useRouter();
-  const [appointments, setAppointments] = useState<AppointmentWithDetails[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [cancellingAppointment, setCancellingAppointment] = useState<AppointmentDto | null>(null);
 
+  // Auto-refetching hooks
+  const { data: appointmentsData = [], isLoading: appointmentsLoading, error: appointmentsError } = useAppointmentsByUsername(user?.username || '');
+  const { data: barbers = [] } = useBarbers();
+  const { data: services = [] } = useServices();
+  const updateAppointment = useUpdateAppointment();
+
+  // Redirect if not authenticated
   useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const username = localStorage.getItem('username');
-        const isAuthenticated = localStorage.getItem('isAuthenticated');
+    if (authLoading) return;
+    if (!isAuthenticated || !user) {
+      router.push('/signin');
+    }
+  }, [user, isAuthenticated, authLoading, router]);
 
-        if (!isAuthenticated || !username) {
-          router.push('/signin');
-          return;
-        }
-
-        // Fetch appointments for this customer by username
-        const { data: appointmentsData } = await axiosInstance.get<AppointmentDto[]>(
-          `/api/appointment/by-username/${username}`
-        );
-
-        // Fetch barbers and services to get names
-        const { data: barbers } = await axiosInstance.get<BarberDto[]>('/api/barber');
-        const { data: services } = await axiosInstance.get<ServiceDto[]>('/api/customer/services');
-
-        // Combine data
-        const appointmentsWithDetails = appointmentsData.map((apt) => {
-          const barber = barbers.find((b) => b.barberId === apt.barberId);
-          const service = services.find((s) => s.serviceId === apt.serviceId);
-          return {
-            ...apt,
-            barberName: barber?.name,
-            serviceName: service?.serviceName,
-            servicePrice: service?.servicePrice,
-          };
-        });
-
-        setAppointments(appointmentsWithDetails);
-      } catch (err) {
-        console.error('Failed to fetch appointments:', err);
-        setError('Failed to load appointments');
-      } finally {
-        setIsLoading(false);
-      }
+  // Combine appointments with barber and service details
+  const appointments: AppointmentWithDetails[] = appointmentsData.map((apt) => {
+    const barber = barbers.find((b) => b.barberId === apt.barberId);
+    const service = services.find((s) => s.serviceId === apt.serviceId);
+    return {
+      ...apt,
+      barberName: barber?.name,
+      serviceName: service?.serviceName,
+      servicePrice: service?.servicePrice,
     };
+  });
 
-    fetchAppointments();
-  }, [router]);
+  const isLoading = authLoading || appointmentsLoading;
+  const error = appointmentsError ? 'Failed to load appointments' : '';
 
   const getStatusVariant = (status: string) => {
     switch (status.toLowerCase()) {
@@ -86,6 +84,33 @@ export default function MyAppointmentsPage() {
       default:
         return 'secondary';
     }
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!cancellingAppointment) return;
+
+    try {
+      await updateAppointment.mutateAsync({
+        id: cancellingAppointment.appointmentId,
+        appointment: {
+          customerId: cancellingAppointment.customerId,
+          barberId: cancellingAppointment.barberId,
+          serviceId: cancellingAppointment.serviceId,
+          appointmentDate: cancellingAppointment.appointmentDate,
+          status: 'Cancelled',
+        },
+      });
+
+      setCancellingAppointment(null);
+    } catch (err) {
+      console.error('Failed to cancel appointment:', err);
+      alert('Failed to cancel appointment. Please try again.');
+    }
+  };
+
+  const canCancelAppointment = (appointment: AppointmentDto) => {
+    const status = appointment.status.toLowerCase();
+    return status === 'pending' || status === 'confirmed';
   };
 
   if (isLoading) {
@@ -139,12 +164,27 @@ export default function MyAppointmentsPage() {
                 <Card key={appointment.appointmentId}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-xl">
-                        Appointment #{appointment.appointmentId}
-                      </CardTitle>
-                      <Badge variant={getStatusVariant(appointment.status)}>
-                        {appointment.status}
-                      </Badge>
+                      <div>
+                        <CardTitle className="text-xl">
+                          Appointment #{appointment.appointmentId}
+                        </CardTitle>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge variant={getStatusVariant(appointment.status)}>
+                          {appointment.status}
+                        </Badge>
+                        {canCancelAppointment(appointment) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCancellingAppointment(appointment)}
+                            className="text-destructive border-destructive hover:bg-destructive/10"
+                          >
+                            <XCircle className="h-4 w-4 mr-2" />
+                            Cancel
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <CardDescription>
                       {new Date(appointment.appointmentDate).toLocaleDateString('en-US', {
@@ -209,6 +249,28 @@ export default function MyAppointmentsPage() {
               ))}
             </div>
           )}
+
+          <AlertDialog open={!!cancellingAppointment} onOpenChange={() => setCancellingAppointment(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel Appointment</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to cancel appointment #{cancellingAppointment?.appointmentId}?
+                  This action cannot be undone. You will need to book a new appointment if you change your mind.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep Appointment</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleCancelAppointment}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  disabled={updateAppointment.isPending}
+                >
+                  {updateAppointment.isPending ? 'Cancelling...' : 'Yes, Cancel Appointment'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </main>
     </div>

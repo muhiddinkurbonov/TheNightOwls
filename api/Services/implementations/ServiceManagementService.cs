@@ -30,6 +30,15 @@ public class ServiceManagementService(
         return created;
     }
 
+    public async Task<ServiceModel> UpdateAsync(int id, ServiceModel serviceModel)
+    {
+        var updated = await _serviceRepository.UpdateAsync(id, serviceModel);
+        if (updated is null)
+            throw new NotFoundException($"Service with ID {id} not found.");
+        await _dbTransactionContext.SaveChangesAsync();
+        return updated;
+    }
+
     public async Task<ServiceModel> DeleteAsync(int id)
     {
         var deleted = await _serviceRepository.DeleteAsync(id);

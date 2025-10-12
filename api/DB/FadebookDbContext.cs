@@ -12,6 +12,7 @@ public class FadebookDbContext : DbContext
     public DbSet<ServiceModel> serviceTable { get; set; }
     public DbSet<BarberServiceModel> barberServiceTable { get; set; }
     public DbSet<AppointmentModel> appointmentTable { get; set; }
+    public DbSet<UserModel> userTable { get; set; }
 
     public FadebookDbContext(DbContextOptions<FadebookDbContext> options) : base(options) { }
 
@@ -64,6 +65,15 @@ public class FadebookDbContext : DbContext
             .HasForeignKey(bsm => bsm.ServiceId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
+
+        // User model configuration
+        modelBuilder.Entity<UserModel>()
+            .HasIndex(u => u.Username)
+            .IsUnique();
+
+        modelBuilder.Entity<UserModel>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
 
         base.OnModelCreating(modelBuilder);
     }

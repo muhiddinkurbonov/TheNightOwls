@@ -44,6 +44,14 @@ namespace Fadebook.Controllers
             return Ok(_mapper.Map<CustomerDto>(customer));
         }
 
+        // GET: api/customer/by-username/{username}
+        [HttpGet("by-username/{username}")]
+        public async Task<ActionResult<CustomerDto>> GetByUsername([FromRoute] string username)
+        {
+            var customer = await _userAccountService.GetCustomerByUsernameAsync(username);
+            return Ok(_mapper.Map<CustomerDto>(customer));
+        }
+
         // GET: api/customer/services
         [HttpGet("services")]
         public async Task<ActionResult<IEnumerable<ServiceDto>>> GetServices()
