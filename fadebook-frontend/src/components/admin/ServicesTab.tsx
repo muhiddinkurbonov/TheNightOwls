@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useServices, useCreateService, useDeleteService } from '@/hooks/useServices';
+import { useServices, useCreateService, useUpdateService, useDeleteService } from '@/hooks/useServices';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,36 +23,65 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Pencil } from 'lucide-react';
 import type { CreateServiceDto } from '@/hooks/useServices';
+import type { ServiceDto } from '@/types/api';
 
 export function ServicesTab() {
   const { data: services, isLoading, error } = useServices();
   const createService = useCreateService();
+  const updateService = useUpdateService();
   const deleteService = useDeleteService();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingService, setEditingService] = useState<ServiceDto | null>(null);
   const [formData, setFormData] = useState({
     serviceName: '',
     servicePrice: '',
   });
 
+  const handleOpenDialog = (service?: ServiceDto) => {
+    if (service) {
+      setEditingService(service);
+      setFormData({
+        serviceName: service.serviceName,
+        servicePrice: service.servicePrice.toString(),
+      });
+    } else {
+      setEditingService(null);
+      setFormData({
+        serviceName: '',
+        servicePrice: '',
+      });
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingService(null);
+    setFormData({
+      serviceName: '',
+      servicePrice: '',
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const serviceData: CreateServiceDto = {
       serviceName: formData.serviceName,
       servicePrice: parseFloat(formData.servicePrice),
     };
 
     try {
-      await createService.mutateAsync(serviceData);
-      setIsDialogOpen(false);
-      setFormData({
-        serviceName: '',
-        servicePrice: '',
-      });
+      if (editingService) {
+        await updateService.mutateAsync({ id: editingService.serviceId, service: serviceData });
+      } else {
+        await createService.mutateAsync(serviceData);
+      }
+      handleCloseDialog();
     } catch (error) {
-      console.error('Failed to create service:', error);
+      console.error(`Failed to ${editingService ? 'update' : 'create'} service:`, error);
     }
   };
 
@@ -94,18 +123,18 @@ export function ServicesTab() {
             <CardTitle>Services</CardTitle>
             <CardDescription>Manage available services and pricing</CardDescription>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => handleOpenDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Service
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Add New Service</DialogTitle>
+                <DialogTitle>{editingService ? 'Edit Service' : 'Add New Service'}</DialogTitle>
                 <DialogDescription>
-                  Create a new service with pricing
+                  {editingService ? 'Update service details and pricing' : 'Create a new service with pricing'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -138,8 +167,11 @@ export function ServicesTab() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full" disabled={createService.isPending}>
-                  {createService.isPending ? 'Creating...' : 'Create Service'}
+                <Button type="submit" className="w-full" disabled={createService.isPending || updateService.isPending}>
+                  {editingService
+                    ? (updateService.isPending ? 'Updating...' : 'Update Service')
+                    : (createService.isPending ? 'Creating...' : 'Create Service')
+                  }
                 </Button>
               </form>
             </DialogContent>
@@ -172,14 +204,23 @@ export function ServicesTab() {
                     ${service.servicePrice.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(service.serviceId)}
-                      disabled={deleteService.isPending}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenDialog(service)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(service.serviceId)}
+                        disabled={deleteService.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

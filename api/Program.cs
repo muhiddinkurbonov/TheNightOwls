@@ -94,25 +94,13 @@ builder.Services.AddDbContext<FadebookDbContext>((options) =>
     options.UseSqlServer(connectionString);
 });
 
-/*
-builder.Services.AddIdentity<User, IdentityRole>(options =>
-{
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequiredLength = 8;
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-    options.Lockout.MaxFailedAccessAttempts = 3;
-    options.Lockout.AllowedForNewUsers = true;
-    options.User.RequireUniqueEmail = true;
-
-}).AddEntityFrameworkStores<SchoolDbContext>()
-.AddDefaultTokenProviders();
-
-// Jwt Auth
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var key = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JwtSettings.SecretKey is missing in appsettings.json!");
+// JWT Authentication
+var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+    ?? throw new InvalidOperationException("JWT_SECRET_KEY is missing in .env file!");
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+    ?? throw new InvalidOperationException("JWT_ISSUER is missing in .env file!");
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+    ?? throw new InvalidOperationException("JWT_AUDIENCE is missing in .env file!");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -127,19 +115,18 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey))
     };
 });
 
-builder.Services.AddAuthorization( options =>
+builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Students", policy => policy.RequireClaim("Student"));
-    options.AddPolicy("Instructors", policy => policy.RequireClaim("Instructor"));
-    options.AddPolicy("SysAdmin", policy => policy.RequireClaim("SysAdmin"));
+    options.AddPolicy("Customer", policy => policy.RequireRole("Customer"));
+    options.AddPolicy("Barber", policy => policy.RequireRole("Barber"));
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
 });
-*/
 
 // repository classes for DI
 builder.Services.AddScoped<IDbTransactionContext, DbTransactionContext>();
@@ -148,6 +135,7 @@ builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IBarberRepository, BarberRepository>();
 builder.Services.AddScoped<IBarberServiceRepository, BarberServiceRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 
 // service classes for DI
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
@@ -155,6 +143,7 @@ builder.Services.AddScoped<ICustomerAppointmentService, CustomerAppointmentServi
 builder.Services.AddScoped<IAppointmentManagementService, AppointmentManagementService>();
 builder.Services.AddScoped<IBarberManagementService, BarberManagementService>();
 builder.Services.AddScoped<IServiceManagementService, ServiceManagementService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 // builder.Services.AddScoped<IInstructorService, InstructorService>();
 // builder.Services.AddScoped<ICourseService, CourseService>();
 
@@ -177,8 +166,8 @@ app.UseHttpsRedirection();
 // Exception handling middleware should be first in the pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// app.UseAuthentication();
-// app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Apply CORS before mapping controllers

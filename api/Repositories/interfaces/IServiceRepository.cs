@@ -8,10 +8,6 @@ public interface IServiceRepository
     Task<ServiceModel?> GetByIdAsync(int serviceId);
     Task<IEnumerable<ServiceModel>> GetAll();
     Task<ServiceModel> AddAsync(ServiceModel serviceModel);
+    Task<ServiceModel?> UpdateAsync(int serviceId, ServiceModel serviceModel);
     Task<ServiceModel?> DeleteAsync(int serviceId);
 }
-
-/*
-
-
-*/

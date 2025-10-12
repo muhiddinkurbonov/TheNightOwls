@@ -1,21 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Navigation } from '@/components/Navigation';
-import { axiosInstance } from '@/lib/axios';
+import { useAuth } from '@/providers/AuthProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { CustomerDto } from '@/types/api';
 
 export default function SignInPage() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
+  const { login, user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      // Redirect based on role
+      if (user.role === 'Admin') {
+        router.push('/admin');
+      } else if (user.role === 'Barber') {
+        router.push('/barber-dashboard');
+      } else {
+        router.push('/book');
+      }
+    }
+  }, [isAuthenticated, authLoading, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,31 +38,23 @@ export default function SignInPage() {
     setIsLoading(true);
 
     try {
-      console.log('Attempting login with username:', username);
-      
-      // Call login API
-      const { data } = await axiosInstance.post<CustomerDto>(
-        '/api/customeraccount/login',
-        { username }
-      );
+      const userData = await login({ usernameOrEmail, password });
 
-      console.log('Login successful:', data);
-
-      // Store user info in localStorage
-      localStorage.setItem('username', data.username);
-      localStorage.setItem('customerId', data.customerId.toString());
-      localStorage.setItem('isAuthenticated', 'true');
-      
-      // Redirect to booking page
-      router.push('/book');
+      // Redirect based on role
+      if (userData.role === 'Admin') {
+        router.push('/admin');
+      } else if (userData.role === 'Barber') {
+        router.push('/barber-dashboard');
+      } else {
+        router.push('/book');
+      }
     } catch (err: any) {
       console.error('Login error:', err);
-      console.error('Error response:', err.response);
-      
-      if (err.response?.status === 404) {
-        setError('Username not found. Please sign up first.');
+
+      if (err.response?.status === 401) {
+        setError('Invalid username/email or password.');
       } else if (err.code === 'ERR_NETWORK') {
-        setError('Cannot connect to server. Please make sure the API is running on http://localhost:5288');
+        setError('Cannot connect to server. Please make sure the API is running.');
       } else {
         setError(err.response?.data?.message || 'Sign in failed. Please try again.');
       }
@@ -74,14 +81,26 @@ export default function SignInPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="usernameOrEmail">Username or Email</Label>
                 <Input
-                  id="username"
+                  id="usernameOrEmail"
                   type="text"
                   required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
+                  value={usernameOrEmail}
+                  onChange={(e) => setUsernameOrEmail(e.target.value)}
+                  placeholder="Enter your username or email"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
                 />
               </div>
 

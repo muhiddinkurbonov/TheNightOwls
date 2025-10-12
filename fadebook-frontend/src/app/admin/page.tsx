@@ -1,15 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Navigation } from '@/components/Navigation';
+import { useAuth } from '@/providers/AuthProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarbersTab } from '@/components/admin/BarbersTab';
 import { CustomersTab } from '@/components/admin/CustomersTab';
 import { AppointmentsTab } from '@/components/admin/AppointmentsTab';
 import { ServicesTab } from '@/components/admin/ServicesTab';
+import { UsersTab } from '@/components/admin/UsersTab';
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    // Wait for auth to load
+    if (isLoading) return;
+
+    // Redirect if not authenticated
+    if (!isAuthenticated) {
+      router.push('/signin');
+      return;
+    }
+
+    // Redirect if not admin
+    if (user && user.role !== 'Admin') {
+      router.push('/book'); // Redirect non-admins to book page
+      return;
+    }
+  }, [user, isAuthenticated, isLoading, router]);
+
+  // Show loading state while checking auth
+  if (isLoading || !user || user.role !== 'Admin') {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="flex-1 py-8 px-4">
+          <div className="container mx-auto">
+            <p className="text-center text-muted-foreground">Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
@@ -22,13 +59,18 @@ export default function AdminPage() {
             </p>
           </div>
 
-          <Tabs defaultValue="barbers" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <Tabs defaultValue="users" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+              <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="barbers">Barbers</TabsTrigger>
               <TabsTrigger value="services">Services</TabsTrigger>
               <TabsTrigger value="customers">Customers</TabsTrigger>
               <TabsTrigger value="appointments">Appointments</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="users">
+              <UsersTab />
+            </TabsContent>
 
             <TabsContent value="barbers">
               <BarbersTab />

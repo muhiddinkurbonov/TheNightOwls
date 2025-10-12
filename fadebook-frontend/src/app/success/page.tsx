@@ -31,12 +31,12 @@ export default function SuccessPage() {
   };
 
   useEffect(() => {
-    // Get appointment details from URL params or localStorage
-    const appointmentId = searchParams.get('appointmentId') || localStorage.getItem('lastAppointmentId') || '';
-    const date = searchParams.get('date') || localStorage.getItem('lastAppointmentDate') || '';
-    const time = searchParams.get('time') || localStorage.getItem('lastAppointmentTime') || '';
-    const barberName = searchParams.get('barberName') || localStorage.getItem('lastBarberName') || '';
-    const serviceName = searchParams.get('serviceName') || localStorage.getItem('lastServiceName') || '';
+    // Get appointment details from URL params
+    const appointmentId = searchParams.get('appointmentId') || '';
+    const date = searchParams.get('date') || '';
+    const time = searchParams.get('time') || '';
+    const barberName = searchParams.get('barberName') || '';
+    const serviceName = searchParams.get('serviceName') || '';
     const gcalSuccess = searchParams.get('gcal') === 'success';
 
     setAppointmentDetails({
@@ -50,13 +50,6 @@ export default function SuccessPage() {
     if (gcalSuccess) {
       setGoogleCalendarAdded(true);
     }
-
-    // Clear localStorage after displaying
-    localStorage.removeItem('lastAppointmentId');
-    localStorage.removeItem('lastAppointmentDate');
-    localStorage.removeItem('lastAppointmentTime');
-    localStorage.removeItem('lastBarberName');
-    localStorage.removeItem('lastServiceName');
   }, [searchParams]);
 
   return (

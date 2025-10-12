@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useBarbers, useCreateBarber, useDeleteBarber } from '@/hooks/useBarbers';
+import { useBarbers, useCreateBarber, useUpdateBarber, useDeleteBarber } from '@/hooks/useBarbers';
 import { useServices } from '@/hooks/useCustomers';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,15 +25,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2 } from 'lucide-react';
-import type { CreateBarberDto } from '@/types/api';
+import { Plus, Trash2, Pencil } from 'lucide-react';
+import type { CreateBarberDto, BarberDto } from '@/types/api';
 
 export function BarbersTab() {
   const { data: barbers, isLoading, error } = useBarbers();
   const { data: services } = useServices();
   const createBarber = useCreateBarber();
+  const updateBarber = useUpdateBarber();
   const deleteBarber = useDeleteBarber();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingBarber, setEditingBarber] = useState<BarberDto | null>(null);
   const [formData, setFormData] = useState({
     username: '',
     name: '',
@@ -42,9 +44,44 @@ export function BarbersTab() {
     serviceIds: [] as number[],
   });
 
+  const handleOpenDialog = (barber?: BarberDto) => {
+    if (barber) {
+      setEditingBarber(barber);
+      setFormData({
+        username: barber.username,
+        name: barber.name,
+        specialty: barber.specialty || '',
+        contactInfo: barber.contactInfo || '',
+        serviceIds: [],
+      });
+    } else {
+      setEditingBarber(null);
+      setFormData({
+        username: '',
+        name: '',
+        specialty: '',
+        contactInfo: '',
+        serviceIds: [],
+      });
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingBarber(null);
+    setFormData({
+      username: '',
+      name: '',
+      specialty: '',
+      contactInfo: '',
+      serviceIds: [],
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const barberData: CreateBarberDto = {
       username: formData.username,
       name: formData.name,
@@ -54,17 +91,14 @@ export function BarbersTab() {
     };
 
     try {
-      await createBarber.mutateAsync(barberData);
-      setIsDialogOpen(false);
-      setFormData({
-        username: '',
-        name: '',
-        specialty: '',
-        contactInfo: '',
-        serviceIds: [],
-      });
+      if (editingBarber) {
+        await updateBarber.mutateAsync({ id: editingBarber.barberId, barber: barberData });
+      } else {
+        await createBarber.mutateAsync(barberData);
+      }
+      handleCloseDialog();
     } catch (error) {
-      console.error('Failed to create barber:', error);
+      console.error(`Failed to ${editingBarber ? 'update' : 'create'} barber:`, error);
     }
   };
 
@@ -115,18 +149,18 @@ export function BarbersTab() {
             <CardTitle>Barbers</CardTitle>
             <CardDescription>Manage barbers and their services</CardDescription>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => handleOpenDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Barber
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Add New Barber</DialogTitle>
+                <DialogTitle>{editingBarber ? 'Edit Barber' : 'Add New Barber'}</DialogTitle>
                 <DialogDescription>
-                  Create a new barber and assign services
+                  {editingBarber ? 'Update barber information' : 'Create a new barber and assign services'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -201,8 +235,11 @@ export function BarbersTab() {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={createBarber.isPending}>
-                  {createBarber.isPending ? 'Creating...' : 'Create Barber'}
+                <Button type="submit" className="w-full" disabled={createBarber.isPending || updateBarber.isPending}>
+                  {editingBarber
+                    ? (updateBarber.isPending ? 'Updating...' : 'Update Barber')
+                    : (createBarber.isPending ? 'Creating...' : 'Create Barber')
+                  }
                 </Button>
               </form>
             </DialogContent>
@@ -235,14 +272,23 @@ export function BarbersTab() {
                   <TableCell>{barber.specialty || '-'}</TableCell>
                   <TableCell>{barber.contactInfo || '-'}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(barber.barberId)}
-                      disabled={deleteBarber.isPending}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenDialog(barber)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(barber.barberId)}
+                        disabled={deleteBarber.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

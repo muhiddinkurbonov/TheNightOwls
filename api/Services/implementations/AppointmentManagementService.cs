@@ -13,23 +13,36 @@ public class AppointmentManagementService(
     ICustomerRepository _customerRepository
     ) : IAppointmentManagementService
 {
+    public async Task<IEnumerable<AppointmentModel>> GetAllAppointmentsAsync()
+    {
+        return await _appointmentRepository.GetAllAsync();
+    }
 
     public async Task<AppointmentModel> AddAppointmentAsync(AppointmentModel appointmentModel)
     {
         try
         {
+            Console.WriteLine($"[DEBUG] Adding appointment - CustomerId: {appointmentModel.CustomerId}, BarberId: {appointmentModel.BarberId}, ServiceId: {appointmentModel.ServiceId}");
+
             var newAppointment = await _appointmentRepository.AddAsync(appointmentModel);
             if (newAppointment is null)
                 throw new BadRequestException("Unable to create appointment. Verify that Customer, Barber, and Service IDs exist.");
+
+            Console.WriteLine($"[DEBUG] Appointment added, saving changes...");
             await _dbTransactionContext.SaveChangesAsync();
-            return newAppointment;
+            Console.WriteLine($"[DEBUG] Changes saved, appointment ID: {newAppointment.AppointmentId}");
+
+            // Reload the appointment with navigation properties for proper DTO mapping
+            Console.WriteLine($"[DEBUG] Reloading appointment with navigation properties...");
+            var reloadedAppointment = await _appointmentRepository.GetByIdAsync(newAppointment.AppointmentId);
+            Console.WriteLine($"[DEBUG] Appointment reloaded successfully");
+
+            return reloadedAppointment ?? newAppointment;
         }
-        catch
+        catch (Exception ex)
         {
-            // Nothing for us to correct here
-            // So we pass the exception on.
-            // Also, apparently this is how we rethrow an expception per CS2200
-            // Manually rethrowing an exception results in a stack trace rewrite causing lost info.
+            Console.WriteLine($"[ERROR] Failed to add appointment: {ex.Message}");
+            Console.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
             throw;
         }
     }

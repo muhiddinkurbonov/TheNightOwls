@@ -24,4 +24,9 @@ public class AppointmentDto
 
     [Required(ErrorMessage = "Appointment date is required.")]
     public DateTime appointmentDate { get; set; }
+
+    // Display names for UI (populated from related entities)
+    public string? CustomerName { get; set; }
+    public string? BarberName { get; set; }
+    public string? ServiceName { get; set; }
 }

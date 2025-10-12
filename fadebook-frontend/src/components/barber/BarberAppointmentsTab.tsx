@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useAppointmentsByDate, useUpdateAppointment, useDeleteAppointment } from '@/hooks/useAppointments';
+import { useAuth } from '@/providers/AuthProvider';
+import { useAppointmentsByBarberId, useUpdateAppointment } from '@/hooks/useAppointments';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,22 +30,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Calendar, Pencil, Trash2 } from 'lucide-react';
+import { Calendar, Pencil } from 'lucide-react';
 import type { AppointmentDto } from '@/types/api';
 
-export function AppointmentsTab() {
+export function BarberAppointmentsTab() {
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [editingAppointment, setEditingAppointment] = useState<AppointmentDto | null>(null);
   const [editStatus, setEditStatus] = useState('');
 
-  const { data: appointments = [], isLoading, error } = useAppointmentsByDate(selectedDate);
+  // Fetch appointments for this barber using their barberId
+  const { data: appointments = [], isLoading, error } = useAppointmentsByBarberId(user?.barberId || 0);
   const updateAppointment = useUpdateAppointment();
-  const deleteAppointment = useDeleteAppointment();
 
-  const filteredAppointments = statusFilter === 'all'
-    ? appointments
-    : appointments.filter((apt) => apt.status.toLowerCase() === statusFilter.toLowerCase());
+  const filteredAppointments = appointments.filter((apt) => {
+    const matchesDate = !selectedDate || new Date(apt.appointmentDate).toDateString() === new Date(selectedDate).toDateString();
+    const matchesStatus = statusFilter === 'all' || apt.status.toLowerCase() === statusFilter.toLowerCase();
+    return matchesDate && matchesStatus;
+  });
 
   const handleOpenEditDialog = (appointment: AppointmentDto) => {
     setEditingAppointment(appointment);
@@ -76,16 +80,6 @@ export function AppointmentsTab() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this appointment?')) {
-      try {
-        await deleteAppointment.mutateAsync(id);
-      } catch (err) {
-        console.error('Failed to delete appointment:', err);
-      }
-    }
-  };
-
   const getStatusVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
@@ -101,15 +95,35 @@ export function AppointmentsTab() {
     }
   };
 
+  if (!user?.barberId) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>My Appointments</CardTitle>
+          <CardDescription>View and manage your customer appointments</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="p-8 text-center space-y-4">
+            <p className="text-muted-foreground">
+              Unable to load appointments. Your barber profile is not set up correctly.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Please contact an administrator to ensure a barber record exists for your account.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Debug info: Username: {user?.username}, Barber ID: {user?.barberId || 'Not found'}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Appointments</CardTitle>
-            <CardDescription>View and filter appointments</CardDescription>
-          </div>
-        </div>
+        <CardTitle>My Appointments</CardTitle>
+        <CardDescription>View and manage your customer appointments</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex gap-4">
@@ -143,18 +157,14 @@ export function AppointmentsTab() {
           </div>
         </div>
 
-        {!selectedDate ? (
-          <div className="text-center py-12">
-            <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Select a date to view appointments</p>
-          </div>
-        ) : isLoading ? (
+        {isLoading ? (
           <p className="text-center py-8 text-muted-foreground">Loading appointments...</p>
         ) : error ? (
           <p className="text-center py-8 text-destructive">Failed to load appointments</p>
         ) : filteredAppointments.length === 0 ? (
           <p className="text-center py-8 text-muted-foreground">
-            No appointments found for this date
+            No appointments found
+            {selectedDate && ' for this date'}
             {statusFilter !== 'all' && ` with status "${statusFilter}"`}
           </p>
         ) : (
@@ -164,7 +174,6 @@ export function AppointmentsTab() {
                 <TableHead>ID</TableHead>
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Customer</TableHead>
-                <TableHead>Barber</TableHead>
                 <TableHead>Service</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -182,10 +191,6 @@ export function AppointmentsTab() {
                     <div className="text-xs text-muted-foreground">ID: {appointment.customerId}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{appointment.barberName || 'Unknown'}</div>
-                    <div className="text-xs text-muted-foreground">ID: {appointment.barberId}</div>
-                  </TableCell>
-                  <TableCell>
                     <div className="font-medium">{appointment.serviceName || 'Unknown'}</div>
                     <div className="text-xs text-muted-foreground">ID: {appointment.serviceId}</div>
                   </TableCell>
@@ -195,23 +200,13 @@ export function AppointmentsTab() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenEditDialog(appointment)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(appointment.appointmentId)}
-                        disabled={deleteAppointment.isPending}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleOpenEditDialog(appointment)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

@@ -15,6 +15,8 @@ export const useAppointmentsByDate = (date: string) => {
     queryKey: ['appointments', 'by-date', date],
     queryFn: () => appointmentsApi.getByDate(date),
     enabled: !!date,
+    refetchInterval: 10000, // Auto-refetch every 10 seconds
+    refetchIntervalInBackground: false, // Only refetch when tab is active
   });
 };
 
@@ -23,6 +25,18 @@ export const useAppointmentsByUsername = (username: string) => {
     queryKey: ['appointments', 'by-username', username],
     queryFn: () => appointmentsApi.getByUsername(username),
     enabled: !!username,
+    refetchInterval: 10000, // Auto-refetch every 10 seconds
+    refetchIntervalInBackground: false, // Only refetch when tab is active
+  });
+};
+
+export const useAppointmentsByBarberId = (barberId: number) => {
+  return useQuery({
+    queryKey: ['appointments', 'by-barber', barberId],
+    queryFn: () => appointmentsApi.getByBarberId(barberId),
+    enabled: !!barberId,
+    refetchInterval: 10000, // Auto-refetch every 10 seconds
+    refetchIntervalInBackground: false, // Only refetch when tab is active
   });
 };
 

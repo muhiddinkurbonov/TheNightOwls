@@ -20,8 +20,6 @@ public class CustomerRepository(
         return await _fadebookDbContext.customerTable.ToListAsync();
     }
 
-    // TODO: Add Customer
-
     //find customer by username
     public async Task<CustomerModel?> GetByUsernameAsync(string username)
     {

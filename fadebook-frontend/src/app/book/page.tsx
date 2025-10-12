@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navigation } from '@/components/Navigation';
+import { useAuth } from '@/providers/AuthProvider';
 import { useServices, useBarbersByService } from '@/hooks/useCustomers';
 import { useCreateAppointment } from '@/hooks/useAppointments';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +21,8 @@ import type { CreateAppointmentDto } from '@/types/api';
 
 export default function BookAppointmentPage() {
   const router = useRouter();
-  const [customerId, setCustomerId] = useState<string>('');
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [customerId, setCustomerId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     serviceId: '',
     barberId: '',
@@ -29,18 +31,37 @@ export default function BookAppointmentPage() {
   });
 
   useEffect(() => {
-    // Get customer ID from localStorage
-    const storedCustomerId = localStorage.getItem('customerId');
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    
-    if (!isAuthenticated || !storedCustomerId) {
-      // Redirect to sign in if not authenticated
+    // Redirect to signin if not authenticated
+    if (!authLoading && !isAuthenticated) {
       router.push('/signin');
       return;
     }
-    
-    setCustomerId(storedCustomerId);
-  }, [router]);
+
+    // Fetch customer ID from the backend using username
+    const fetchCustomerId = async () => {
+      if (user?.username) {
+        try {
+          const response = await fetch(`http://localhost:5288/api/customer/by-username/${user.username}`, {
+            credentials: 'include',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
+
+          if (response.ok) {
+            const customer = await response.json();
+            setCustomerId(customer.customerId);
+          } else {
+            console.error('Failed to fetch customer ID');
+          }
+        } catch (error) {
+          console.error('Error fetching customer ID:', error);
+        }
+      }
+    };
+
+    fetchCustomerId();
+  }, [user, isAuthenticated, authLoading, router]);
 
   const { data: services, isLoading: servicesLoading } = useServices();
   const { data: barbers, isLoading: barbersLoading } = useBarbersByService(
@@ -51,8 +72,13 @@ export default function BookAppointmentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!customerId) {
+      alert('Customer ID not found. Please try logging in again.');
+      return;
+    }
+
     const appointmentData: CreateAppointmentDto = {
-      customerId: Number(customerId),
+      customerId: customerId,
       serviceId: Number(formData.serviceId),
       barberId: Number(formData.barberId),
       appointmentDate: new Date(formData.appointmentDate).toISOString(),
@@ -60,21 +86,15 @@ export default function BookAppointmentPage() {
     };
 
     try {
+      console.log('Sending appointment data:', appointmentData);
       const newAppointment = await createAppointment.mutateAsync(appointmentData);
-      
+
       // Find service and barber names for success page
       const selectedService = services?.find(s => s.serviceId === Number(formData.serviceId));
       const selectedBarber = barbers?.find(b => b.barberId === Number(formData.barberId));
-      
-      // Store appointment details in localStorage for success page
       const appointmentDateTime = new Date(formData.appointmentDate);
-      localStorage.setItem('lastAppointmentId', newAppointment.appointmentId.toString());
-      localStorage.setItem('lastAppointmentDate', appointmentDateTime.toLocaleDateString());
-      localStorage.setItem('lastAppointmentTime', appointmentDateTime.toLocaleTimeString());
-      localStorage.setItem('lastBarberName', selectedBarber?.name || 'Unknown');
-      localStorage.setItem('lastServiceName', selectedService?.serviceName || 'Unknown');
-      
-      // Redirect to success page
+
+      // Redirect to success page with appointment details in URL
       const qs = new URLSearchParams({
         appointmentId: newAppointment.appointmentId.toString(),
         date: appointmentDateTime.toLocaleDateString(),
@@ -83,8 +103,10 @@ export default function BookAppointmentPage() {
         serviceName: selectedService?.serviceName || 'Unknown',
       }).toString();
       router.push(`/success?${qs}`);
-    } catch (error) {
-      alert('Failed to book appointment. Please try again.');
+    } catch (error: any) {
+      console.error('Failed to book appointment:', error);
+      const errorMessage = error?.response?.data?.message || 'Failed to book appointment. Please try again.';
+      alert(errorMessage);
     }
   };
 
