@@ -218,6 +218,68 @@ public class AuthService : IAuthService
         await CreateRoleBasedRecordAsync(user, checkExisting: true);
     }
 
+    public async Task<UserDto> UpdateUserRoleAsync(int userId, string newRole)
+    {
+        var user = await _authRepository.GetUserByIdAsync(userId);
+
+        if (user == null)
+        {
+            throw new NotFoundException($"User with ID {userId} not found.");
+        }
+
+        // Validate role
+        var validRoles = new[] { "Customer", "Barber", "Admin" };
+        if (!validRoles.Contains(newRole, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new BadRequestException($"Invalid role: {newRole}. Valid roles are: Customer, Barber, Admin");
+        }
+
+        var oldRole = user.Role;
+
+        // If role hasn't changed, just return
+        if (oldRole.Equals(newRole, StringComparison.OrdinalIgnoreCase))
+        {
+            return _mapper.Map<UserDto>(user);
+        }
+
+        // Clean up old role-based records
+        await CleanupOldRoleRecordsAsync(user.Username, oldRole);
+
+        // Update the user's role
+        user.Role = newRole;
+        await _authRepository.UpdateUserAsync(user);
+        await _dbTransactionContext.SaveChangesAsync();
+
+        // Create new role-based record
+        await CreateRoleBasedRecordAsync(user, checkExisting: false);
+
+        return _mapper.Map<UserDto>(user);
+    }
+
+    private async Task CleanupOldRoleRecordsAsync(string username, string oldRole)
+    {
+        if (oldRole.Equals("Customer", StringComparison.OrdinalIgnoreCase))
+        {
+            var customer = await _customerRepository.GetByUsernameAsync(username);
+            if (customer != null)
+            {
+                await _customerRepository.RemoveByIdAsync(customer.CustomerId);
+                await _dbTransactionContext.SaveChangesAsync();
+            }
+        }
+        else if (oldRole.Equals("Barber", StringComparison.OrdinalIgnoreCase))
+        {
+            var barbers = await _barberRepository.GetAllAsync();
+            var barber = barbers.FirstOrDefault(b => b.Username == username);
+            if (barber != null)
+            {
+                await _barberRepository.RemoveByIdAsync(barber.BarberId);
+                await _dbTransactionContext.SaveChangesAsync();
+            }
+        }
+        // Admin role doesn't have a separate table, so no cleanup needed
+    }
+
     private async Task CreateRoleBasedRecordAsync(UserModel user, bool checkExisting = false)
     {
         if (user.Role.Equals("Customer", StringComparison.OrdinalIgnoreCase))

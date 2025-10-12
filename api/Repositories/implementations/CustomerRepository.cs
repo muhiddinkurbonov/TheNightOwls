@@ -53,4 +53,13 @@ public class CustomerRepository(
         await _fadebookDbContext.customerTable.AddAsync(customer);
         return customer;
     }
+
+    public async Task<CustomerModel> RemoveByIdAsync(int customerId)
+    {
+        var foundCustomer = await GetByIdAsync(customerId);
+        if (foundCustomer is null)
+            return null!;
+        _fadebookDbContext.customerTable.Remove(foundCustomer);
+        return foundCustomer;
+    }
 }

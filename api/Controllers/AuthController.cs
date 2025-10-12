@@ -152,4 +152,20 @@ public class AuthController : ControllerBase
 
         return Ok(result.User);
     }
+
+    /// <summary>
+    /// Admin updates user role (with automatic cleanup of old role records)
+    /// </summary>
+    [HttpPut("update-role/{userId}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<UserDto>> UpdateUserRole(int userId, [FromBody] UpdateRoleDto updateRoleDto)
+    {
+        _logger.LogInformation("Admin updating role for user ID: {UserId} to role: {Role}", userId, updateRoleDto.Role);
+
+        var user = await _authService.UpdateUserRoleAsync(userId, updateRoleDto.Role);
+
+        _logger.LogInformation("User role updated successfully for user ID: {UserId}", userId);
+
+        return Ok(user);
+    }
 }

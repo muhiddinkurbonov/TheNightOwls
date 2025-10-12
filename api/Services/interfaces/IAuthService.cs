@@ -10,4 +10,5 @@ public interface IAuthService
     Task<UserDto> ChangePasswordAsync(int userId, ChangePasswordDto changePasswordDto);
     Task<UserDto> UpdateUserAsync(int userId, UserDto userDto);
     Task SyncUserToCustomerOrBarberAsync(int userId);
+    Task<UserDto> UpdateUserRoleAsync(int userId, string newRole);
 }

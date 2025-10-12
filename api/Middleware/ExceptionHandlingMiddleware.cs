@@ -37,6 +37,11 @@ public class ExceptionHandlingMiddleware
 
         switch (exception)
         {
+            case UnauthorizedException unauthorizedEx:
+                statusCode = HttpStatusCode.Unauthorized;
+                message = unauthorizedEx.Message;
+                break;
+
             case NotFoundException notFoundEx:
                 statusCode = HttpStatusCode.NotFound;
                 message = notFoundEx.Message;
