@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  const [isToggling, setIsToggling] = React.useState(false);
 
-  // Sync initial theme from backend cookie
+  // Sync initial theme from backend cookie - only once on mount
   React.useEffect(() => {
     setMounted(true);
     (async () => {
@@ -22,15 +23,22 @@ export function ThemeToggle() {
         // ignore
       }
     })();
-  }, [setTheme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - run only once
 
   const applyTheme = async (value: ThemeValue) => {
+    if (isToggling) return; // Prevent rapid clicks
+
+    setIsToggling(true);
     // Optimistically update UI
     setTheme(value);
     try {
       await themeApi.set(value);
     } catch {
       // swallow; user keeps chosen theme even if persistence fails
+    } finally {
+      // Add small delay to prevent rapid toggling
+      setTimeout(() => setIsToggling(false), 300);
     }
   };
 

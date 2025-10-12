@@ -70,3 +70,10 @@ public class ChangePasswordDto
         ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.")]
     public string NewPassword { get; set; } = null!;
 }
+
+public class UpdateRoleDto
+{
+    [Required(ErrorMessage = "Role is required.")]
+    [RegularExpression("^(Customer|Barber|Admin)$", ErrorMessage = "Role must be one of: Customer, Barber, Admin")]
+    public string Role { get; set; } = null!;
+}

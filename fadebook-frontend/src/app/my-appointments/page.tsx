@@ -56,6 +56,20 @@ export default function MyAppointmentsPage() {
     }
   }, [user, isAuthenticated, authLoading, router]);
 
+  // Don't render anything while checking auth or if not authenticated
+  if (authLoading || !isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="flex-1 py-8 px-4">
+          <div className="container mx-auto">
+            <p className="text-center text-muted-foreground">Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // Combine appointments with barber and service details
   const appointments: AppointmentWithDetails[] = appointmentsData.map((apt) => {
     const barber = barbers.find((b) => b.barberId === apt.barberId);
@@ -68,7 +82,7 @@ export default function MyAppointmentsPage() {
     };
   });
 
-  const isLoading = authLoading || appointmentsLoading;
+  const isLoading = appointmentsLoading;
   const error = appointmentsError ? 'Failed to load appointments' : '';
 
   const getStatusVariant = (status: string) => {

@@ -2,11 +2,16 @@
 
 import { Navigation } from '@/components/Navigation';
 import { useBarbers } from '@/hooks/useBarbers';
+import { useAuth } from '@/providers/AuthProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function BarbersPage() {
   const { data: barbers, isLoading, error } = useBarbers();
+  const { user } = useAuth();
+
+  // Only admins and barbers can see contact info and usernames
+  const canViewPrivateInfo = user?.role === 'Admin' || user?.role === 'Barber';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -40,7 +45,9 @@ export default function BarbersPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle>{barber.name}</CardTitle>
-                      <CardDescription>@{barber.username}</CardDescription>
+                      {canViewPrivateInfo && (
+                        <CardDescription>@{barber.username}</CardDescription>
+                      )}
                     </div>
                     {barber.specialty && (
                       <Badge variant="secondary">{barber.specialty}</Badge>
@@ -48,7 +55,7 @@ export default function BarbersPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {barber.contactInfo && (
+                  {canViewPrivateInfo && barber.contactInfo && (
                     <p className="text-sm text-muted-foreground">
                       Contact: {barber.contactInfo}
                     </p>

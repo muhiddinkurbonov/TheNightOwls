@@ -13,4 +13,5 @@ public interface ICustomerRepository
     Task<CustomerModel?> GetByUsernameAsync(string username);
     Task<CustomerModel> UpdateAsync(int customerId, CustomerModel customer);
     Task<CustomerModel> AddAsync(CustomerModel customer);
+    Task<CustomerModel> RemoveByIdAsync(int customerId);
 }

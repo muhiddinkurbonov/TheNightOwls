@@ -190,6 +190,72 @@ static async Task SeedApp(WebApplication app)
             var customerList = await dbContext.customerTable.ToListAsync();
             if (customerList.Count() == 0)
             {
+                // Seed Users (for authentication)
+                var userDean = await dbContext.userTable.AddAsync(new UserModel
+                {
+                    Username = "dean-the-machine",
+                    Email = "dean@fadebook.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+                    Name = "Dean",
+                    PhoneNumber = "123",
+                    Role = "Barber",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                });
+
+                var userVictor = await dbContext.userTable.AddAsync(new UserModel
+                {
+                    Username = "v-for-victor",
+                    Email = "victor@fadebook.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+                    Name = "Victor",
+                    PhoneNumber = "456",
+                    Role = "Barber",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                });
+
+                var userCharles = await dbContext.userTable.AddAsync(new UserModel
+                {
+                    Username = "charles-xavier",
+                    Email = "charles@fadebook.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+                    Name = "Charles",
+                    PhoneNumber = "789",
+                    Role = "Barber",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                });
+
+                var userMuhid = await dbContext.userTable.AddAsync(new UserModel
+                {
+                    Username = "m-kurbonov",
+                    Email = "muhiddin@fadebook.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+                    Name = "Muhiddin",
+                    PhoneNumber = "1456",
+                    Role = "Customer",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                });
+
+                // Seed an Admin user
+                var userAdmin = await dbContext.userTable.AddAsync(new UserModel
+                {
+                    Username = "admin",
+                    Email = "admin@fadebook.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                    Name = "Administrator",
+                    PhoneNumber = "000",
+                    Role = "Admin",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                });
+
+                await dbContext.SaveChangesAsync();
+                logger.LogInformation("Seeded UserModel records");
+
+                // Seed Services
                 var serviceHaircut = await dbContext.serviceTable.AddAsync(new ServiceModel
                 {
                     ServiceName = "Haircut",
@@ -211,6 +277,7 @@ static async Task SeedApp(WebApplication app)
                     ServicePrice = 25.00
                 });
 
+                // Seed Barbers (legacy table)
                 var barberDean = await dbContext.barberTable.AddAsync(new BarberModel
                 {
                     Username = "dean-the-machine",
@@ -233,6 +300,7 @@ static async Task SeedApp(WebApplication app)
                     ContactInfo = "789"
                 });
 
+                // Seed Customer (legacy table)
                 var customerMuhid = await dbContext.customerTable.AddAsync(new CustomerModel
                 {
                     Username = "m-kurbonov",
@@ -241,6 +309,7 @@ static async Task SeedApp(WebApplication app)
                 });
 
                 await dbContext.SaveChangesAsync();
+                logger.LogInformation("Seeded Services, Barbers, and Customers");
 
                 await dbContext.barberServiceTable.AddAsync(new BarberServiceModel
                 {

@@ -49,19 +49,22 @@ export default function SignUpPage() {
     } catch (err: any) {
       console.error('Signup error:', err);
 
-      if (err.response?.status === 400) {
+      // Check if we have a response with an error message from the API
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.status === 400) {
         const errors = err.response?.data?.errors;
         if (errors) {
           // Extract validation errors
           const errorMessages = Object.values(errors).flat().join(' ');
           setError(errorMessages as string);
         } else {
-          setError(err.response?.data?.message || 'Invalid data. Please check all fields.');
+          setError('Invalid data. Please check all fields.');
         }
       } else if (err.code === 'ERR_NETWORK') {
         setError('Cannot connect to server. Please make sure the API is running.');
       } else {
-        setError(err.response?.data?.message || 'Failed to create account. Please try again.');
+        setError('Failed to create account. Please try again.');
       }
     } finally {
       setIsLoading(false);

@@ -21,6 +21,9 @@ export default function SignInPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated && user) {
+      // Clear any error messages before redirect
+      setError('');
+
       // Redirect based on role
       if (user.role === 'Admin') {
         router.push('/admin');
@@ -38,25 +41,18 @@ export default function SignInPage() {
     setIsLoading(true);
 
     try {
-      const userData = await login({ usernameOrEmail, password });
-
-      // Redirect based on role
-      if (userData.role === 'Admin') {
-        router.push('/admin');
-      } else if (userData.role === 'Barber') {
-        router.push('/barber-dashboard');
-      } else {
-        router.push('/book');
-      }
+      await login({ usernameOrEmail, password });
+      // Redirect is handled by useEffect after auth state updates
     } catch (err: any) {
       console.error('Login error:', err);
 
-      if (err.response?.status === 401) {
-        setError('Invalid username/email or password.');
+      // Check if we have a response with an error message from the API
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
       } else if (err.code === 'ERR_NETWORK') {
         setError('Cannot connect to server. Please make sure the API is running.');
       } else {
-        setError(err.response?.data?.message || 'Sign in failed. Please try again.');
+        setError('Sign in failed. Please try again.');
       }
     } finally {
       setIsLoading(false);
