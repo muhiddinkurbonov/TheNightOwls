@@ -121,7 +121,15 @@ function BookAppointmentPageContent() {
             formData.selectedDate,
             30 // 30-minute appointment duration
           );
-          setAvailableSlots(slots);
+
+          // Filter out past time slots (important for today's date)
+          const now = new Date();
+          const futureSlots = slots.filter(slot => {
+            const slotDate = new Date(slot);
+            return slotDate > now; // Only include slots in the future
+          });
+
+          setAvailableSlots(futureSlots);
         } catch (error) {
           setAvailableSlots([]);
         } finally {

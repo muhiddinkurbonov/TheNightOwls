@@ -70,7 +70,8 @@ function BarberCard({ barber, canViewPrivateInfo }: { barber: BarberDto; canView
   };
 
   // Don't show barbers without available slots (no work hours configured)
-  if (!isLoadingSlot && !nextSlot) {
+  // Also hide while checking availability to prevent flickering
+  if (!nextSlot) {
     return null;
   }
 
@@ -130,12 +131,27 @@ function BarberCard({ barber, canViewPrivateInfo }: { barber: BarberDto; canView
 export default function BarbersPage() {
   const { data: barbers, isLoading, error } = useBarbers();
   const { user, isAuthenticated } = useAuth();
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(true);
 
   // Only admins and barbers can see contact info and usernames
   const canViewPrivateInfo = user?.role === 'Admin' || user?.role === 'Barber';
 
   // Don't render barber cards if there are none or still loading
   const shouldRenderCards = !isLoading && !error && barbers && barbers.length > 0;
+
+  // Track when all barber cards have finished checking availability
+  useEffect(() => {
+    if (shouldRenderCards) {
+      // Give barber cards time to check availability (slight delay)
+      const timer = setTimeout(() => {
+        setIsCheckingAvailability(false);
+      }, 2000); // 2 seconds should be enough for most API calls
+
+      return () => clearTimeout(timer);
+    } else {
+      setIsCheckingAvailability(false);
+    }
+  }, [shouldRenderCards]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -162,7 +178,13 @@ export default function BarbersPage() {
             </div>
           )}
 
-          {shouldRenderCards && (
+          {shouldRenderCards && isCheckingAvailability && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Checking barber availability...</p>
+            </div>
+          )}
+
+          {shouldRenderCards && !isCheckingAvailability && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {barbers.map((barber) => (
