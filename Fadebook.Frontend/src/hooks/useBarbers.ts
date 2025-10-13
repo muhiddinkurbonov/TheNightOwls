@@ -63,6 +63,7 @@ export const useUpdateBarberServices = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['barber', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['barbers'] });
+      queryClient.invalidateQueries({ queryKey: ['barber-services', variables.id] });
     },
   });
 };

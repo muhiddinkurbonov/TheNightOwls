@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Navigation } from '@/components/Navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useServices, useBarbersByService, useAllCustomers } from '@/hooks/useCustomers';
 import { useCreateAppointment } from '@/hooks/useAppointments';
+import { useBarbers } from '@/hooks/useBarbers';
+import { useBarberServices } from '@/hooks/useServices';
 import { workHoursApi } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,31 +24,60 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import type { CreateAppointmentDto } from '@/types/api';
 
-export default function BookAppointmentPage() {
+function BookAppointmentPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [customerId, setCustomerId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
-    customerId: '', // For barbers to select customer
-    serviceId: '',
-    barberId: '',
-    appointmentDate: '',
-    selectedDate: '', // Just the date part (YYYY-MM-DD)
-    selectedTimeSlot: '', // The time slot from available slots
-    status: 'Pending',
+  // Initialize with barberId from URL if present (when coming from barbers page)
+  const [formData, setFormData] = useState(() => {
+    const initialBarberId = searchParams.get('barberId') || '';
+    return {
+      customerId: '', // For barbers to select customer
+      serviceId: '',
+      barberId: initialBarberId,
+      appointmentDate: '',
+      selectedDate: '', // Just the date part (YYYY-MM-DD)
+      selectedTimeSlot: '', // The time slot from available slots
+      status: 'Pending',
+    };
   });
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [minDate, setMinDate] = useState<string>('');
+
+  // Get barber ID from URL
+  const barberIdFromUrl = searchParams.get('barberId');
 
   const isBarber = user?.role === 'Barber';
 
+  // Set minimum date on client side only to avoid hydration mismatch
+  useEffect(() => {
+    setMinDate(new Date().toISOString().split('T')[0]);
+  }, []);
+
   // IMPORTANT: Always call all hooks before any conditional returns
-  const { data: services, isLoading: servicesLoading } = useServices();
-  const { data: barbers, isLoading: barbersLoading } = useBarbersByService(
+  const { data: allServices, isLoading: servicesLoading } = useServices();
+  const { data: barberSpecificServices } = useBarberServices(formData.barberId ? Number(formData.barberId) : 0);
+  const { data: barbersByService, isLoading: barbersLoading } = useBarbersByService(
     Number(formData.serviceId)
   );
+  const { data: allBarbers } = useBarbers();
   const { data: customers, isLoading: customersLoading } = useAllCustomers();
   const createAppointment = useCreateAppointment();
+
+  // Smart service filtering based on context:
+  // 1. If barber is selected → show only that barber's services
+  // 2. Otherwise → show all services
+  const services = formData.barberId ? barberSpecificServices : allServices;
+
+  // Smart barber filtering based on context:
+  // 1. If service is selected → show only barbers who offer that service
+  // 2. If barber is pre-selected (from URL) but no service yet → show all barbers
+  // 3. Otherwise → show empty (user must select service first)
+  const barbers = formData.serviceId
+    ? barbersByService
+    : (barberIdFromUrl ? allBarbers : []);
 
   useEffect(() => {
     // Redirect to signin if not authenticated
@@ -216,9 +247,32 @@ export default function BookAppointmentPage() {
                   <Label htmlFor="service">Service</Label>
                   <Select
                     value={formData.serviceId}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, serviceId: value, barberId: '' })
-                    }
+                    onValueChange={(value) => {
+                      // When service changes, check if current barber offers this service
+                      const newServiceId = Number(value);
+                      const currentBarberId = formData.barberId ? Number(formData.barberId) : null;
+
+                      // If a barber is selected, verify they offer the new service
+                      if (currentBarberId && barbersByService) {
+                        const barberOffersService = barbersByService.some(b => b.barberId === currentBarberId);
+                        setFormData({
+                          ...formData,
+                          serviceId: value,
+                          // Clear barber if they don't offer the new service
+                          barberId: barberOffersService ? formData.barberId : '',
+                          selectedDate: '',
+                          selectedTimeSlot: ''
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          serviceId: value,
+                          barberId: '', // Clear barber when changing service
+                          selectedDate: '',
+                          selectedTimeSlot: ''
+                        });
+                      }
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a service" />
@@ -245,10 +299,22 @@ export default function BookAppointmentPage() {
                   <Label htmlFor="barber">Barber</Label>
                   <Select
                     value={formData.barberId}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, barberId: value, selectedDate: '', selectedTimeSlot: '' })
-                    }
-                    disabled={!formData.serviceId}
+                    onValueChange={(value) => {
+                      // When barber changes, verify current service is offered by new barber
+                      const newBarberId = Number(value);
+                      const currentServiceId = formData.serviceId ? Number(formData.serviceId) : null;
+
+                      setFormData({
+                        ...formData,
+                        barberId: value,
+                        selectedDate: '',
+                        selectedTimeSlot: ''
+                      });
+
+                      // Note: Service compatibility will be handled by the services hook
+                      // which will automatically show only services this barber offers
+                    }}
+                    disabled={!formData.serviceId && !barberIdFromUrl}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a barber" />
@@ -285,7 +351,7 @@ export default function BookAppointmentPage() {
                     type="date"
                     required
                     disabled={!formData.barberId}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={minDate}
                     value={formData.selectedDate}
                     onChange={(e) =>
                       setFormData({ ...formData, selectedDate: e.target.value, selectedTimeSlot: '' })
@@ -347,5 +413,22 @@ export default function BookAppointmentPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function BookAppointmentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="flex-1 py-4 sm:py-8 px-4">
+          <div className="container mx-auto">
+            <p className="text-center text-muted-foreground">Loading...</p>
+          </div>
+        </main>
+      </div>
+    }>
+      <BookAppointmentPageContent />
+    </Suspense>
   );
 }

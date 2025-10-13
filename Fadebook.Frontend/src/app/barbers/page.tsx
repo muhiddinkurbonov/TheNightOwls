@@ -1,10 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navigation } from '@/components/Navigation';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useAuth } from '@/providers/AuthProvider';
-import { useAppointmentsByBarberId } from '@/hooks/useAppointments';
+import { workHoursApi } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,56 +15,64 @@ import type { BarberDto } from '@/types/api';
 // Helper component for individual barber card with next available slot
 function BarberCard({ barber, canViewPrivateInfo }: { barber: BarberDto; canViewPrivateInfo: boolean }) {
   const router = useRouter();
-  // Always call hooks in the same order - React Query will handle cancellation
-  const { data: appointments = [], isLoading: appointmentsLoading } = useAppointmentsByBarberId(barber.barberId);
+  const [nextSlot, setNextSlot] = useState<Date | null>(null);
+  const [isLoadingSlot, setIsLoadingSlot] = useState(true);
 
-  // Calculate next available slot (simplified - next hour that's not booked)
-  const getNextAvailableSlot = () => {
-    // Don't calculate if still loading appointments
-    if (appointmentsLoading || !appointments) {
-      return null;
-    }
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(9, 0, 0, 0); // Start at 9 AM tomorrow
+  // Fetch next available slot from the backend (which considers work hours)
+  useEffect(() => {
+    const findNextAvailableSlot = async () => {
+      setIsLoadingSlot(true);
+      try {
+        const now = new Date();
 
-    // Check next 7 days for an available slot
-    for (let day = 0; day < 7; day++) {
-      const checkDate = new Date(tomorrow);
-      checkDate.setDate(checkDate.getDate() + day);
+        // Check next 14 days for an available slot
+        for (let day = 0; day < 14; day++) {
+          const checkDate = new Date(now);
+          checkDate.setDate(checkDate.getDate() + day);
+          const dateString = checkDate.toISOString().split('T')[0];
 
-      // Check each hour from 9 AM to 5 PM
-      for (let hour = 9; hour <= 17; hour++) {
-        checkDate.setHours(hour, 0, 0, 0);
+          // Get available slots for this date from the API
+          // This API already considers work hours and existing appointments
+          const slots = await workHoursApi.getAvailableTimeSlots(barber.barberId, dateString, 30);
 
-        // Check if this slot is booked
-        const isBooked = appointments.some(apt => {
-          const aptDate = new Date(apt.appointmentDate);
-          return (
-            aptDate.getFullYear() === checkDate.getFullYear() &&
-            aptDate.getMonth() === checkDate.getMonth() &&
-            aptDate.getDate() === checkDate.getDate() &&
-            aptDate.getHours() === checkDate.getHours() &&
-            (apt.status.toLowerCase() === 'pending' || apt.status.toLowerCase() === 'confirmed')
-          );
-        });
+          if (slots && slots.length > 0) {
+            // Filter out past time slots (for today only)
+            const futureSlots = slots.filter(slot => {
+              const slotDate = new Date(slot);
+              return slotDate > now; // Only include slots in the future
+            });
 
-        if (!isBooked) {
-          return checkDate;
+            if (futureSlots.length > 0) {
+              // Return the first future available slot
+              setNextSlot(new Date(futureSlots[0]));
+              setIsLoadingSlot(false);
+              return;
+            }
+          }
         }
+
+        // No slots found in the next 14 days
+        setNextSlot(null);
+        setIsLoadingSlot(false);
+      } catch (error) {
+        // Error fetching slots (likely no work hours configured)
+        setNextSlot(null);
+        setIsLoadingSlot(false);
       }
-    }
+    };
 
-    return null;
-  };
-
-  const nextSlot = getNextAvailableSlot();
+    findNextAvailableSlot();
+  }, [barber.barberId]);
 
   const handleBookNow = () => {
     // Navigate to booking page with barber pre-selected
     router.push(`/book?barberId=${barber.barberId}`);
   };
+
+  // Don't show barbers without available slots (no work hours configured)
+  if (!isLoadingSlot && !nextSlot) {
+    return null;
+  }
 
   return (
     <Card>
@@ -154,11 +163,16 @@ export default function BarbersPage() {
           )}
 
           {shouldRenderCards && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {barbers.map((barber) => (
-                <BarberCard key={barber.barberId} barber={barber} canViewPrivateInfo={canViewPrivateInfo} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {barbers.map((barber) => (
+                  <BarberCard key={barber.barberId} barber={barber} canViewPrivateInfo={canViewPrivateInfo} />
+                ))}
+              </div>
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                Only showing barbers with available appointments
+              </p>
+            </>
           )}
         </div>
       </main>

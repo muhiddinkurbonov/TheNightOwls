@@ -13,10 +13,12 @@ export const axiosInstance = axios.create({
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Add auth token if available
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Add auth token if available (only on client side)
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -30,8 +32,10 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized access
-      localStorage.removeItem("token");
+      // Handle unauthorized access (only on client side)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("token");
+      }
     }
     return Promise.reject(error);
   }

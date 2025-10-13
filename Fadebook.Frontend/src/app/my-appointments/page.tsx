@@ -42,12 +42,18 @@ export default function MyAppointmentsPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [cancellingAppointment, setCancellingAppointment] = useState<AppointmentDto | null>(null);
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
   // Auto-refetching hooks
   const { data: appointmentsData = [], isLoading: appointmentsLoading, error: appointmentsError } = useAppointmentsByUsername(user?.username || '');
   const { data: barbers = [] } = useBarbers();
   const { data: services = [] } = useServices();
   const updateAppointment = useUpdateAppointment();
+
+  // Set current date on client side only to avoid hydration mismatch
+  useEffect(() => {
+    setCurrentDate(new Date());
+  }, []);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -87,8 +93,14 @@ export default function MyAppointmentsPage() {
   // 1. Upcoming (Pending/Confirmed) - soonest first
   // 2. Past (Completed) - most recent first
   // 3. Cancelled - most recent first
+  // Use currentDate from state to avoid hydration mismatch
   const appointments = appointmentsWithDetails.sort((a, b) => {
-    const now = new Date();
+    // If currentDate is not set yet (SSR), don't sort by date comparison
+    if (!currentDate) {
+      return 0;
+    }
+
+    const now = currentDate;
     const dateA = new Date(a.appointmentDate);
     const dateB = new Date(b.appointmentDate);
     const statusA = a.status.toLowerCase();

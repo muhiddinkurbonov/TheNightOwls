@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Navigation } from '@/components/Navigation';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Calendar } from 'lucide-react';
 
-export default function SuccessPage() {
+function SuccessPageContent() {
   const searchParams = useSearchParams();
   const [appointmentDetails, setAppointmentDetails] = useState({
     appointmentId: '',
@@ -151,5 +151,20 @@ export default function SuccessPage() {
         </Card>
       </main>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </main>
+      </div>
+    }>
+      <SuccessPageContent />
+    </Suspense>
   );
 }

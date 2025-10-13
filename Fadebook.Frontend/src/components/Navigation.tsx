@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
@@ -9,6 +10,12 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 export function Navigation() {
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch by only rendering user-dependent UI after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Role-based home link - best practice for multi-role applications
   const getHomeLink = () => {
@@ -48,7 +55,7 @@ export function Navigation() {
               />
             </Link>
             <div className="hidden md:flex gap-2 lg:gap-4">
-              {links.map((link) => {
+              {mounted && links.map((link) => {
                 // Hide protected links if not authenticated
                 if (link.protected && !isAuthenticated) return null;
 
@@ -86,7 +93,21 @@ export function Navigation() {
 
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             <ThemeToggle />
-            {isAuthenticated && user ? (
+            {!mounted ? (
+              // Render placeholder during SSR/initial hydration to match server HTML
+              <>
+                <Link href="/signin">
+                  <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            ) : isAuthenticated && user ? (
               <>
                 <span className="hidden sm:inline text-xs sm:text-sm text-muted-foreground">
                   Welcome, <span className="font-medium text-foreground">{user.name}</span>

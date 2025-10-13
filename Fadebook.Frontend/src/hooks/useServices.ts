@@ -21,6 +21,18 @@ export const useServices = () => {
   });
 };
 
+// Get services for a specific barber
+export const useBarberServices = (barberId: number) => {
+  return useQuery({
+    queryKey: ['barber-services', barberId],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<ServiceDto[]>(`/api/barber/${barberId}/services`);
+      return data;
+    },
+    enabled: !!barberId && barberId > 0, // Only fetch if barberId is valid
+  });
+};
+
 // Create service
 export const useCreateService = () => {
   const queryClient = useQueryClient();
@@ -47,6 +59,8 @@ export const useUpdateService = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['services'] });
+      // Invalidate all barber-services queries since service details changed
+      queryClient.invalidateQueries({ queryKey: ['barber-services'] });
     },
   });
 };
@@ -61,6 +75,8 @@ export const useDeleteService = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['services'] });
+      // Invalidate all barber-services queries since a service was deleted
+      queryClient.invalidateQueries({ queryKey: ['barber-services'] });
     },
   });
 };

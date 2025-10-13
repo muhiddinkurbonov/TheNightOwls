@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useBarbers, useCreateBarber, useUpdateBarber, useDeleteBarber } from '@/hooks/useBarbers';
+import { useState, useEffect } from 'react';
+import { useBarbers, useCreateBarber, useUpdateBarber, useDeleteBarber, useUpdateBarberServices } from '@/hooks/useBarbers';
 import { useServices } from '@/hooks/useCustomers';
+import { useBarberServices } from '@/hooks/useServices';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +34,7 @@ export function BarbersTab() {
   const { data: services } = useServices();
   const createBarber = useCreateBarber();
   const updateBarber = useUpdateBarber();
+  const updateBarberServices = useUpdateBarberServices();
   const deleteBarber = useDeleteBarber();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -46,6 +48,19 @@ export function BarbersTab() {
     serviceIds: [] as number[],
   });
 
+  // Fetch barber's services when editing
+  const { data: barberServices } = useBarberServices(editingBarber?.barberId || 0);
+
+  // Load barber's services when they're fetched
+  useEffect(() => {
+    if (editingBarber && barberServices) {
+      setFormData(prev => ({
+        ...prev,
+        serviceIds: barberServices.map(s => s.serviceId)
+      }));
+    }
+  }, [editingBarber, barberServices]);
+
   const handleOpenDialog = (barber?: BarberDto) => {
     if (barber) {
       setEditingBarber(barber);
@@ -54,7 +69,7 @@ export function BarbersTab() {
         name: barber.name,
         specialty: barber.specialty || '',
         contactInfo: barber.contactInfo || '',
-        serviceIds: [],
+        serviceIds: [], // Will be populated by useEffect when barberServices loads
       });
     } else {
       setEditingBarber(null);
@@ -94,8 +109,13 @@ export function BarbersTab() {
 
     try {
       if (editingBarber) {
+        // When editing, we need to call two endpoints:
+        // 1. Update barber basic info
         await updateBarber.mutateAsync({ id: editingBarber.barberId, barber: barberData });
+        // 2. Update barber services separately
+        await updateBarberServices.mutateAsync({ id: editingBarber.barberId, serviceIds: formData.serviceIds });
       } else {
+        // When creating, the backend handles services in one call
         await createBarber.mutateAsync(barberData);
       }
       handleCloseDialog();
@@ -248,9 +268,9 @@ export function BarbersTab() {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={createBarber.isPending || updateBarber.isPending}>
+                <Button type="submit" className="w-full" disabled={createBarber.isPending || updateBarber.isPending || updateBarberServices.isPending}>
                   {editingBarber
-                    ? (updateBarber.isPending ? 'Updating...' : 'Update Barber')
+                    ? (updateBarber.isPending || updateBarberServices.isPending ? 'Updating...' : 'Update Barber')
                     : (createBarber.isPending ? 'Creating...' : 'Create Barber')
                   }
                 </Button>

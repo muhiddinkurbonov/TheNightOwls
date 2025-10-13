@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { useAppointmentsByDate } from '@/hooks/useAppointments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,9 +17,13 @@ import {
 } from '@/components/ui/table';
 
 export default function AppointmentsPage() {
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  // Initialize with empty string to avoid hydration mismatch
+  const [selectedDate, setSelectedDate] = useState('');
+
+  // Set today's date on client side only to avoid hydration mismatch
+  useEffect(() => {
+    setSelectedDate(new Date().toISOString().split('T')[0]);
+  }, []);
 
   const { data: appointments, isLoading, error } = useAppointmentsByDate(selectedDate);
 

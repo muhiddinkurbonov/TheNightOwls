@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppointmentsByDate, useUpdateAppointment, useDeleteAppointment } from '@/hooks/useAppointments';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,20 +33,21 @@ import { Calendar, Pencil, Trash2 } from 'lucide-react';
 import type { AppointmentDto } from '@/types/api';
 
 export function AppointmentsTab() {
-  // Set today's date as default (in local timezone)
-  const getTodayDate = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`; // Format: YYYY-MM-DD in local timezone
-  };
-
-  const [selectedDate, setSelectedDate] = useState(getTodayDate());
+  // Initialize with empty string to avoid hydration mismatch
+  const [selectedDate, setSelectedDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [editingAppointment, setEditingAppointment] = useState<AppointmentDto | null>(null);
   const [deletingAppointment, setDeletingAppointment] = useState<AppointmentDto | null>(null);
   const [editStatus, setEditStatus] = useState('');
+
+  // Set today's date on client side only to avoid hydration mismatch
+  useEffect(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
+  }, []);
 
   const { data: appointments = [], isLoading, error } = useAppointmentsByDate(selectedDate);
   const updateAppointment = useUpdateAppointment();
