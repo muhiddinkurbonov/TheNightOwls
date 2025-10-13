@@ -261,9 +261,9 @@ fadebook-frontend/
 
 ```
 TheNightOwls/
-├── api/                         # Backend API
-├── Api.Tests/                   # Backend tests
-├── fadebook-frontend/           # Frontend app
+├── Fadebook.Api/                # Backend API
+├── Fadebook.Api.Tests/          # Backend tests
+├── Fadebook.Frontend/           # Frontend app
 ├── docs/                        # Documentation
 │   ├── diagrams/                # ERD, wireframes, flow diagrams
 │   ├── guides/                  # Setup and usage guides
@@ -275,13 +275,13 @@ TheNightOwls/
 │   └── PROJECT_REQUIREMENTS.md
 │
 ├── scripts/                     # Build and automation scripts
-│   ├── cicd.sh                  # CI/CD automation script
-│   └── start-db.sh              # Database initialization script
+│   ├── dev.sh                   # Main development orchestration script
+│   └── cicd.sh                  # CI/CD automation and testing
 │
 ├── .editorconfig                # Editor configuration
 ├── .gitignore                   # Root gitignore
 ├── docker-compose.yml           # Docker configuration
-├── api.sln                      # .NET solution
+├── Fadebook.sln                 # .NET solution
 ├── README.md                    # Project overview
 ├── CONTRIBUTING.md              # Contribution guidelines
 └── LICENSE                      # MIT License

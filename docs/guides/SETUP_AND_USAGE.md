@@ -3,6 +3,7 @@
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Project Structure](#project-structure)
+- [Quick Start](#quick-start)
 - [Initial Setup](#initial-setup)
 - [Database Setup](#database-setup)
 - [Running the Application](#running-the-application)
@@ -33,20 +34,45 @@ Before you start, ensure you have the following installed:
 
 ```
 TheNightOwls/
-├── api/                      # .NET Web API backend
-├── Api.Tests/                # Backend unit tests
-├── fadebook-frontend/        # Next.js frontend
+├── Fadebook.Api/             # .NET Web API backend
+├── Fadebook.Api.Tests/       # Backend unit tests
+├── Fadebook.Frontend/        # Next.js frontend
 ├── docs/                     # Documentation
 │   ├── diagrams/             # Project diagrams (ERD, wireframes)
 │   ├── guides/               # Setup and usage guides
 │   └── standards/            # Coding standards
 ├── scripts/                  # Build and automation scripts
-│   ├── cicd.sh              # CI/CD automation script
-│   └── start-db.sh          # Database startup script
+│   ├── dev.sh               # Main development orchestration script
+│   └── cicd.sh              # CI/CD automation and testing
 ├── docker-compose.yml        # SQL Server container configuration
 ├── .env.example             # Environment variables template
-└── api.sln                  # .NET solution file
+└── Fadebook.sln             # .NET solution file
 ```
+
+---
+
+## Quick Start
+
+**For the fastest setup, use our automated development script:**
+
+```bash
+# Clone repository
+git clone git@github.com:250908-NET/TheNightOwls.git
+cd TheNightOwls
+
+# Complete setup (one command does it all)
+./scripts/dev.sh setup
+
+# Start all services
+./scripts/dev.sh start
+```
+
+That's it! Access:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5288
+- **Swagger**: http://localhost:5288/swagger
+
+For manual setup or more control, see [Initial Setup](#initial-setup) below.
 
 ---
 
@@ -86,7 +112,7 @@ cd ..
 ### 4. Restore Backend Dependencies
 
 ```bash
-dotnet restore api.sln
+dotnet restore Fadebook.sln
 ```
 
 ---
@@ -98,15 +124,21 @@ dotnet restore api.sln
 The project uses SQL Server running in a Docker container.
 
 ```bash
-./scripts/start-db.sh
+# Fresh database setup (drops and recreates)
+./scripts/dev.sh setup-db-fresh
+
+# Or quick start (if already configured)
+./scripts/dev.sh setup-db
 ```
 
-This script will:
+The fresh setup will:
 1. Check for required environment variables
 2. Start SQL Server in Docker
-3. Wait for the database to be ready
-4. Drop and recreate the database (if exists)
-5. Apply Entity Framework migrations
+3. Wait for the database to be ready (checks for "Recovery is complete")
+4. Drop and recreate the database
+5. Auto-create migrations if none exist
+6. Detect and handle pending model changes
+7. Apply Entity Framework migrations
 
 **Note:** On Windows, run this in Git Bash or WSL.
 
@@ -147,14 +179,14 @@ dotnet ef database update
 
 #### Terminal 1 - Backend API
 ```bash
-cd api
+cd Fadebook.Api
 dotnet run
 ```
 The API will be available at `http://localhost:5288`
 
 #### Terminal 2 - Frontend
 ```bash
-cd fadebook-frontend
+cd Fadebook.Frontend
 npm run dev
 ```
 The frontend will be available at `http://localhost:3000`
@@ -170,6 +202,58 @@ This builds and runs the API in one command.
 ---
 
 ## Development Scripts
+
+### Main Development Script (dev.sh)
+
+The `dev.sh` script provides a complete development environment orchestration:
+
+```bash
+# Complete setup (first time)
+./scripts/dev.sh setup
+
+# Start all services (database, backend, frontend)
+./scripts/dev.sh start
+
+# Stop all services
+./scripts/dev.sh stop
+
+# Restart all services
+./scripts/dev.sh restart
+
+# Check status
+./scripts/dev.sh status
+
+# Run tests
+./scripts/dev.sh test
+
+# Build all projects
+./scripts/dev.sh build
+
+# Clean everything
+./scripts/dev.sh clean
+
+# Individual services
+./scripts/dev.sh db          # Start database only
+./scripts/dev.sh backend     # Start backend only
+./scripts/dev.sh frontend    # Start frontend only
+
+# Setup steps
+./scripts/dev.sh check       # Check prerequisites
+./scripts/dev.sh setup-db    # Setup database only
+./scripts/dev.sh setup-api   # Setup backend only
+./scripts/dev.sh setup-fe    # Setup frontend only
+
+# Help
+./scripts/dev.sh help
+```
+
+**Features:**
+- ✅ Automated environment setup
+- ✅ Dependency management
+- ✅ Service orchestration
+- ✅ Port conflict resolution
+- ✅ Log file management (`logs/` directory)
+- ✅ Cross-platform support (Windows/Linux/macOS)
 
 ### Backend Scripts (via cicd.sh)
 
@@ -202,7 +286,7 @@ This builds and runs the API in one command.
 ### Frontend Scripts
 
 ```bash
-cd fadebook-frontend
+cd Fadebook.Frontend
 
 # Start development server with Turbopack
 npm run dev
@@ -237,7 +321,7 @@ npm run test:coverage
 ./scripts/cicd.sh test
 
 # Manual testing
-cd Api.Tests
+cd Fadebook.Api.Tests
 dotnet test --configuration Release
 ```
 
@@ -249,7 +333,7 @@ Test results will be saved in:
 ### Frontend Tests
 
 ```bash
-cd fadebook-frontend
+cd Fadebook.Frontend
 
 # Run all tests
 npm test
@@ -294,9 +378,9 @@ The `cicd.sh` script automates the entire build/test/deploy cycle.
 The script can be customized by editing these variables at the top of `scripts/cicd.sh`:
 
 ```bash
-API_PROJECT_DIR="./api"
-TEST_PROJECT_DIR="./Api.Tests"
-SLN_FILE="./api.sln"
+API_PROJECT_DIR="./Fadebook.Api"
+TEST_PROJECT_DIR="./Fadebook.Api.Tests"
+SLN_FILE="./Fadebook.sln"
 REPORT_BASE_DIR="./TestResults"
 ```
 
@@ -323,7 +407,7 @@ REPORT_BASE_DIR="./TestResults"
 2. Check connection string in `.env`
 3. Delete migrations and recreate:
    ```bash
-   cd api
+   cd Fadebook.Api
    rm -rf Migrations/
    dotnet ef migrations add InitialCreate
    dotnet ef database update
@@ -336,7 +420,7 @@ REPORT_BASE_DIR="./TestResults"
 **Solutions:**
 1. Clear node_modules and reinstall:
    ```bash
-   cd fadebook-frontend
+   cd Fadebook.Frontend
    rm -rf node_modules package-lock.json
    npm install
    ```
@@ -354,8 +438,8 @@ REPORT_BASE_DIR="./TestResults"
 1. Clean and restore:
    ```bash
    ./scripts/cicd.sh clean
-   dotnet restore api.sln
-   dotnet build api.sln
+   dotnet restore Fadebook.sln
+   dotnet build Fadebook.sln
    ```
 2. Check .NET version: `dotnet --version` (should be 9.0+)
 
@@ -413,12 +497,16 @@ REPORT_BASE_DIR="./TestResults"
 
 - [ ] Install all prerequisites
 - [ ] Clone repository
-- [ ] Create `.env` files (root and api/)
-- [ ] Install frontend dependencies: `cd fadebook-frontend && npm install`
-- [ ] Start database: `./scripts/start-db.sh`
-- [ ] Run backend: `cd api && dotnet run`
-- [ ] Run frontend: `cd fadebook-frontend && npm run dev`
+- [ ] Run complete setup: `./scripts/dev.sh setup`
+- [ ] Start all services: `./scripts/dev.sh start`
 - [ ] Access application at `http://localhost:3000`
+
+**Or manually:**
+- [ ] Create `.env` files (root and Fadebook.Api/)
+- [ ] Install frontend dependencies: `cd Fadebook.Frontend && npm install`
+- [ ] Start database: `./scripts/dev.sh setup-db-fresh`
+- [ ] Run backend: `cd Fadebook.Api && dotnet run`
+- [ ] Run frontend: `cd Fadebook.Frontend && npm run dev`
 
 ---
 

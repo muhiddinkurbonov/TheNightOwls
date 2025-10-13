@@ -229,9 +229,8 @@ export async function deleteAppointment(id: number) { }
 ### File Naming
 
 - **Shell scripts**: `kebab-case.sh`
+  - ✅ `dev.sh`
   - ✅ `cicd.sh`
-  - ✅ `start-db.sh`
-  - ✅ `run-tests.sh`
 
 ### Script Best Practices
 

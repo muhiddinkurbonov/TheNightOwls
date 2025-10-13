@@ -44,25 +44,41 @@ We are committed to providing a welcoming and inclusive environment for all cont
 
 ```bash
 # Fork the repository on GitHub, then clone your fork
-git clone https://github.com/YOUR_USERNAME/TheNightOwls.git
+git clone https://github.com/muhiddinkurbonov/TheNightOwls.git
 cd TheNightOwls
 ```
 
 ### 2. Set Up Your Development Environment
 
-Follow the setup instructions in [`docs/guides/SETUP_AND_USAGE.md`](docs/guides/SETUP_AND_USAGE.md):
+**Quick Setup (Recommended):**
+
+```bash
+# Use the automated setup script
+./scripts/dev.sh setup
+
+# This will:
+# - Check prerequisites
+# - Setup database
+# - Install all dependencies
+# - Apply migrations
+# - Build projects
+```
+
+**Manual Setup:**
+
+If you prefer manual setup, follow the instructions in [`docs/guides/SETUP_AND_USAGE.md`](docs/guides/SETUP_AND_USAGE.md):
 
 ```bash
 # Install dependencies
-dotnet restore api.sln
-cd fadebook-frontend && npm install && cd ..
+dotnet restore Fadebook.sln
+cd Fadebook.Frontend && npm install && cd ..
 
 # Set up environment variables
-cp api/.env.example api/.env
-# Edit api/.env with your configuration
+cp Fadebook.Api/.env.example Fadebook.Api/.env
+# Edit Fadebook.Api/.env with your configuration
 
-# Start the database
-./scripts/start-db.sh
+# Start the database with fresh setup
+./scripts/dev.sh setup-db-fresh
 ```
 
 ### 3. Create a Branch
@@ -97,19 +113,27 @@ git checkout -b fix/bug-description
 
 ### 2. Test Your Changes
 
-**Backend:**
+**Using dev.sh (Recommended):**
 ```bash
 # Run all tests
+./scripts/dev.sh test
+```
+
+**Manual Testing:**
+
+**Backend:**
+```bash
+# Run all tests with coverage
 ./scripts/cicd.sh test
 
 # Or manually
-cd Api.Tests
+cd Fadebook.Api.Tests
 dotnet test
 ```
 
 **Frontend:**
 ```bash
-cd fadebook-frontend
+cd Fadebook.Frontend
 npm test
 npm run lint
 ```
@@ -193,7 +217,7 @@ interface User {
 - **C# files**: `PascalCase.cs` (AppointmentController.cs)
 - **React components**: `PascalCase.tsx` (Navigation.tsx)
 - **Utilities/Hooks**: `camelCase.ts` (useAuth.ts)
-- **Scripts**: `kebab-case.sh` (start-db.sh)
+- **Scripts**: `kebab-case.sh` (dev.sh, cicd.sh)
 
 ---
 
@@ -342,7 +366,7 @@ All new frontend components should have tests:
 - **API calls** - Test with mocked responses
 
 ```bash
-cd fadebook-frontend
+cd Fadebook.Frontend
 npm run test:coverage
 ```
 

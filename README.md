@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Fadebook Logo](./fadebook-frontend/public/FadeBook%20Logo%20with%20Razor%20Icon.svg)
+![Fadebook Logo](./Fadebook.Frontend/public/FadeBook%20Logo%20with%20Razor%20Icon.svg)
 
 **A full-stack web application for barbershop appointment management**
 
@@ -113,7 +113,36 @@ Ensure you have the following installed:
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [Git](https://git-scm.com/)
 
-### Installation
+### Quick Setup (Recommended)
+
+Use our automated setup script for the fastest experience:
+
+```bash
+# Clone the repository
+git clone https://github.com/250908-NET/TheNightOwls.git
+cd TheNightOwls
+
+# Run complete setup (database, backend, frontend)
+./scripts/dev.sh setup
+
+# Start all services
+./scripts/dev.sh start
+```
+
+**That's it!** The script handles:
+- ✅ Environment configuration
+- ✅ Database setup and migrations
+- ✅ Dependency installation
+- ✅ Service startup
+
+Access the application at:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5288
+- **API Documentation**: http://localhost:5288/swagger
+
+### Manual Setup
+
+If you prefer manual setup or need to run services individually:
 
 1. **Clone the repository**
    ```bash
@@ -127,7 +156,7 @@ Ensure you have the following installed:
    cp .env.example .env
 
    # API .env for application configuration
-   cp api/.env.example api/.env
+   cp Fadebook.Api/.env.example Fadebook.Api/.env
 
    # Edit both files with your configuration
    ```
@@ -135,30 +164,30 @@ Ensure you have the following installed:
 3. **Install dependencies**
    ```bash
    # Backend dependencies
-   dotnet restore api.sln
+   dotnet restore Fadebook.sln
 
    # Frontend dependencies
-   cd fadebook-frontend
+   cd Fadebook.Frontend
    npm install
    cd ..
    ```
 
 4. **Start the database**
    ```bash
-   ./scripts/start-db.sh
+   ./scripts/dev.sh setup-db-fresh
    ```
 
 5. **Run the application**
 
    **Terminal 1 - Backend:**
    ```bash
-   cd api
+   cd Fadebook.Api
    dotnet run
    ```
 
    **Terminal 2 - Frontend:**
    ```bash
-   cd fadebook-frontend
+   cd Fadebook.Frontend
    npm run dev
    ```
 
@@ -181,7 +210,7 @@ Ensure you have the following installed:
 
 ```
 TheNightOwls/
-├── api/                        # .NET Web API backend
+├── Fadebook.Api/               # .NET Web API backend
 │   ├── Common/                 # Shared utilities, constants, converters
 │   ├── Controllers/            # API controllers
 │   ├── DTOs/                   # Data Transfer Objects (organized by feature)
@@ -192,12 +221,12 @@ TheNightOwls/
 │   ├── Repositories/           # Data access layer
 │   └── Services/               # Business logic layer
 │
-├── Api.Tests/                  # Backend unit tests
+├── Fadebook.Api.Tests/         # Backend unit tests
 │   ├── Controllers/            # Controller tests
 │   ├── Services/               # Service tests
 │   └── Repositories/           # Repository tests
 │
-├── fadebook-frontend/          # Next.js frontend
+├── Fadebook.Frontend/          # Next.js frontend
 │   ├── src/
 │   │   ├── app/                # Next.js App Router pages
 │   │   ├── components/         # React components
@@ -216,8 +245,8 @@ TheNightOwls/
 │   └── PROJECT_REQUIREMENTS.md # Original project requirements
 │
 ├── scripts/                    # 🔧 Build and automation scripts
-│   ├── cicd.sh                 # CI/CD automation
-│   └── start-db.sh             # Database initialization
+│   ├── dev.sh                  # Main development orchestration script
+│   └── cicd.sh                 # CI/CD automation and testing
 │
 ├── TestResults/                # Test results and coverage reports
 ├── .dockerignore               # Docker build context exclusions
@@ -225,7 +254,7 @@ TheNightOwls/
 ├── .env.example                # Environment variables template for Docker
 ├── .gitignore                  # Git ignore rules
 ├── docker-compose.yml          # Docker services configuration
-├── api.sln                     # .NET solution file
+├── Fadebook.sln                # .NET solution file
 ├── LICENSE                     # MIT License
 ├── CONTRIBUTING.md             # Contribution guidelines
 └── README.md                   # This file
@@ -258,24 +287,59 @@ TheNightOwls/
 
 ## 💻 Development
 
+### Development Script (Recommended)
+
+The `dev.sh` script provides a unified interface for all development tasks:
+
+```bash
+# Check what's running
+./scripts/dev.sh status
+
+# Start all services
+./scripts/dev.sh start
+
+# Stop all services
+./scripts/dev.sh stop
+
+# Restart all services
+./scripts/dev.sh restart
+
+# Run tests
+./scripts/dev.sh test
+
+# Build everything
+./scripts/dev.sh build
+
+# Clean all artifacts
+./scripts/dev.sh clean
+
+# Start individual services
+./scripts/dev.sh db          # Database only
+./scripts/dev.sh backend     # Backend only
+./scripts/dev.sh frontend    # Frontend only
+
+# Get help
+./scripts/dev.sh help
+```
+
 ### Backend Development
 
 ```bash
 # Restore dependencies
-dotnet restore api.sln
+dotnet restore Fadebook.sln
 
 # Build the solution
-dotnet build api.sln
+dotnet build Fadebook.sln
 
 # Run the API
-cd api
+cd Fadebook.Api
 dotnet run
 
 # Run with watch mode (auto-reload)
 dotnet watch run
 
 # Create new migration
-cd api
+cd Fadebook.Api
 dotnet ef migrations add <MigrationName>
 dotnet ef database update
 ```
@@ -283,7 +347,7 @@ dotnet ef database update
 ### Frontend Development
 
 ```bash
-cd fadebook-frontend
+cd Fadebook.Frontend
 
 # Start development server with Turbopack
 npm run dev
@@ -328,7 +392,7 @@ npm run lint
 ./scripts/cicd.sh test
 
 # Manual testing
-cd Api.Tests
+cd Fadebook.Api.Tests
 dotnet test --configuration Release --collect:"XPlat Code Coverage"
 ```
 
@@ -342,7 +406,7 @@ Test results available in `TestResults/`:
 ### Frontend Tests
 
 ```bash
-cd fadebook-frontend
+cd Fadebook.Frontend
 
 # Run all tests
 npm test
@@ -366,8 +430,11 @@ npm run test:ui
 The application uses SQL Server running in Docker:
 
 ```bash
-# Start the database
-./scripts/start-db.sh
+# Start the database (fresh setup)
+./scripts/dev.sh setup-db-fresh
+
+# Or just start if already configured
+./scripts/dev.sh setup-db
 
 # Stop the database
 docker-compose down
@@ -380,11 +447,11 @@ docker logs mssql-express
 
 ```bash
 # Backend
-cd api
+cd Fadebook.Api
 dotnet publish -c Release -o ./publish
 
 # Frontend
-cd fadebook-frontend
+cd Fadebook.Frontend
 npm run build
 npm start
 ```
