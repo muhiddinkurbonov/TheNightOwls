@@ -13,6 +13,7 @@ public class FadebookDbContext : DbContext
     public DbSet<BarberServiceModel> barberServiceTable { get; set; }
     public DbSet<AppointmentModel> appointmentTable { get; set; }
     public DbSet<UserModel> userTable { get; set; }
+    public DbSet<BarberWorkHoursModel> barberWorkHoursTable { get; set; }
 
     public FadebookDbContext(DbContextOptions<FadebookDbContext> options) : base(options) { }
 
@@ -73,6 +74,19 @@ public class FadebookDbContext : DbContext
 
         modelBuilder.Entity<UserModel>()
             .HasIndex(u => u.Email)
+            .IsUnique();
+
+        // BarberWorkHours configuration
+        modelBuilder.Entity<BarberWorkHoursModel>()
+            .HasOne(bwh => bwh.Barber)
+            .WithMany()
+            .HasForeignKey(bwh => bwh.BarberId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired();
+
+        // Ensure unique work hour slots per barber per day (prevent duplicate entries)
+        modelBuilder.Entity<BarberWorkHoursModel>()
+            .HasIndex(bwh => new { bwh.BarberId, bwh.DayOfWeek, bwh.StartTime, bwh.EndTime })
             .IsUnique();
 
         base.OnModelCreating(modelBuilder);

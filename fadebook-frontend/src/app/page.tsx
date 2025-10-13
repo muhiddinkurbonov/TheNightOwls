@@ -1,9 +1,47 @@
+'use client';
+
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function Home() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      // Redirect based on role
+      if (user.role === 'Admin') {
+        router.push('/admin');
+      } else if (user.role === 'Barber') {
+        router.push('/barbers');
+      }
+      // Customers can stay on the home page or optionally redirect to /my-appointments
+      // Uncomment the line below if you want customers to go straight to their appointments
+      // else if (user.role === 'Customer') {
+      //   router.push('/my-appointments');
+      // }
+    }
+  }, [user, isLoading, router]);
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="flex justify-center items-center min-h-screen">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />

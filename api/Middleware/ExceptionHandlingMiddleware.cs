@@ -10,11 +10,13 @@ public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+    private readonly IWebHostEnvironment _env;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger, IWebHostEnvironment env)
     {
         _next = next;
         _logger = logger;
+        _env = env;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -30,10 +32,11 @@ public class ExceptionHandlingMiddleware
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var statusCode = HttpStatusCode.InternalServerError;
         var message = "An unexpected error occurred. Please try again later.";
+        var isDevelopment = _env.IsDevelopment();
 
         switch (exception)
         {
@@ -62,9 +65,9 @@ public class ExceptionHandlingMiddleware
                 message = noUsernameEx.Message;
                 break;
 
-            case KeyNotFoundException keyNotFoundEx:
+            case KeyNotFoundException:
                 statusCode = HttpStatusCode.NotFound;
-                message = keyNotFoundEx.Message;
+                message = "The requested resource was not found.";
                 break;
 
             case ValidationException validationEx:
@@ -72,19 +75,19 @@ public class ExceptionHandlingMiddleware
                 message = validationEx.Message;
                 break;
 
-            case ArgumentNullException argNullEx:
+            case ArgumentNullException:
                 statusCode = HttpStatusCode.BadRequest;
-                message = $"Required parameter is missing: {argNullEx.ParamName}";
+                message = "Required parameter is missing.";
                 break;
 
-            case ArgumentException argEx:
+            case ArgumentException:
                 statusCode = HttpStatusCode.BadRequest;
-                message = argEx.Message;
+                message = "Invalid parameter value provided.";
                 break;
 
-            case InvalidOperationException invalidOpEx:
+            case InvalidOperationException:
                 statusCode = HttpStatusCode.Conflict;
-                message = invalidOpEx.Message;
+                message = "The requested operation could not be completed.";
                 break;
 
             case UnauthorizedAccessException:
@@ -92,25 +95,51 @@ public class ExceptionHandlingMiddleware
                 message = "You are not authorized to perform this action.";
                 break;
 
-            case DbUpdateException:
+            case DbUpdateException dbEx:
                 statusCode = HttpStatusCode.Conflict;
-                message = "A database update error occurred.";
+                // Don't expose SQL-specific details in production
+                if (isDevelopment)
+                {
+                    message = $"Database update error: {dbEx.InnerException?.Message ?? dbEx.Message}";
+                }
+                else
+                {
+                    message = "A database conflict occurred. Please verify your data and try again.";
+                }
                 break;
 
             default:
-                // For unhandled exceptions, keep the generic message
-                // In production, avoid exposing internal error details
+                // For unhandled exceptions, never expose details in production
+                if (isDevelopment)
+                {
+                    message = $"Internal error: {exception.Message}";
+                }
                 break;
         }
 
-        var response = new
+        // Create response object based on environment
+        object response;
+        if (isDevelopment)
         {
-            status = (int)statusCode,
-            message = message,
-            timestamp = DateTime.UtcNow,
-            path = context.Request.Path.Value,
-            traceId = context.TraceIdentifier
-        };
+            response = new
+            {
+                status = (int)statusCode,
+                message = message,
+                timestamp = DateTime.UtcNow,
+                path = context.Request.Path.Value,
+                traceId = context.TraceIdentifier,
+                exceptionType = exception.GetType().Name
+            };
+        }
+        else
+        {
+            response = new
+            {
+                status = (int)statusCode,
+                message = message,
+                timestamp = DateTime.UtcNow
+            };
+        }
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;

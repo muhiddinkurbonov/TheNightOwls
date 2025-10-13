@@ -17,12 +17,19 @@ using Fadebook.Services;
 using Fadebook.Repositories;
 using Fadebook.Models;
 using Fadebook.Middleware;
+using Fadebook.Common.Converters;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
-
-builder.Services.AddControllers(); // let's add the controller classes as well...
+// Configure JSON serialization to handle dates as UTC
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Ensure DateTime values are serialized as UTC in ISO 8601 format
+        options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // CORS: allow Next.js dev server
 builder.Services.AddCors(options =>
@@ -117,7 +124,21 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+        ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 minutes of clock skew
+    };
+
+    // Add event handlers for better security
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+            {
+                context.Response.Headers.Append("Token-Expired", "true");
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -136,6 +157,7 @@ builder.Services.AddScoped<IBarberRepository, BarberRepository>();
 builder.Services.AddScoped<IBarberServiceRepository, BarberServiceRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IBarberWorkHoursRepository, BarberWorkHoursRepository>();
 
 // service classes for DI
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
@@ -144,6 +166,7 @@ builder.Services.AddScoped<IAppointmentManagementService, AppointmentManagementS
 builder.Services.AddScoped<IBarberManagementService, BarberManagementService>();
 builder.Services.AddScoped<IServiceManagementService, ServiceManagementService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IBarberWorkHoursService, BarberWorkHoursService>();
 // builder.Services.AddScoped<IInstructorService, InstructorService>();
 // builder.Services.AddScoped<ICourseService, CourseService>();
 
@@ -163,6 +186,36 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Add security headers
+app.Use(async (context, next) =>
+{
+    // Prevent clickjacking attacks
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+
+    // Prevent MIME type sniffing
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+
+    // Enable XSS protection (for older browsers)
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+
+    // Enforce HTTPS
+    context.Response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+
+    // Content Security Policy
+    context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:3000");
+
+    // Referrer Policy
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+
+    // Permissions Policy (formerly Feature Policy)
+    context.Response.Headers.Append("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+
+    await next();
+});
+
+// Apply CORS early in the pipeline, before authentication
+app.UseCors("Frontend");
+
 // Exception handling middleware should be first in the pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -170,8 +223,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<RequestLoggingMiddleware>();
 
-// Apply CORS before mapping controllers
-app.UseCors("Frontend");
 app.MapControllers(); 
 
 await SeedApp(app);
@@ -193,11 +244,11 @@ static async Task SeedApp(WebApplication app)
                 // Seed Users (for authentication)
                 var userDean = await dbContext.userTable.AddAsync(new UserModel
                 {
-                    Username = "dean-the-machine",
-                    Email = "dean@fadebook.com",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
-                    Name = "Dean",
-                    PhoneNumber = "123",
+                    Username = "dean.barber",
+                    Email = "dean.barber@fadebook.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("barber123"),
+                    Name = "Dean Barber",
+                    PhoneNumber = "555-0101",
                     Role = "Barber",
                     CreatedAt = DateTime.UtcNow,
                     IsActive = true
@@ -205,11 +256,11 @@ static async Task SeedApp(WebApplication app)
 
                 var userVictor = await dbContext.userTable.AddAsync(new UserModel
                 {
-                    Username = "v-for-victor",
-                    Email = "victor@fadebook.com",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
-                    Name = "Victor",
-                    PhoneNumber = "456",
+                    Username = "victor.barber",
+                    Email = "victor.barber@fadebook.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("barber123"),
+                    Name = "Victor Barber",
+                    PhoneNumber = "555-0102",
                     Role = "Barber",
                     CreatedAt = DateTime.UtcNow,
                     IsActive = true
@@ -217,23 +268,23 @@ static async Task SeedApp(WebApplication app)
 
                 var userCharles = await dbContext.userTable.AddAsync(new UserModel
                 {
-                    Username = "charles-xavier",
-                    Email = "charles@fadebook.com",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
-                    Name = "Charles",
-                    PhoneNumber = "789",
+                    Username = "charles.barber",
+                    Email = "charles.barber@fadebook.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("barber123"),
+                    Name = "Charles Barber",
+                    PhoneNumber = "555-0103",
                     Role = "Barber",
                     CreatedAt = DateTime.UtcNow,
                     IsActive = true
                 });
 
-                var userMuhid = await dbContext.userTable.AddAsync(new UserModel
+                var userCustomer = await dbContext.userTable.AddAsync(new UserModel
                 {
-                    Username = "m-kurbonov",
-                    Email = "muhiddin@fadebook.com",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
-                    Name = "Muhiddin",
-                    PhoneNumber = "1456",
+                    Username = "john.customer",
+                    Email = "john.customer@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("customer123"),
+                    Name = "John Customer",
+                    PhoneNumber = "555-0201",
                     Role = "Customer",
                     CreatedAt = DateTime.UtcNow,
                     IsActive = true
@@ -245,8 +296,8 @@ static async Task SeedApp(WebApplication app)
                     Username = "admin",
                     Email = "admin@fadebook.com",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
-                    Name = "Administrator",
-                    PhoneNumber = "000",
+                    Name = "Admin User",
+                    PhoneNumber = "555-0001",
                     Role = "Admin",
                     CreatedAt = DateTime.UtcNow,
                     IsActive = true
@@ -280,32 +331,32 @@ static async Task SeedApp(WebApplication app)
                 // Seed Barbers (legacy table)
                 var barberDean = await dbContext.barberTable.AddAsync(new BarberModel
                 {
-                    Username = "dean-the-machine",
-                    Name = "Dean",
-                    Specialty = "Beards",
-                    ContactInfo = "123"
+                    Username = "dean.barber",
+                    Name = "Dean Barber",
+                    Specialty = "Beard Specialist",
+                    ContactInfo = "555-0101"
                 });
                 var barberVictor = await dbContext.barberTable.AddAsync(new BarberModel
                 {
-                    Username = "v-for-victor",
-                    Name = "Victor",
-                    Specialty = "Styled Hair Cuts",
-                    ContactInfo = "456"
+                    Username = "victor.barber",
+                    Name = "Victor Barber",
+                    Specialty = "Modern Styles",
+                    ContactInfo = "555-0102"
                 });
                 var barberCharles = await dbContext.barberTable.AddAsync(new BarberModel
                 {
-                    Username = "charles-xavier",
-                    Name = "Charles",
-                    Specialty = "The Works",
-                    ContactInfo = "789"
+                    Username = "charles.barber",
+                    Name = "Charles Barber",
+                    Specialty = "Full Service",
+                    ContactInfo = "555-0103"
                 });
 
                 // Seed Customer (legacy table)
-                var customerMuhid = await dbContext.customerTable.AddAsync(new CustomerModel
+                var customerJohn = await dbContext.customerTable.AddAsync(new CustomerModel
                 {
-                    Username = "m-kurbonov",
-                    Name = "Muhiddin",
-                    ContactInfo = "1456"
+                    Username = "john.customer",
+                    Name = "John Customer",
+                    ContactInfo = "555-0201"
                 });
 
                 await dbContext.SaveChangesAsync();
@@ -347,13 +398,13 @@ static async Task SeedApp(WebApplication app)
                     ServiceId = serviceTheWorks.Entity.ServiceId
                 });
 
-                var muhidAppointmentWithDean = await dbContext.appointmentTable.AddAsync(new AppointmentModel
+                var johnAppointmentWithDean = await dbContext.appointmentTable.AddAsync(new AppointmentModel
                 {
                     AppointmentDate = DateTime.UtcNow.AddYears(1),
                     Status = "Pending", // Pending, Completed, Cancelled, Expired
                     BarberId = barberDean.Entity.BarberId,
                     ServiceId = serviceBeard.Entity.ServiceId,
-                    CustomerId = customerMuhid.Entity.CustomerId
+                    CustomerId = customerJohn.Entity.CustomerId
                 });
 
                 await dbContext.SaveChangesAsync();

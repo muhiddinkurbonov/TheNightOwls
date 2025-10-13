@@ -11,6 +11,7 @@ import { CustomersTab } from '@/components/admin/CustomersTab';
 import { AppointmentsTab } from '@/components/admin/AppointmentsTab';
 import { ServicesTab } from '@/components/admin/ServicesTab';
 import { UsersTab } from '@/components/admin/UsersTab';
+import { WorkHoursTab } from '@/components/admin/WorkHoursTab';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -60,12 +61,13 @@ export default function AdminPage() {
           </div>
 
           <Tabs defaultValue="users" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 h-auto p-2">
               <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="barbers">Barbers</TabsTrigger>
               <TabsTrigger value="services">Services</TabsTrigger>
               <TabsTrigger value="customers">Customers</TabsTrigger>
               <TabsTrigger value="appointments">Appointments</TabsTrigger>
+              <TabsTrigger value="workHours">Work Hours</TabsTrigger>
             </TabsList>
 
             <TabsContent value="users">
@@ -86,6 +88,10 @@ export default function AdminPage() {
 
             <TabsContent value="appointments">
               <AppointmentsTab />
+            </TabsContent>
+
+            <TabsContent value="workHours">
+              <WorkHoursTab />
             </TabsContent>
           </Tabs>
         </div>

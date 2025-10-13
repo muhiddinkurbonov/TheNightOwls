@@ -1,7 +1,12 @@
 using AutoMapper;
-using Fadebook.DTOs;
-using Fadebook.DTO;
+using Fadebook.DTOs.Appointments;
+using Fadebook.DTOs.Auth;
+using Fadebook.DTOs.Barbers;
+using Fadebook.DTOs.Services;
+using Fadebook.DTOs.Customers;
+using Fadebook.DTOs.Common;
 using Fadebook.Models;
+using Fadebook.Controllers;
 
 namespace Fadebook.Mapping;
 
@@ -28,5 +33,33 @@ public class ApiMappingProfile : Profile
 
         // Auth mappings
         CreateMap<UserModel, UserDto>().ReverseMap();
+
+        // BarberWorkHours mappings
+        CreateMap<BarberWorkHoursModel, BarberWorkHoursDto>()
+            .ForMember(dest => dest.BarberName, opt => opt.MapFrom(src => src.Barber != null ? src.Barber.Name : ""))
+            .ForMember(dest => dest.DayOfWeekName, opt => opt.MapFrom(src => GetDayOfWeekName(src.DayOfWeek)))
+            .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime.ToString("HH:mm")))
+            .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime.ToString("HH:mm")));
+
+        CreateMap<CreateBarberWorkHoursDto, BarberWorkHoursModel>()
+            .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => TimeOnly.Parse(src.StartTime)))
+            .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => TimeOnly.Parse(src.EndTime)))
+            .ForMember(dest => dest.Barber, opt => opt.Ignore())
+            .ForMember(dest => dest.WorkHourId, opt => opt.Ignore());
+    }
+
+    private static string GetDayOfWeekName(int dayOfWeek)
+    {
+        return dayOfWeek switch
+        {
+            0 => "Sunday",
+            1 => "Monday",
+            2 => "Tuesday",
+            3 => "Wednesday",
+            4 => "Thursday",
+            5 => "Friday",
+            6 => "Saturday",
+            _ => "Unknown"
+        };
     }
 }

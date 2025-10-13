@@ -10,6 +10,7 @@ export const useAppointment = (id: number) => {
   });
 };
 
+
 export const useAppointmentsByDate = (date: string) => {
   return useQuery({
     queryKey: ['appointments', 'by-date', date],
@@ -37,6 +38,8 @@ export const useAppointmentsByBarberId = (barberId: number) => {
     enabled: !!barberId,
     refetchInterval: 10000, // Auto-refetch every 10 seconds
     refetchIntervalInBackground: false, // Only refetch when tab is active
+    retry: false, // Don't retry on failure (e.g., 401 errors)
+    staleTime: 5000, // Consider data fresh for 5 seconds
   });
 };
 

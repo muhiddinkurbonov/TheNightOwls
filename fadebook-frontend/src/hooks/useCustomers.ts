@@ -10,6 +10,13 @@ export const useCustomer = (id: number) => {
   });
 };
 
+export const useAllCustomers = () => {
+  return useQuery({
+    queryKey: ['customers'],
+    queryFn: () => customersApi.getAll(),
+  });
+};
+
 export const useServices = () => {
   return useQuery({
     queryKey: ['services'],

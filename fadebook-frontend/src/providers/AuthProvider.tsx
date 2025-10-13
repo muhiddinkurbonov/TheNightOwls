@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { authApi } from '@/lib/api';
 import type { UserDto, LoginDto, RegisterDto } from '@/types/api';
 
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const isAuthenticated = !!user;
 
@@ -58,6 +60,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    // Cancel all queries immediately to prevent hook order issues
+    queryClient.cancelQueries();
+    // Clear the cache
+    queryClient.clear();
+    // Navigate immediately - the cancellation should prevent hook errors
     router.push('/signin');
   };
 

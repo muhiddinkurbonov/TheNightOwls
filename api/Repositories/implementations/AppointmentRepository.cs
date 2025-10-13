@@ -29,11 +29,15 @@ public class AppointmentRepository(
 
     public async Task<IEnumerable<AppointmentModel>> GetByDateAsync(DateTime targetDate)
     {
+        // Ensure we're comparing dates in UTC
+        var startOfDay = DateTime.SpecifyKind(targetDate.Date, DateTimeKind.Utc);
+        var endOfDay = startOfDay.AddDays(1);
+
         return await _fadebookDbContext.appointmentTable
             .Include(a => a.Customer)
             .Include(a => a.Barber)
             .Include(a => a.Service)
-            .Where(a => a.AppointmentDate.Date == targetDate.Date)
+            .Where(a => a.AppointmentDate >= startOfDay && a.AppointmentDate < endOfDay)
             .ToListAsync();
     }
 

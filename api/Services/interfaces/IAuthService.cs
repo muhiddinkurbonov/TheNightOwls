@@ -1,4 +1,6 @@
-using Fadebook.DTO;
+using Fadebook.DTOs.Auth;
+using Fadebook.DTOs.Barbers;
+using Fadebook.DTOs.Customers;
 
 namespace Fadebook.Services;
 

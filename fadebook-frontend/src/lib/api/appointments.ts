@@ -33,6 +33,8 @@ export const appointmentsApi = {
 
   // GET: api/appointment/by-date?date=2025-01-01
   getByDate: async (date: string): Promise<AppointmentDto[]> => {
+    // Simply pass the date string as-is
+    // The backend will interpret it as a UTC date and return all appointments on that UTC date
     const { data } = await axiosInstance.get('/api/appointment/by-date', {
       params: { date },
     });

@@ -37,4 +37,10 @@ export const customersApi = {
     const { data } = await axiosInstance.get(`/api/customeraccount/username-exists/${encodeURIComponent(username)}`);
     return Boolean(data?.exists);
   },
+
+  // GET: api/customer/customers
+  getAll: async (): Promise<CustomerDto[]> => {
+    const { data } = await axiosInstance.get('/api/customer/customers');
+    return data;
+  },
 };

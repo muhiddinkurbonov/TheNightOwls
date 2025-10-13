@@ -1,6 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Navigation } from '@/components/Navigation';
+import { AuthProvider } from '@/providers/AuthProvider';
+import { authApi } from '@/lib/api/auth';
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
@@ -21,14 +24,40 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+// Mock auth API
+vi.mock('@/lib/api/auth', () => ({
+  authApi: {
+    me: vi.fn(() => Promise.reject(new Error('Not authenticated'))),
+    login: vi.fn(),
+    register: vi.fn(),
+  },
+}));
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  // eslint-disable-next-line react/display-name
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
+  );
+};
+
 describe('Navigation', () => {
   it('should render the brand name', () => {
-    render(<Navigation />);
+    const Wrapper = createWrapper();
+    render(<Navigation />, { wrapper: Wrapper });
     expect(screen.getByText('Fadebook')).toBeInTheDocument();
   });
 
   it('should render all navigation links', () => {
-    render(<Navigation />);
+    const Wrapper = createWrapper();
+    render(<Navigation />, { wrapper: Wrapper });
 
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('My Appointments')).toBeInTheDocument();
@@ -38,7 +67,8 @@ describe('Navigation', () => {
   });
 
   it('should have correct hrefs for all links', () => {
-    render(<Navigation />);
+    const Wrapper = createWrapper();
+    render(<Navigation />, { wrapper: Wrapper });
 
     const homeLink = screen.getByText('Home').closest('a');
     const appointmentsLink = screen.getByText('My Appointments').closest('a');
@@ -57,7 +87,8 @@ describe('Navigation', () => {
     const nextNav = await import('next/navigation');
     vi.mocked(nextNav.usePathname).mockReturnValue('/my-appointments');
 
-    render(<Navigation />);
+    const Wrapper = createWrapper();
+    render(<Navigation />, { wrapper: Wrapper });
 
     const appointmentsLink = screen.getByText('My Appointments').closest('a');
     expect(appointmentsLink?.className).toContain('bg-primary');
@@ -68,7 +99,8 @@ describe('Navigation', () => {
     const nextNav = await import('next/navigation');
     vi.mocked(nextNav.usePathname).mockReturnValue('/');
 
-    render(<Navigation />);
+    const Wrapper = createWrapper();
+    render(<Navigation />, { wrapper: Wrapper });
 
     const appointmentsLink = screen.getByText('My Appointments').closest('a');
     expect(appointmentsLink?.className).toContain('text-muted-foreground');

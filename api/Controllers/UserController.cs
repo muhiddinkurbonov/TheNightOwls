@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Fadebook.DTO;
+using Fadebook.DTOs.Auth;
 using Fadebook.Repositories;
 using AutoMapper;
 

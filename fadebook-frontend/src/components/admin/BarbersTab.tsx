@@ -35,7 +35,9 @@ export function BarbersTab() {
   const updateBarber = useUpdateBarber();
   const deleteBarber = useDeleteBarber();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingBarber, setEditingBarber] = useState<BarberDto | null>(null);
+  const [deletingBarber, setDeletingBarber] = useState<BarberDto | null>(null);
   const [formData, setFormData] = useState({
     username: '',
     name: '',
@@ -102,13 +104,24 @@ export function BarbersTab() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this barber?')) {
-      try {
-        await deleteBarber.mutateAsync(id);
-      } catch (error) {
-        console.error('Failed to delete barber:', error);
-      }
+  const handleOpenDeleteDialog = (barber: BarberDto) => {
+    setDeletingBarber(barber);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setDeletingBarber(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingBarber) return;
+
+    try {
+      await deleteBarber.mutateAsync(deletingBarber.barberId);
+      handleCloseDeleteDialog();
+    } catch (error) {
+      console.error('Failed to delete barber:', error);
     }
   };
 
@@ -283,7 +296,7 @@ export function BarbersTab() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(barber.barberId)}
+                        onClick={() => handleOpenDeleteDialog(barber)}
                         disabled={deleteBarber.isPending}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -296,6 +309,29 @@ export function BarbersTab() {
           </Table>
         )}
       </CardContent>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Barber</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <strong>{deletingBarber?.name}</strong> (@{deletingBarber?.username})? This action cannot be undone and may affect existing appointments.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={handleCloseDeleteDialog}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleteBarber.isPending}
+            >
+              {deleteBarber.isPending ? 'Deleting...' : 'Delete Barber'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

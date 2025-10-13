@@ -33,7 +33,9 @@ export function ServicesTab() {
   const updateService = useUpdateService();
   const deleteService = useDeleteService();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<ServiceDto | null>(null);
+  const [deletingService, setDeletingService] = useState<ServiceDto | null>(null);
   const [formData, setFormData] = useState({
     serviceName: '',
     servicePrice: '',
@@ -85,13 +87,24 @@ export function ServicesTab() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this service? This may affect existing appointments.')) {
-      try {
-        await deleteService.mutateAsync(id);
-      } catch (error) {
-        console.error('Failed to delete service:', error);
-      }
+  const handleOpenDeleteDialog = (service: ServiceDto) => {
+    setDeletingService(service);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setDeletingService(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingService) return;
+
+    try {
+      await deleteService.mutateAsync(deletingService.serviceId);
+      handleCloseDeleteDialog();
+    } catch (error) {
+      console.error('Failed to delete service:', error);
     }
   };
 
@@ -215,7 +228,7 @@ export function ServicesTab() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(service.serviceId)}
+                        onClick={() => handleOpenDeleteDialog(service)}
                         disabled={deleteService.isPending}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -228,6 +241,29 @@ export function ServicesTab() {
           </Table>
         )}
       </CardContent>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Service</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <strong>{deletingService?.serviceName}</strong>? This action cannot be undone and may affect existing appointments.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={handleCloseDeleteDialog}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleteService.isPending}
+            >
+              {deleteService.isPending ? 'Deleting...' : 'Delete Service'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

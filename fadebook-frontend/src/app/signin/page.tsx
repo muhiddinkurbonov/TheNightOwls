@@ -110,6 +110,24 @@ export default function SignInPage() {
                   Sign up
                 </Link>
               </div>
+
+              <div className="pt-4 border-t">
+                <p className="text-xs font-medium text-center mb-3 text-muted-foreground">Demo Accounts</p>
+                <div className="space-y-2 text-xs">
+                  <div className="p-2 bg-muted/30 rounded">
+                    <p className="font-medium">Customer</p>
+                    <p className="text-muted-foreground">john.customer • john.customer@example.com • customer123</p>
+                  </div>
+                  <div className="p-2 bg-muted/30 rounded">
+                    <p className="font-medium">Barber</p>
+                    <p className="text-muted-foreground">dean.barber • dean.barber@fadebook.com • barber123</p>
+                  </div>
+                  <div className="p-2 bg-muted/30 rounded">
+                    <p className="font-medium">Admin</p>
+                    <p className="text-muted-foreground">admin • admin@fadebook.com • admin123</p>
+                  </div>
+                </div>
+              </div>
             </form>
           </CardContent>
         </Card>

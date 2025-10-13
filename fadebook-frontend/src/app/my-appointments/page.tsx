@@ -71,7 +71,7 @@ export default function MyAppointmentsPage() {
   }
 
   // Combine appointments with barber and service details
-  const appointments: AppointmentWithDetails[] = appointmentsData.map((apt) => {
+  const appointmentsWithDetails: AppointmentWithDetails[] = appointmentsData.map((apt) => {
     const barber = barbers.find((b) => b.barberId === apt.barberId);
     const service = services.find((s) => s.serviceId === apt.serviceId);
     return {
@@ -80,6 +80,45 @@ export default function MyAppointmentsPage() {
       serviceName: service?.serviceName,
       servicePrice: service?.servicePrice,
     };
+  });
+
+  // Sort appointments logically:
+  // 1. Upcoming (Pending/Confirmed) - soonest first
+  // 2. Past (Completed) - most recent first
+  // 3. Cancelled - most recent first
+  const appointments = appointmentsWithDetails.sort((a, b) => {
+    const now = new Date();
+    const dateA = new Date(a.appointmentDate);
+    const dateB = new Date(b.appointmentDate);
+    const statusA = a.status.toLowerCase();
+    const statusB = b.status.toLowerCase();
+
+    // Define status priority
+    const getStatusPriority = (status: string, date: Date) => {
+      if (status === 'pending' || status === 'confirmed') {
+        return date >= now ? 1 : 2; // Upcoming = 1, Past active = 2
+      }
+      if (status === 'completed') return 3;
+      if (status === 'cancelled') return 4;
+      return 5;
+    };
+
+    const priorityA = getStatusPriority(statusA, dateA);
+    const priorityB = getStatusPriority(statusB, dateB);
+
+    // First sort by priority
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // Within same priority, sort by date
+    if (priorityA === 1) {
+      // Upcoming: soonest first (ascending)
+      return dateA.getTime() - dateB.getTime();
+    } else {
+      // Past/Cancelled: most recent first (descending)
+      return dateB.getTime() - dateA.getTime();
+    }
   });
 
   const isLoading = appointmentsLoading;
@@ -156,34 +195,34 @@ export default function MyAppointmentsPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
-      <main className="flex-1 py-8 px-4">
+      <main className="flex-1 py-4 sm:py-8 px-4">
         <div className="container mx-auto">
-          <h1 className="text-4xl font-bold mb-8">My Appointments</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-8">My Appointments</h1>
 
           {appointments.length === 0 ? (
             <Card>
-              <CardContent className="py-12">
+              <CardContent className="py-8 sm:py-12">
                 <div className="text-center">
-                  <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">You don't have any appointments yet.</p>
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <Calendar className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-muted-foreground">You don't have any appointments yet.</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                     Book your first appointment to get started!
                   </p>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6">
+            <div className="grid gap-4 sm:gap-6">
               {appointments.map((appointment) => (
                 <Card key={appointment.appointmentId}>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div>
-                        <CardTitle className="text-xl">
+                        <CardTitle className="text-lg sm:text-xl">
                           Appointment #{appointment.appointmentId}
                         </CardTitle>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <Badge variant={getStatusVariant(appointment.status)}>
                           {appointment.status}
                         </Badge>
@@ -192,15 +231,15 @@ export default function MyAppointmentsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => setCancellingAppointment(appointment)}
-                            className="text-destructive border-destructive hover:bg-destructive/10"
+                            className="text-destructive border-destructive hover:bg-destructive/10 text-xs sm:text-sm"
                           >
-                            <XCircle className="h-4 w-4 mr-2" />
+                            <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                             Cancel
                           </Button>
                         )}
                       </div>
                     </div>
-                    <CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">
                       {new Date(appointment.appointmentDate).toLocaleDateString('en-US', {
                         weekday: 'long',
                         year: 'numeric',
@@ -210,12 +249,12 @@ export default function MyAppointmentsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center gap-3">
-                        <Clock className="h-5 w-5 text-muted-foreground" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                         <div>
-                          <p className="text-sm font-medium">Time</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm font-medium">Time</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             {new Date(appointment.appointmentDate).toLocaleTimeString('en-US', {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -224,34 +263,34 @@ export default function MyAppointmentsPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <User className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <User className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                         <div>
-                          <p className="text-sm font-medium">Barber</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm font-medium">Barber</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             {appointment.barberName || `Barber #${appointment.barberId}`}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <Scissors className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Scissors className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                         <div>
-                          <p className="text-sm font-medium">Service</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm font-medium">Service</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             {appointment.serviceName || `Service #${appointment.serviceId}`}
                           </p>
                         </div>
                       </div>
 
                       {appointment.servicePrice && (
-                        <div className="flex items-center gap-3">
-                          <div className="h-5 w-5 flex items-center justify-center text-muted-foreground font-bold">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center text-muted-foreground font-bold flex-shrink-0">
                             $
                           </div>
                           <div>
-                            <p className="text-sm font-medium">Price</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-xs sm:text-sm font-medium">Price</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                               ${appointment.servicePrice.toFixed(2)}
                             </p>
                           </div>

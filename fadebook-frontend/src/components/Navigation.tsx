@@ -4,14 +4,29 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function Navigation() {
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
 
+  // Role-based home link - best practice for multi-role applications
+  const getHomeLink = () => {
+    if (!user) return '/';
+
+    switch (user.role) {
+      case 'Admin':
+        return '/admin';
+      case 'Barber':
+        return '/barbers';
+      case 'Customer':
+      default:
+        return '/';
+    }
+  };
+
   const links = [
-    { href: '/', label: 'Home' },
+    { href: '/', label: 'Home', excludeAdmin: true, excludeBarber: true },
     { href: '/my-appointments', label: 'My Appointments', protected: true, customerOnly: true },
     { href: '/barbers', label: 'Barbers', excludeAdmin: true, excludeBarber: true },
     { href: '/book', label: 'Book Appointment', protected: true, customerOnly: true },
@@ -21,18 +36,18 @@ export function Navigation() {
 
   return (
     <nav className="border-b bg-background">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center text-xl font-bold gap-1">
+      <div className="container mx-auto px-2 sm:px-4">
+        <div className="flex h-14 sm:h-16 items-center justify-between">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Link href={getHomeLink()} className="flex items-center text-lg sm:text-xl font-bold gap-1">
               <img
                 src="/FadeBook Logo with Razor Icon.svg"
                 alt="FadeBook logo"
-                className="w-24 h-24 object-contain mr-1 dark:invert dark:brightness-0 dark:contrast-200"
+                className="w-16 h-16 sm:w-24 sm:h-24 object-contain mr-1 dark:invert dark:brightness-0 dark:contrast-200"
                 loading="eager"
               />
             </Link>
-            <div className="flex gap-4">
+            <div className="hidden md:flex gap-2 lg:gap-4">
               {links.map((link) => {
                 // Hide protected links if not authenticated
                 if (link.protected && !isAuthenticated) return null;
@@ -56,7 +71,7 @@ export function Navigation() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-2 lg:px-3 py-2 rounded-md text-xs lg:text-sm font-medium transition-colors ${
                       pathname === link.href
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -69,26 +84,26 @@ export function Navigation() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             <ThemeToggle />
             {isAuthenticated && user ? (
               <>
-                <span className="text-sm text-muted-foreground">
+                <span className="hidden sm:inline text-xs sm:text-sm text-muted-foreground">
                   Welcome, <span className="font-medium text-foreground">{user.name}</span>
                 </span>
-                <Button variant="outline" size="sm" onClick={logout}>
+                <Button variant="outline" size="sm" onClick={logout} className="text-xs sm:text-sm">
                   Sign Out
                 </Button>
               </>
             ) : (
               <>
                 <Link href="/signin">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/signup">
-                  <Button size="sm">
+                  <Button size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
                     Sign Up
                   </Button>
                 </Link>

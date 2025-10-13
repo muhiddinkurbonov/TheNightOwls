@@ -33,9 +33,19 @@ import { Calendar, Pencil, Trash2 } from 'lucide-react';
 import type { AppointmentDto } from '@/types/api';
 
 export function AppointmentsTab() {
-  const [selectedDate, setSelectedDate] = useState('');
+  // Set today's date as default (in local timezone)
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; // Format: YYYY-MM-DD in local timezone
+  };
+
+  const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [statusFilter, setStatusFilter] = useState('all');
   const [editingAppointment, setEditingAppointment] = useState<AppointmentDto | null>(null);
+  const [deletingAppointment, setDeletingAppointment] = useState<AppointmentDto | null>(null);
   const [editStatus, setEditStatus] = useState('');
 
   const { data: appointments = [], isLoading, error } = useAppointmentsByDate(selectedDate);
@@ -76,13 +86,22 @@ export function AppointmentsTab() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this appointment?')) {
-      try {
-        await deleteAppointment.mutateAsync(id);
-      } catch (err) {
-        console.error('Failed to delete appointment:', err);
-      }
+  const handleOpenDeleteDialog = (appointment: AppointmentDto) => {
+    setDeletingAppointment(appointment);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeletingAppointment(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingAppointment) return;
+
+    try {
+      await deleteAppointment.mutateAsync(deletingAppointment.appointmentId);
+      handleCloseDeleteDialog();
+    } catch (err) {
+      console.error('Failed to delete appointment:', err);
     }
   };
 
@@ -143,12 +162,7 @@ export function AppointmentsTab() {
           </div>
         </div>
 
-        {!selectedDate ? (
-          <div className="text-center py-12">
-            <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Select a date to view appointments</p>
-          </div>
-        ) : isLoading ? (
+        {isLoading ? (
           <p className="text-center py-8 text-muted-foreground">Loading appointments...</p>
         ) : error ? (
           <p className="text-center py-8 text-destructive">Failed to load appointments</p>
@@ -206,7 +220,7 @@ export function AppointmentsTab() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(appointment.appointmentId)}
+                        onClick={() => handleOpenDeleteDialog(appointment)}
                         disabled={deleteAppointment.isPending}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -248,6 +262,29 @@ export function AppointmentsTab() {
                 disabled={updateAppointment.isPending}
               >
                 {updateAppointment.isPending ? 'Updating...' : 'Update Status'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!deletingAppointment} onOpenChange={handleCloseDeleteDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Delete Appointment</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete appointment <strong>#{deletingAppointment?.appointmentId}</strong>? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button variant="outline" onClick={handleCloseDeleteDialog}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDelete}
+                disabled={deleteAppointment.isPending}
+              >
+                {deleteAppointment.isPending ? 'Deleting...' : 'Delete Appointment'}
               </Button>
             </div>
           </DialogContent>

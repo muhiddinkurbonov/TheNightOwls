@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Fadebook.DTO;
+using Fadebook.DTOs.Auth;
 using Fadebook.Services;
 
 namespace Fadebook.Controllers;

@@ -484,3 +484,21 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+##
+## Project-Specific
+##
+
+# Test Results (keep structure, ignore generated files)
+TestResults/**/*.trx
+TestResults/**/*.xml
+TestResults/**/html/
+
+# Temporary files and artifacts
+*.tmp
+test-results.txt
+errors.md
+
+# OS-specific
+.DS_Store
+Thumbs.db

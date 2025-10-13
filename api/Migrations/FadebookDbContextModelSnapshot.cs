@@ -117,6 +117,37 @@ namespace api.Migrations
                     b.ToTable("barberServiceTable");
                 });
 
+            modelBuilder.Entity("Fadebook.Models.BarberWorkHoursModel", b =>
+                {
+                    b.Property<int>("WorkHourId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WorkHourId"));
+
+                    b.Property<int>("BarberId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("WorkHourId");
+
+                    b.HasIndex("BarberId", "DayOfWeek", "StartTime", "EndTime")
+                        .IsUnique();
+
+                    b.ToTable("barberWorkHoursTable");
+                });
+
             modelBuilder.Entity("Fadebook.Models.CustomerModel", b =>
                 {
                     b.Property<int>("CustomerId")
@@ -265,6 +296,17 @@ namespace api.Migrations
                     b.Navigation("Barber");
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("Fadebook.Models.BarberWorkHoursModel", b =>
+                {
+                    b.HasOne("Fadebook.Models.BarberModel", "Barber")
+                        .WithMany()
+                        .HasForeignKey("BarberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Barber");
                 });
 
             modelBuilder.Entity("Fadebook.Models.BarberModel", b =>

@@ -96,3 +96,23 @@ export interface ChangePasswordDto {
   currentPassword: string;
   newPassword: string;
 }
+
+// Work Hours types
+export interface BarberWorkHoursDto {
+  workHourId: number;
+  barberId: number;
+  barberName: string;
+  dayOfWeek: number;
+  dayOfWeekName: string;
+  startTime: string; // Format: "HH:mm"
+  endTime: string;   // Format: "HH:mm"
+  isActive: boolean;
+}
+
+export interface CreateBarberWorkHoursDto {
+  barberId: number;
+  dayOfWeek: number;
+  startTime: string; // Format: "HH:mm"
+  endTime: string;   // Format: "HH:mm"
+  isActive: boolean;
+}
