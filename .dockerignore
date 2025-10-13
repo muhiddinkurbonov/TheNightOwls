@@ -1,0 +1,84 @@
+# .dockerignore
+# Excludes files and directories from Docker build context
+# Reduces build time and image size
+
+# Git
+**/.git
+**/.gitignore
+**/.gitattributes
+
+# IDE and Editor
+**/.vs
+**/.vscode
+**/.idea
+**/.fleet
+*.swp
+*.swo
+*~
+
+# Environment Variables (never include secrets)
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Node.js
+**/node_modules
+**/npm-debug.log
+**/yarn-debug.log
+**/yarn-error.log
+**/.npm
+**/.yarn
+**/package-lock.json
+**/yarn.lock
+
+# .NET Build Outputs
+**/bin
+**/obj
+**/out
+**/*.user
+**/*.suo
+
+# Test Results
+**/TestResults
+**/*.trx
+**/coverage
+**/*.coverage
+**/*.coveragexml
+
+# Logs
+**/logs
+**/Logs
+**/*.log
+
+# OS Files
+**/.DS_Store
+**/Thumbs.db
+**/Desktop.ini
+
+# Documentation (usually not needed in production images)
+**/docs
+**/*.md
+!**/README.md
+
+# Scripts (CI/CD scripts not needed in container)
+**/scripts
+
+# Docker files themselves
+**/Dockerfile
+**/docker-compose.yml
+**/.dockerignore
+
+# Temporary files
+**/*.tmp
+**/*.temp
+**/*.cache
+
+# Database files (if any local)
+**/*.mdf
+**/*.ldf
+**/*.ndf
+
+# Next.js specific
+**/.next
+**/out
+**/.turbo
