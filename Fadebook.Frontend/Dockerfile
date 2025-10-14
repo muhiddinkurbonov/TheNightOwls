@@ -3,6 +3,7 @@ FROM node:20-alpine AS base
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
+# Force rebuild - cache bust
 
 # Copy package files
 COPY package.json package-lock.json ./
