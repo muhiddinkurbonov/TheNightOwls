@@ -115,15 +115,41 @@ public class BarberWorkHoursService(
 
     public async Task<IEnumerable<DateTime>> GetAvailableTimeSlotsAsync(int barberId, DateTime date, int durationMinutes = 30)
     {
-        // Simple approach: Treat work hours as UTC times to avoid timezone conversion issues
-        // This means 9:00 AM stored in database = 9:00 AM UTC, which the frontend will display in user's local timezone
-        var utcDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
-        var dayOfWeek = (int)utcDate.DayOfWeek;
+        // Get the business timezone from environment variable (default to America/Chicago for Central Time)
+        var timezoneId = Environment.GetEnvironmentVariable("BUSINESS_TIMEZONE") ?? "America/Chicago";
+        TimeZoneInfo businessTimeZone;
+
+        try
+        {
+            // Try IANA timezone ID (works on Linux/Mac)
+            businessTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timezoneId);
+        }
+        catch
+        {
+            // Fallback to Windows timezone ID
+            try
+            {
+                var windowsId = timezoneId == "America/Chicago" ? "Central Standard Time" : timezoneId;
+                businessTimeZone = TimeZoneInfo.FindSystemTimeZoneById(windowsId);
+            }
+            catch
+            {
+                // If all else fails, use UTC
+                businessTimeZone = TimeZoneInfo.Utc;
+            }
+        }
+
+        // Get the date in the business timezone
+        var utcNow = DateTime.UtcNow;
+        var businessNow = TimeZoneInfo.ConvertTimeFromUtc(utcNow, businessTimeZone);
+        var businessDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(date.Date, DateTimeKind.Utc), businessTimeZone);
+
+        var dayOfWeek = (int)businessDate.DayOfWeek;
         var workHours = await _workHoursRepository.GetByBarberIdAndDayAsync(barberId, dayOfWeek);
         var activeWorkHours = workHours.Where(wh => wh.IsActive);
 
         // Get existing appointments for this barber on this date (excluding cancelled)
-        var existingAppointments = await _appointmentRepository.GetByBarberIdAndDateAsync(barberId, utcDate);
+        var existingAppointments = await _appointmentRepository.GetByBarberIdAndDateAsync(barberId, businessDate.Date);
         var bookedSlots = existingAppointments
             .Where(a => a.Status != "Cancelled")
             .Select(a => a.AppointmentDate)
@@ -138,16 +164,19 @@ public class BarberWorkHoursService(
 
             while (currentTime.AddMinutes(durationMinutes) <= endTime)
             {
-                // Create UTC DateTime directly - no timezone conversion
-                var utcSlot = new DateTime(
-                    utcDate.Year,
-                    utcDate.Month,
-                    utcDate.Day,
+                // Create datetime in business timezone
+                var businessSlot = new DateTime(
+                    businessDate.Year,
+                    businessDate.Month,
+                    businessDate.Day,
                     currentTime.Hour,
                     currentTime.Minute,
                     0,
-                    DateTimeKind.Utc
+                    DateTimeKind.Unspecified
                 );
+
+                // Convert to UTC for transmission to frontend
+                var utcSlot = TimeZoneInfo.ConvertTimeToUtc(businessSlot, businessTimeZone);
 
                 // Only add if this slot is not already booked
                 if (!bookedSlots.Contains(utcSlot))
