@@ -115,14 +115,15 @@ public class BarberWorkHoursService(
 
     public async Task<IEnumerable<DateTime>> GetAvailableTimeSlotsAsync(int barberId, DateTime date, int durationMinutes = 30)
     {
-        // Treat the incoming date as a local date (not UTC) since it comes from a date picker
-        var localDate = date.Kind == DateTimeKind.Utc ? date.ToLocalTime().Date : date.Date;
-        var dayOfWeek = (int)localDate.DayOfWeek;
+        // Work entirely in UTC to avoid timezone issues
+        // Convert input date to UTC if it's not already
+        var utcDate = date.Kind == DateTimeKind.Utc ? date.Date : DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
+        var dayOfWeek = (int)utcDate.DayOfWeek;
         var workHours = await _workHoursRepository.GetByBarberIdAndDayAsync(barberId, dayOfWeek);
         var activeWorkHours = workHours.Where(wh => wh.IsActive);
 
         // Get existing appointments for this barber on this date (excluding cancelled)
-        var existingAppointments = await _appointmentRepository.GetByBarberIdAndDateAsync(barberId, localDate);
+        var existingAppointments = await _appointmentRepository.GetByBarberIdAndDateAsync(barberId, utcDate);
         var bookedSlots = existingAppointments
             .Where(a => a.Status != "Cancelled")
             .Select(a => a.AppointmentDate)
@@ -137,17 +138,16 @@ public class BarberWorkHoursService(
 
             while (currentTime.AddMinutes(durationMinutes) <= endTime)
             {
-                // Create a local DateTime, then convert to UTC for the API response
-                var localSlot = new DateTime(
-                    localDate.Year,
-                    localDate.Month,
-                    localDate.Day,
+                // Create UTC DateTime directly without timezone conversion
+                var utcSlot = new DateTime(
+                    utcDate.Year,
+                    utcDate.Month,
+                    utcDate.Day,
                     currentTime.Hour,
                     currentTime.Minute,
                     0,
-                    DateTimeKind.Local
+                    DateTimeKind.Utc
                 );
-                var utcSlot = localSlot.ToUniversalTime();
 
                 // Only add if this slot is not already booked
                 if (!bookedSlots.Contains(utcSlot))
