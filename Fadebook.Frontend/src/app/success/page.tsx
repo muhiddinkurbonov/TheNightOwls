@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Calendar } from 'lucide-react';
+import { toast } from 'sonner';
 
 function SuccessPageContent() {
   const searchParams = useSearchParams();
@@ -22,11 +23,11 @@ function SuccessPageContent() {
 
   const handleAddToGoogleCalendar = () => {
     if (!appointmentDetails.appointmentId) {
-      alert('No appointment ID available');
+      toast.error('No appointment ID available');
       return;
     }
     // Redirect to backend OAuth flow
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5288';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     window.location.href = `${apiUrl}/api/GoogleCalendar/google-auth?apptId=${appointmentDetails.appointmentId}`;
   };
 

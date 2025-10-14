@@ -9,6 +9,7 @@ import { useCreateAppointment } from '@/hooks/useAppointments';
 import { useBarbers } from '@/hooks/useBarbers';
 import { useBarberServices } from '@/hooks/useServices';
 import { workHoursApi } from '@/lib/api';
+import { axiosInstance } from '@/lib/axios';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,18 +91,8 @@ function BookAppointmentPageContent() {
     const fetchCustomerId = async () => {
       if (user?.username && user?.role === 'Customer') {
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5288';
-          const response = await fetch(`${apiUrl}/api/customer/by-username/${user.username}`, {
-            credentials: 'include',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            },
-          });
-
-          if (response.ok) {
-            const customer = await response.json();
-            setCustomerId(customer.customerId);
-          }
+          const response = await axiosInstance.get(`/api/customer/by-username/${user.username}`);
+          setCustomerId(response.data.customerId);
         } catch (error) {
           // Failed to fetch customer ID
         }
