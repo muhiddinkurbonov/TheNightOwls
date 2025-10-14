@@ -228,11 +228,35 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<RequestLoggingMiddleware>();
 
-app.MapControllers(); 
+app.MapControllers();
+
+// Apply migrations automatically on startup
+await ApplyMigrations(app);
 
 await SeedApp(app);
 
 app.Run();
+
+static async Task ApplyMigrations(WebApplication app)
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<FadebookDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        try
+        {
+            logger.LogInformation("Applying database migrations...");
+            await dbContext.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred while applying migrations");
+            throw; // Re-throw to prevent app startup with invalid database state
+        }
+    }
+}
 
 static async Task SeedApp(WebApplication app)
 {
