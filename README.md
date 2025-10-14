@@ -11,7 +11,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Team](#team)
+🌐 **[Live Demo](https://fadebook.up.railway.app)** | [Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Team](#team)
 
 </div>
 

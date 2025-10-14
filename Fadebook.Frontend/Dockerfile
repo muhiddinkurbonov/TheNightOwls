@@ -18,6 +18,11 @@ COPY . .
 # Set environment variable for build
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Accept build argument and set as environment variable
+# This allows Railway to pass NEXT_PUBLIC_API_URL at build time
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Build the application
 RUN npm run build
 
