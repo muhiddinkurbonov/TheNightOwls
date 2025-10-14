@@ -115,15 +115,33 @@ public class BarberWorkHoursService(
 
     public async Task<IEnumerable<DateTime>> GetAvailableTimeSlotsAsync(int barberId, DateTime date, int durationMinutes = 30)
     {
-        // Work entirely in UTC to avoid timezone issues
-        // Convert input date to UTC if it's not already
-        var utcDate = date.Kind == DateTimeKind.Utc ? date.Date : DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
-        var dayOfWeek = (int)utcDate.DayOfWeek;
+        // Get business timezone from environment variable (default to Eastern Time)
+        var businessTimezoneId = Environment.GetEnvironmentVariable("BUSINESS_TIMEZONE") ?? "America/New_York";
+        TimeZoneInfo businessTimeZone;
+
+        try
+        {
+            businessTimeZone = TimeZoneInfo.FindSystemTimeZoneById(businessTimezoneId);
+        }
+        catch
+        {
+            // Fallback to UTC if timezone not found
+            businessTimeZone = TimeZoneInfo.Utc;
+        }
+
+        // Convert the input date to the business timezone
+        var dateOnly = date.Date;
+        var businessDate = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.SpecifyKind(dateOnly, DateTimeKind.Utc),
+            businessTimeZone
+        );
+
+        var dayOfWeek = (int)businessDate.DayOfWeek;
         var workHours = await _workHoursRepository.GetByBarberIdAndDayAsync(barberId, dayOfWeek);
         var activeWorkHours = workHours.Where(wh => wh.IsActive);
 
         // Get existing appointments for this barber on this date (excluding cancelled)
-        var existingAppointments = await _appointmentRepository.GetByBarberIdAndDateAsync(barberId, utcDate);
+        var existingAppointments = await _appointmentRepository.GetByBarberIdAndDateAsync(barberId, businessDate.Date);
         var bookedSlots = existingAppointments
             .Where(a => a.Status != "Cancelled")
             .Select(a => a.AppointmentDate)
@@ -138,16 +156,19 @@ public class BarberWorkHoursService(
 
             while (currentTime.AddMinutes(durationMinutes) <= endTime)
             {
-                // Create UTC DateTime directly without timezone conversion
-                var utcSlot = new DateTime(
-                    utcDate.Year,
-                    utcDate.Month,
-                    utcDate.Day,
+                // Create DateTime in business timezone
+                var businessSlot = new DateTime(
+                    businessDate.Year,
+                    businessDate.Month,
+                    businessDate.Day,
                     currentTime.Hour,
                     currentTime.Minute,
                     0,
-                    DateTimeKind.Utc
+                    DateTimeKind.Unspecified
                 );
+
+                // Convert to UTC for storage/transmission
+                var utcSlot = TimeZoneInfo.ConvertTimeToUtc(businessSlot, businessTimeZone);
 
                 // Only add if this slot is not already booked
                 if (!bookedSlots.Contains(utcSlot))
