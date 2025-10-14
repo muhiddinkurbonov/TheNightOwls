@@ -398,6 +398,45 @@ static async Task SeedApp(WebApplication app)
                     ServiceId = serviceTheWorks.Entity.ServiceId
                 });
 
+                // Seed work hours for Dean (Monday-Friday, 9 AM - 5 PM)
+                for (int day = 1; day <= 5; day++) // Monday to Friday
+                {
+                    await dbContext.barberWorkHoursTable.AddAsync(new BarberWorkHoursModel
+                    {
+                        BarberId = barberDean.Entity.BarberId,
+                        DayOfWeek = day,
+                        StartTime = new TimeOnly(9, 0),
+                        EndTime = new TimeOnly(17, 0),
+                        IsActive = true
+                    });
+                }
+
+                // Seed work hours for Victor (Tuesday-Saturday, 10 AM - 6 PM)
+                for (int day = 2; day <= 6; day++) // Tuesday to Saturday
+                {
+                    await dbContext.barberWorkHoursTable.AddAsync(new BarberWorkHoursModel
+                    {
+                        BarberId = barberVictor.Entity.BarberId,
+                        DayOfWeek = day,
+                        StartTime = new TimeOnly(10, 0),
+                        EndTime = new TimeOnly(18, 0),
+                        IsActive = true
+                    });
+                }
+
+                // Seed work hours for Charles (Monday-Saturday, 8 AM - 4 PM)
+                for (int day = 1; day <= 6; day++) // Monday to Saturday
+                {
+                    await dbContext.barberWorkHoursTable.AddAsync(new BarberWorkHoursModel
+                    {
+                        BarberId = barberCharles.Entity.BarberId,
+                        DayOfWeek = day,
+                        StartTime = new TimeOnly(8, 0),
+                        EndTime = new TimeOnly(16, 0),
+                        IsActive = true
+                    });
+                }
+
                 var johnAppointmentWithDean = await dbContext.appointmentTable.AddAsync(new AppointmentModel
                 {
                     AppointmentDate = DateTime.UtcNow.AddYears(1),
