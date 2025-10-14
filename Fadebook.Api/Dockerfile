@@ -5,13 +5,12 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore dependencies
-COPY ["Fadebook.Api/api.csproj", "Fadebook.Api/"]
-RUN dotnet restore "Fadebook.Api/api.csproj"
+# Copy csproj and restore dependencies (root is Fadebook.Api)
+COPY ["api.csproj", "./"]
+RUN dotnet restore "api.csproj"
 
 # Copy everything else and build
 COPY . .
-WORKDIR "/src/Fadebook.Api"
 RUN dotnet build "api.csproj" -c Release -o /app/build
 
 FROM build AS publish
