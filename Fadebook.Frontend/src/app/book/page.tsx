@@ -90,7 +90,8 @@ function BookAppointmentPageContent() {
     const fetchCustomerId = async () => {
       if (user?.username && user?.role === 'Customer') {
         try {
-          const response = await fetch(`http://localhost:5288/api/customer/by-username/${user.username}`, {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5288';
+          const response = await fetch(`${apiUrl}/api/customer/by-username/${user.username}`, {
             credentials: 'include',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`,
