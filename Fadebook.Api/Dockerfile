@@ -21,7 +21,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Set environment variable for ASP.NET Core to listen on port 8080
-ENV ASPNETCORE_URLS=http://+:8080
+# Railway provides PORT environment variable - use it if available, otherwise default to 8080
+ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
 
 ENTRYPOINT ["dotnet", "api.dll"]
