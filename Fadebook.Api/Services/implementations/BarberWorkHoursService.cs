@@ -142,7 +142,10 @@ public class BarberWorkHoursService(
         // Get the date in the business timezone
         var utcNow = DateTime.UtcNow;
         var businessNow = TimeZoneInfo.ConvertTimeFromUtc(utcNow, businessTimeZone);
-        var businessDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(date.Date, DateTimeKind.Utc), businessTimeZone);
+
+        // The incoming date parameter should be treated as a date in the business timezone, not UTC
+        // Extract just the date components and create a new DateTime in the business timezone
+        var businessDate = new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, DateTimeKind.Unspecified);
 
         var dayOfWeek = (int)businessDate.DayOfWeek;
         var workHours = await _workHoursRepository.GetByBarberIdAndDayAsync(barberId, dayOfWeek);
