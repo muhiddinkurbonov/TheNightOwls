@@ -178,6 +178,17 @@ public class BarberWorkHoursService(
                 // Convert to UTC for transmission to frontend
                 var utcSlot = TimeZoneInfo.ConvertTimeToUtc(businessSlot, businessTimeZone);
 
+                // Skip slots that are in the past
+                // For today, only show slots that are at least 30 minutes in the future
+                if (businessDate.Date == businessNow.Date)
+                {
+                    if (businessSlot <= businessNow.AddMinutes(30))
+                    {
+                        currentTime = currentTime.AddMinutes(durationMinutes);
+                        continue;
+                    }
+                }
+
                 // Only add if this slot is not already booked
                 if (!bookedSlots.Contains(utcSlot))
                 {
