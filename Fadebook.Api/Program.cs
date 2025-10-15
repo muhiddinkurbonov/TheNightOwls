@@ -11,6 +11,7 @@ using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 using Fadebook.DB;
 using Fadebook.Services;
@@ -96,10 +97,23 @@ builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 //     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 // });
 
+// builder.Services.AddDbContext<FadebookDbContext>((options) =>
+// {
+//     var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+//     options.UseSqlServer(connectionString);
+// });
+
 builder.Services.AddDbContext<FadebookDbContext>((options) =>
 {
-    var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
-    options.UseSqlServer(connectionString);
+    var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+    // Handle Railway's postgres:// format
+    if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("postgres://"))
+    {
+        connectionString = connectionString.Replace("postgres://", "postgresql://");
+    }
+
+    options.UseNpgsql(connectionString);
 });
 
 // JWT Authentication
