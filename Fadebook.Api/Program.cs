@@ -20,7 +20,32 @@ using Fadebook.Models;
 using Fadebook.Middleware;
 using Fadebook.Common.Converters;
 
-Env.Load();
+// Load .env file
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (File.Exists(envPath))
+{
+    Env.Load(envPath);
+}
+else
+{
+    Env.Load(); // Try default location
+}
+
+// Capture DATABASE_URL once at startup and convert to Npgsql format
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (string.IsNullOrEmpty(databaseUrl))
+{
+    throw new InvalidOperationException("DATABASE_URL environment variable is not set. Make sure .env file exists and is loaded.");
+}
+
+// Convert postgresql://user:pass@host:port/db to Npgsql connection string format
+// This is more reliable than using the URL format directly
+if (databaseUrl.StartsWith("postgres://") || databaseUrl.StartsWith("postgresql://"))
+{
+    var uri = new Uri(databaseUrl.Replace("postgres://", "postgresql://"));
+    databaseUrl = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={uri.UserInfo.Split(':')[0]};Password={uri.UserInfo.Split(':')[1]}";
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure JSON serialization to handle dates as UTC
@@ -105,15 +130,8 @@ builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
 builder.Services.AddDbContext<FadebookDbContext>((options) =>
 {
-    var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
-
-    // Handle Railway's postgres:// format
-    if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("postgres://"))
-    {
-        connectionString = connectionString.Replace("postgres://", "postgresql://");
-    }
-
-    options.UseNpgsql(connectionString);
+    // Use the captured database URL from startup
+    options.UseNpgsql(databaseUrl);
 });
 
 // JWT Authentication
